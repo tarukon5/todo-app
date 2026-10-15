@@ -1,25 +1,27 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ブッとびおならロケット</title>
-<meta name="description" content="給食のあと、おならジェットで空を飛べ！押しっぱなしで遊ぶ、ちょっとくだらないブラウザゲーム。無料・登録なし・スマホでそのまま遊べます。">
+<title>Fart Rocket</title>
+<meta name="description" content="Ate too many sweet potatoes at lunch? Fart-jet into the sky! A silly hold-to-play browser game. Free, no sign-up, plays right on your phone. English / 日本語">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="ブッとびおならロケット">
-<meta property="og:title" content="ブッとび！おならロケット">
-<meta property="og:description" content="給食のあと、おならジェットで空を飛べ！押しっぱなしで遊ぶ、ちょっとくだらないブラウザゲーム。無料・登録なし・スマホでそのまま。">
+<meta property="og:site_name" content="Fart Rocket">
+<meta property="og:title" content="Blast Off! Fart Rocket">
+<meta property="og:description" content="Ate too many sweet potatoes at lunch? Fart-jet into the sky! A silly hold-to-play browser game. Free, no sign-up, plays right on your phone.">
 <meta property="og:url" content="https://tarukon5.github.io/todo-app/onara-rocket.html">
 <meta property="og:image" content="https://tarukon5.github.io/todo-app/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="黒板に描かれた男の子がおならジェットで空を飛んでいるゲームのタイトル画像">
-<meta property="og:locale" content="ja_JP">
+<meta property="og:image:alt" content="A kid drawn in chalk on a blackboard, flying through the sky on a fart jet">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ブッとび！おならロケット">
-<meta name="twitter:description" content="給食のあと、おならジェットで空を飛べ！無料・登録なし・スマホでそのまま遊べるくだらないゲーム。">
+<meta name="twitter:title" content="Blast Off! Fart Rocket">
+<meta name="twitter:description" content="Fart-jet into the sky! A silly browser game. Free, no sign-up, plays right on your phone.">
 <meta name="twitter:image" content="https://tarukon5.github.io/todo-app/og-image.png">
-<meta name="twitter:image:alt" content="黒板に描かれた男の子がおならジェットで空を飛んでいるゲームのタイトル画像">
+<meta name="twitter:image:alt" content="A kid drawn in chalk on a blackboard, flying through the sky on a fart jet">
+<link rel="alternate" hreflang="ja" href="https://tarukon5.github.io/todo-app/onara-rocket-ja.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Yusei+Magic&display=swap">
@@ -164,10 +166,15 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
 .continue { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .continue p { margin: 0; font-size: 1.15rem; }
 .continue .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
-#mute {
+.corner {
   position: absolute;
   right: 10px;
   bottom: 8px;
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+.chip {
   font: inherit;
   font-size: .85rem;
   color: var(--chalk-dim);
@@ -176,9 +183,9 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
   border-radius: 12px 4px 10px 5px;
   padding: 4px 10px;
   cursor: pointer;
-  z-index: 2;
 }
-#mute:focus-visible { outline: 2px dashed var(--yellow); outline-offset: 2px; }
+.chip:hover { color: var(--chalk); border-color: var(--chalk); }
+.chip:focus-visible { outline: 2px dashed var(--yellow); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   .btn { transition: none; }
 }
@@ -186,47 +193,44 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
 </head>
 <body>
 <div id="app">
-  <canvas id="cv" aria-label="ゲーム画面。おしっぱなしでおならジェット噴射"></canvas>
+  <canvas id="cv" aria-label="Game screen. Hold to fart-jet upward."></canvas>
 
   <section class="overlay" id="titleOv">
     <div class="note">
-      <div class="eyebrow">5年2組　自由研究（ゲーム部門）</div>
-      <h1><small>給食のあとで</small>ブッとび！<br>おならロケット</h1>
-      <p class="tagline">さつまいもを食べすぎたぼくは、空を飛んだ。</p>
-      <dl class="rules">
-        <dt>おしっぱなし</dt><dd>おならジェットで上がる（スペースキーでもOK）</dd>
-        <dt>はなす</dt><dd>落ちる。地面についたらアウト</dd>
-        <dt>🍠 🥛 🥚 🥦</dt><dd>食べるとガス補給</dd>
-        <dt>📚 🐝 ⚽ 🛸</dt><dd>ぶつかるとアウト</dd>
-        <dt>ときどき</dt><dd>意味のわからないことが起きる</dd>
-      </dl>
-      <button class="btn" id="startBtn" type="button">スタート</button>
+      <div class="eyebrow" data-t="eyebrow"></div>
+      <h1 id="h1"></h1>
+      <p class="tagline" data-t="tagline"></p>
+      <dl class="rules" id="rules"></dl>
+      <button class="btn" id="startBtn" type="button"></button>
       <div class="best" id="titleBest"></div>
     </div>
   </section>
 
   <section class="overlay" id="overOv" hidden>
     <div class="note">
-      <h2>ゲームオーバー</h2>
+      <h2 data-t="gameOver"></h2>
       <p class="cause" id="cause"></p>
       <dl class="stats">
-        <div><dt>きょり</dt><dd id="sDist">0m</dd></div>
-        <div><dt>ブッ回数</dt><dd id="sFarts">0回</dd></div>
-        <div><dt>さいこう記録</dt><dd id="sBest">0m</dd></div>
+        <div><dt data-t="statDist"></dt><dd id="sDist">0m</dd></div>
+        <div><dt data-t="statFarts"></dt><dd id="sFarts">0</dd></div>
+        <div><dt data-t="statBest"></dt><dd id="sBest">0m</dd></div>
       </dl>
-      <div class="rank">あなたの称号：<b id="rank"></b></div>
-      <p class="sensei"><span>先生のひとこと</span><span id="sensei"></span></p>
+      <div class="rank"><span data-t="rankLabel"></span><b id="rank"></b></div>
+      <p class="sensei"><span data-t="senseiLabel"></span><span id="sensei"></span></p>
       <div class="continue">
-        <p id="contQ">コンティニュー？</p>
+        <p id="contQ"></p>
         <div class="row">
-          <button class="btn" id="yesBtn" type="button">はい</button>
-          <button class="btn ghost" id="noBtn" type="button">いいえ</button>
+          <button class="btn" id="yesBtn" type="button" data-t="yes"></button>
+          <button class="btn ghost" id="noBtn" type="button" data-t="no"></button>
         </div>
       </div>
     </div>
   </section>
 
-  <button id="mute" type="button">音 ON</button>
+  <div class="corner">
+    <button class="chip" id="langBtn" type="button" lang="ja">日本語</button>
+    <button class="chip" id="mute" type="button">Sound ON</button>
+  </div>
 </div>
 
 <script>
@@ -247,49 +251,184 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
   const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const OBSTACLES = {
-    hw:   { emoji: '📚', label: '宿題',     r: 22, from: 0,  cause: '宿題に追いつかれた。' },
-    test: { emoji: null, label: '0点のテスト', r: 22, from: 3,  cause: '0点のテストが家の人にバレた。' },
-    bee:  { emoji: '🐝', label: 'ハチ',     r: 18, from: 8,  cause: 'ハチにおしりをさされた。おならは出なくなった。' },
-    ball: { emoji: '⚽', label: 'ドッジボール', r: 18, from: 15, cause: 'ドッジボールが顔面に当たった。顔面はセーフじゃなかった。' },
-    ufo:  { emoji: '🛸', label: 'UFO',      r: 24, from: 30, cause: 'UFOにさらわれた。給食の時間までには帰ります。' }
+    hw:   { emoji: '📚', r: 22, from: 0 },
+    test: { emoji: null, r: 22, from: 3 },
+    bee:  { emoji: '🐝', r: 18, from: 8 },
+    ball: { emoji: '⚽', r: 18, from: 15 },
+    ufo:  { emoji: '🛸', r: 24, from: 30 }
   };
   const ITEMS = [
-    { emoji: '🍠', name: 'さつまいも',   gas: 40 },
-    { emoji: '🥛', name: '牛乳',         gas: 22 },
-    { emoji: '🥚', name: 'ゆでたまご',   gas: 28 },
-    { emoji: '🥦', name: 'ブロッコリー', gas: 18 }
+    { emoji: '🍠', gas: 40 },
+    { emoji: '🥛', gas: 22 },
+    { emoji: '🥚', gas: 28 },
+    { emoji: '🥦', gas: 18 }
   ];
   const EVENTS = {
-    gravity: { dur: 5, text: 'じゅうりょくが反対になった！', sub: 'おすと下に落ちるぞ', short: '重力反対' },
-    kocho:   { dur: 6, text: '校長先生の話が始まった', sub: '話が長すぎて時間がゆっくりに…', short: '校長先生の話' },
-    fog:     { dur: 5, text: 'だれかのおならで前が見えない！', sub: 'くさい', short: 'おならの霧' },
-    super:   { dur: 5, text: 'スーパーおならタイム！', sub: 'ガス無限・むてき・きょり3倍', short: 'むてき' },
-    lunch:   { dur: 4, text: '空から給食がふってきた！', sub: '食べ放題', short: '給食の雨' },
-    spin:    { dur: 6, text: 'なぜか世界が回りだした', sub: '理由は不明', short: '世界が回転' },
-    stuck:   { dur: 3, text: 'おならがつまった…！', sub: 'がんばれ、おしり', short: 'つまり中' },
-    giant:   { dur: 6, text: 'おなかがパンパンで巨大化！', sub: '当たり判定も大きいよ', short: '巨大化' },
-    mirror:  { dur: 5, text: '画面が左右反対になった', sub: 'なんで？', short: '左右反対' }
+    gravity: { dur: 5 }, kocho: { dur: 6 }, fog: { dur: 5 }, super: { dur: 5 }, lunch: { dur: 4 },
+    spin: { dur: 6 }, stuck: { dur: 3 }, giant: { dur: 6 }, mirror: { dur: 5 }
   };
-  const SOUNDS_START = ['ブッ', 'ブリッ', 'プゥ〜', 'ププッ', 'ブォッ', 'ブッ!!'];
-  const SOUNDS_HOLD = ['ブォォォ', 'ブリブリ', 'ブボボ', 'プシュ〜', 'ブロロロ', 'ボフッ'];
-  const KOCHO_TALK = 'えー、みなさん、おはようございます。えー、今日は、えー、おならについてお話しします。えー、おならというものはですね、えー、だれでも出るものであります。えー、先生が子どものころはですね、えー…（まだ続く）';
-  const RANKS = [
-    [0, 'ただのにおう人'], [60, '給食当番'], [150, 'おなら係'], [300, 'おなら委員長'],
-    [500, 'ガス部長'], [800, 'おなら大臣'], [1200, '伝説のおなら王'], [2000, '宇宙おなら神']
-  ];
-  const SENSEI = [
-    '廊下でおならをしてはいけません。空でもです。',
-    'おならは1日に5〜20回くらい出るのがふつうだそうですよ。',
-    '次は宿題を先にやりましょう。',
-    'においは点数に入りません。',
-    'それはさつまいもの食べすぎです。',
-    'おならの成分のほとんどは、ちっ素などのにおわないガスです。においのもとはほんの少しです。',
-    '先生も子どものころ、同じことを考えました。',
-    '給食はよくかんで食べましょう。空気を飲みこむとおならがふえます。',
-    'ガスの出しすぎに注意しましょう。地球にやさしく。',
-    'ふざけていいのは休み時間だけです。今は休み時間なので、いいです。'
-  ];
-  const GROUND_CAUSE = '地面にしりもちをついた。おならはクッションにならなかった。';
+  const RANK_MIN = [0, 60, 150, 300, 500, 800, 1200, 2000];
+
+  // ---------- text (English is the default; Japanese is the original) ----------
+  const STR = {
+    en: {
+      docTitle: 'Fart Rocket',
+      htmlLang: 'en',
+      canvasLabel: 'Game screen. Hold to fart-jet upward.',
+      eyebrow: 'Class 5-2 · Independent Research Project (Game Category)',
+      h1: '<small>After School Lunch</small>Blast Off!<br>Fart Rocket',
+      tagline: 'I ate way too many sweet potatoes at lunch. Then I flew.',
+      rules: [
+        ['Hold', 'Fart-jet upward (Space key works too)'],
+        ['Let go', 'You fall. Touch the ground and you’re out'],
+        ['🍠 🥛 🥚 🥦', 'Eat to refill your gas'],
+        ['📚 🐝 ⚽ 🛸', 'Hit one and you’re out'],
+        ['Sometimes', 'Something happens that makes no sense']
+      ],
+      start: ['START', 'Whoops! Over here', 'The REAL start'],
+      best: n => `Best: ${n}m`,
+      gameOver: 'GAME OVER',
+      statDist: 'Distance', statFarts: 'Toots', statBest: 'Best',
+      farts: n => `${n}`,
+      newRecord: 'NEW!',
+      rankLabel: 'Your title: ',
+      senseiLabel: 'Teacher says',
+      cont: 'Continue?', yes: 'Yes', no: 'No', noReply: 'Nope. Play again.',
+      sound: on => on ? 'Sound ON' : 'Sound OFF',
+      langBtn: '日本語',
+      obs: {
+        hw: ['Homework', 'Your homework caught up with you.'],
+        test: ['0-point test', 'Your parents found the 0-point test.'],
+        bee: ['Bee', 'A bee stung your butt. The farts stopped.'],
+        ball: ['Dodgeball', 'Dodgeball to the face. Turns out face hits count.'],
+        ufo: ['UFO', 'Abducted by a UFO. Will be back before lunch.']
+      },
+      ground: 'You landed on your butt. Farts are not a cushion.',
+      items: ['Sweet potato', 'Milk', 'Boiled egg', 'Broccoli'],
+      ev: {
+        gravity: ['Gravity flipped!', 'Hold to go DOWN', 'Reverse gravity'],
+        kocho: ['The principal started a speech', 'So long that time slows down…', 'Principal’s speech'],
+        fog: ['Someone farted. Can’t see!', 'It stinks', 'Fart fog'],
+        super: ['SUPER FART TIME!', 'Infinite gas · invincible · 3× distance', 'Invincible'],
+        lunch: ['It’s raining school lunch!', 'All you can eat', 'Lunch rain'],
+        spin: ['The world started spinning', 'Reason: unknown', 'Spinning world'],
+        stuck: ['Fart jam…!', 'Hang in there, butt', 'Jammed'],
+        giant: ['Belly so full you went GIANT!', 'Your hitbox is bigger too', 'Giant mode'],
+        mirror: ['The screen flipped left to right', 'Why?', 'Mirror mode']
+      },
+      soundsStart: ['PFFT', 'BRAP', 'TOOT~', 'PFT-PFT', 'BLAT!', 'POOT!!'],
+      soundsHold: ['BRRRRT', 'FRRRAP', 'BLBLBL', 'FSSSHH', 'VRRROOM', 'FWUMP'],
+      stuckHold: 'pft…', stuckStart: 'pfft',
+      outOfGas: 'pfff… (out of gas)',
+      pickup: (name, gas) => `${name} +${gas} gas`,
+      knocked: 'Blasted away! +10m',
+      stink: 'P-U!',
+      kocho: 'Ahem. Good morning, everyone. Ahem, today, ahem, I would like to talk about farts. Ahem, now, a fart is something, ahem, that everybody has. Ahem, back when I was a boy, ahem… (still going)',
+      ranks: ['Just Smelly', 'Lunch Duty', 'Fart Monitor', 'Fart Club President', 'Head of Gas', 'Minister of Farts', 'Legendary Fart King', 'Cosmic Fart God'],
+      sensei: [
+        'No farting in the hallway. Or in the sky.',
+        'They say 5 to 20 farts a day is perfectly normal.',
+        'Next time, do your homework first.',
+        'Smell does not count toward your grade.',
+        'That is what happens when you eat too many sweet potatoes.',
+        'Most of a fart is odorless gas like nitrogen. Only a tiny bit is the smelly part.',
+        'I had the same idea when I was a kid.',
+        'Chew your lunch well. Swallowing air makes more farts.',
+        'Please do not overuse your gas. Be kind to the Earth.',
+        'Goofing off is only allowed at recess. It is recess now, so it is fine.'
+      ],
+      hudDist: 'DISTANCE',
+      hudSub: (f, b) => `Toots ×${f}   Best ${b}m`,
+      hudGas: inf => inf ? 'GAS ∞' : 'GAS',
+      lowGas: 'Low gas! Eat something!',
+      hint: 'Hold to fart-jet!',
+      evLeft: (name, n) => `${name} · ${n}s left`,
+      vertical: false,
+      dateLine: d => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+      dutyLine: 'On duty: Toot McGee'
+    },
+    ja: {
+      docTitle: 'ブッとびおならロケット',
+      htmlLang: 'ja',
+      canvasLabel: 'ゲーム画面。おしっぱなしでおならジェット噴射',
+      eyebrow: '5年2組　自由研究（ゲーム部門）',
+      h1: '<small>給食のあとで</small>ブッとび！<br>おならロケット',
+      tagline: 'さつまいもを食べすぎたぼくは、空を飛んだ。',
+      rules: [
+        ['おしっぱなし', 'おならジェットで上がる（スペースキーでもOK）'],
+        ['はなす', '落ちる。地面についたらアウト'],
+        ['🍠 🥛 🥚 🥦', '食べるとガス補給'],
+        ['📚 🐝 ⚽ 🛸', 'ぶつかるとアウト'],
+        ['ときどき', '意味のわからないことが起きる']
+      ],
+      start: ['スタート', 'おっと！こっちだよ', 'ほんとのスタート'],
+      best: n => `さいこう記録 ${n}m`,
+      gameOver: 'ゲームオーバー',
+      statDist: 'きょり', statFarts: 'ブッ回数', statBest: 'さいこう記録',
+      farts: n => `${n}回`,
+      newRecord: '新記録！',
+      rankLabel: 'あなたの称号：',
+      senseiLabel: '先生のひとこと',
+      cont: 'コンティニュー？', yes: 'はい', no: 'いいえ', noReply: 'だめです。もう一回。',
+      sound: on => on ? '音 ON' : '音 OFF',
+      langBtn: 'English',
+      obs: {
+        hw: ['宿題', '宿題に追いつかれた。'],
+        test: ['0点のテスト', '0点のテストが家の人にバレた。'],
+        bee: ['ハチ', 'ハチにおしりをさされた。おならは出なくなった。'],
+        ball: ['ドッジボール', 'ドッジボールが顔面に当たった。顔面はセーフじゃなかった。'],
+        ufo: ['UFO', 'UFOにさらわれた。給食の時間までには帰ります。']
+      },
+      ground: '地面にしりもちをついた。おならはクッションにならなかった。',
+      items: ['さつまいも', '牛乳', 'ゆでたまご', 'ブロッコリー'],
+      ev: {
+        gravity: ['じゅうりょくが反対になった！', 'おすと下に落ちるぞ', '重力反対'],
+        kocho: ['校長先生の話が始まった', '話が長すぎて時間がゆっくりに…', '校長先生の話'],
+        fog: ['だれかのおならで前が見えない！', 'くさい', 'おならの霧'],
+        super: ['スーパーおならタイム！', 'ガス無限・むてき・きょり3倍', 'むてき'],
+        lunch: ['空から給食がふってきた！', '食べ放題', '給食の雨'],
+        spin: ['なぜか世界が回りだした', '理由は不明', '世界が回転'],
+        stuck: ['おならがつまった…！', 'がんばれ、おしり', 'つまり中'],
+        giant: ['おなかがパンパンで巨大化！', '当たり判定も大きいよ', '巨大化'],
+        mirror: ['画面が左右反対になった', 'なんで？', '左右反対']
+      },
+      soundsStart: ['ブッ', 'ブリッ', 'プゥ〜', 'ププッ', 'ブォッ', 'ブッ!!'],
+      soundsHold: ['ブォォォ', 'ブリブリ', 'ブボボ', 'プシュ〜', 'ブロロロ', 'ボフッ'],
+      stuckHold: 'プ…', stuckStart: 'プスッ',
+      outOfGas: 'プス…（ガス切れ）',
+      pickup: (name, gas) => `${name} ガス+${gas}`,
+      knocked: 'ふっとばした！ +10m',
+      stink: 'くさっ',
+      kocho: 'えー、みなさん、おはようございます。えー、今日は、えー、おならについてお話しします。えー、おならというものはですね、えー、だれでも出るものであります。えー、先生が子どものころはですね、えー…（まだ続く）',
+      ranks: ['ただのにおう人', '給食当番', 'おなら係', 'おなら委員長', 'ガス部長', 'おなら大臣', '伝説のおなら王', '宇宙おなら神'],
+      sensei: [
+        '廊下でおならをしてはいけません。空でもです。',
+        'おならは1日に5〜20回くらい出るのがふつうだそうですよ。',
+        '次は宿題を先にやりましょう。',
+        'においは点数に入りません。',
+        'それはさつまいもの食べすぎです。',
+        'おならの成分のほとんどは、ちっ素などのにおわないガスです。においのもとはほんの少しです。',
+        '先生も子どものころ、同じことを考えました。',
+        '給食はよくかんで食べましょう。空気を飲みこむとおならがふえます。',
+        'ガスの出しすぎに注意しましょう。地球にやさしく。',
+        'ふざけていいのは休み時間だけです。今は休み時間なので、いいです。'
+      ],
+      hudDist: 'きょり',
+      hudSub: (f, b) => `ブッ ×${f}　さいこう ${b}m`,
+      hudGas: inf => inf ? 'ガス ∞' : 'ガス',
+      lowGas: 'ガス切れ注意！食べて！',
+      hint: 'おしっぱなしでおならジェット！',
+      evLeft: (name, n) => `${name}　あと${n}秒`,
+      vertical: true,
+      dateLine: d => `${kanjiNum(d.getMonth() + 1)}月${kanjiNum(d.getDate())}日　${'日月火水木金土'[d.getDay()]}曜日`,
+      dutyLine: '日直　尾奈良'
+    }
+  };
+  let lang = 'en';
+  try { const saved = localStorage.getItem('onara-lang'); if (saved && STR[saved]) lang = saved; } catch (e) {}
+  const urlLang = new URLSearchParams(location.search).get('lang');
+  if (urlLang && STR[urlLang]) lang = urlLang;
+  const T = () => STR[lang];
 
   // ---------- canvas ----------
   const cv = document.getElementById('cv');
@@ -457,9 +596,10 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
     obs.push(o);
   }
   function spawnItem(fromSky) {
-    const d = pick(ITEMS);
+    const idx = Math.floor(Math.random() * ITEMS.length);
     items.push({
-      ...d,
+      ...ITEMS[idx],
+      idx,
       x: fromSky ? rand(W * 0.3, W + 20) : W + 30,
       y: fromSky ? -20 : rand(40, ground() - 30),
       vy: fromSky ? rand(90, 160) : 0,
@@ -473,7 +613,7 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
     const type = pick(keys);
     lastEv = type;
     ev = { type, t: 0, dur: EVENTS[type].dur };
-    banner = { text: EVENTS[type].text, sub: EVENTS[type].sub, t: 0 };
+    banner = { type, t: 0 };
     eventSound();
   }
 
@@ -535,19 +675,19 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
       fartClock += dt;
       if (fartClock > 0.45) {
         fartClock = 0;
-        popText(stuck ? 'プ…' : pick(SOUNDS_HOLD), P.x - 30 * P.size, P.y + 20 * P.size * flip, C.yellow, 18);
+        popText(stuck ? T().stuckHold : pick(T().soundsHold), P.x - 30 * P.size, P.y + 20 * P.size * flip, C.yellow, 18);
       }
     }
     if (farting && !wasFarting) {
       farts++;
       fartClock = 0;
       fartSnd = startFart(stuck);
-      popText(stuck ? 'プスッ' : pick(SOUNDS_START), P.x - 34 * P.size, P.y + 24 * P.size * flip, C.yellow, 26);
+      popText(stuck ? T().stuckStart : pick(T().soundsStart), P.x - 34 * P.size, P.y + 24 * P.size * flip, C.yellow, 26);
     }
     if (!farting && wasFarting && fartSnd) { fartSnd.stop(); fartSnd = null; }
     if (!farting && wasFarting && holding && P.gas <= 0) {
       sputter();
-      popText('プス…（ガス切れ）', P.x, P.y - 40, C.pink, 16);
+      popText(T().outOfGas, P.x, P.y - 40, C.pink, 16);
     }
     wasFarting = farting;
 
@@ -561,7 +701,7 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
       if (P.vy < -200) bonkSound();
       P.vy = Math.max(0, P.vy);
     }
-    if (P.y + 22 * P.size > ground()) return die(GROUND_CAUSE);
+    if (P.y + 22 * P.size > ground()) return die('ground');
 
     // obstacles
     spawnO -= sdt;
@@ -602,7 +742,7 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
         P.gas = Math.min(100, P.gas + it.gas);
         dist += 5;
         pickupSound();
-        popText(`${it.name} ガス+${it.gas}`, it.x, it.y - 10, C.gas, 15);
+        popText(T().pickup(T().items[it.idx], it.gas), it.x, it.y - 10, C.gas, 15);
       }
     }
     items = items.filter(it => it.x > -40 && !it.got);
@@ -613,10 +753,10 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
           o.gone = true;
           dist += 10;
           bonkSound();
-          popText('ふっとばした！ +10m', o.x, o.y, C.pink, 16);
+          popText(T().knocked, o.x, o.y, C.pink, 16);
           for (let i = 0; i < 10; i++) dust(o.x, o.y, C.chalk);
         } else {
-          return die(OBSTACLES[o.kind].cause);
+          return die(o.kind);
         }
       }
     }
@@ -675,8 +815,6 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
     return k[Math.floor(n / 10)] + '十' + (n % 10 ? k[n % 10] : '');
   }
   const today = new Date();
-  const dateLine = `${kanjiNum(today.getMonth() + 1)}月${kanjiNum(today.getDate())}日　${'日月火水木金土'[today.getDay()]}曜日`;
-  const dutyLine = '日直　尾奈良';
 
   function chalkStroke(alpha = 0.45, w = 2.5) {
     ctx.strokeStyle = `rgba(241,239,230,${alpha})`;
@@ -751,12 +889,21 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
     // date & duty, the way a classroom blackboard has them on the right edge
     ctx.fillStyle = 'rgba(241,239,230,.28)';
     ctx.font = `13px ${F_CHALK}`;
-    ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const lines = [dateLine, dutyLine];
+    const lines = [T().dateLine(today), T().dutyLine];
     lines.forEach((line, li) => {
       const x = W - 14 - li * 18;
-      [...line].forEach((ch, i) => ctx.fillText(ch, x, 78 + i * 15));
+      if (T().vertical) {
+        ctx.textAlign = 'center';
+        [...line].forEach((ch, i) => ctx.fillText(ch, x, 78 + i * 15));
+      } else {
+        ctx.save();
+        ctx.translate(x, 78);
+        ctx.rotate(Math.PI / 2);
+        ctx.textAlign = 'left';
+        ctx.fillText(line, 0, 0);
+        ctx.restore();
+      }
     });
   }
 
@@ -871,7 +1018,7 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
     ctx.fillStyle = 'rgba(244,163,184,.9)';
     ctx.font = `11px ${F_CHALK}`;
     ctx.textAlign = 'center';
-    ctx.fillText(d.label, o.x, o.y + d.r + 10);
+    ctx.fillText(T().obs[o.kind][0], o.x, o.y + d.r + 10);
   }
 
   function drawItem(it) {
@@ -918,7 +1065,7 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
     ctx.fillStyle = `rgba(29,58,47,${0.8 * a})`;
     ctx.font = `20px ${F_DISP}`;
     ctx.textAlign = 'center';
-    ctx.fillText('くさっ', W * 0.7 + Math.sin(ev.t * 3) * 20, H * 0.55);
+    ctx.fillText(T().stink, W * 0.7 + Math.sin(ev.t * 3) * 20, H * 0.55);
   }
 
   function drawKocho() {
@@ -948,7 +1095,7 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
     ctx.font = `20px ${F_CHALK}`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(KOCHO_TALK, W - 20 - ev.t * 110, fy);
+    ctx.fillText(T().kocho, W - 20 - ev.t * 110, fy);
     ctx.restore();
   }
 
@@ -958,19 +1105,19 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
     ctx.textAlign = 'left';
     ctx.fillStyle = 'rgba(241,239,230,.7)';
     ctx.font = `13px ${F_CHALK}`;
-    ctx.fillText('きょり', 16, 22);
+    ctx.fillText(T().hudDist, 16, 22);
     ctx.fillStyle = C.chalk;
     ctx.font = `28px ${F_DISP}`;
     ctx.fillText(`${Math.floor(dist)}m`, 16, 52);
     ctx.fillStyle = 'rgba(241,239,230,.7)';
     ctx.font = `13px ${F_CHALK}`;
-    ctx.fillText(`ブッ ×${farts}　さいこう ${best}m`, 16, 72);
+    ctx.fillText(T().hudSub(farts, best), 16, 72);
     // gas meter
     const isSuper = ev && ev.type === 'super';
     const mw = Math.min(140, W * 0.32), mx = W - mw - 16, my = 30;
     ctx.textAlign = 'right';
     ctx.fillStyle = 'rgba(241,239,230,.7)';
-    ctx.fillText(isSuper ? 'ガス ∞' : 'ガス', W - 16, 22);
+    ctx.fillText(T().hudGas(isSuper), W - 16, 22);
     ctx.fillStyle = 'rgba(0,0,0,.25)';
     ctx.fillRect(mx, my, mw, 14);
     const low = P.gas < 20 && !isSuper;
@@ -988,14 +1135,14 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
     ctx.strokeRect(mx, my, mw, 14);
     if (low) {
       ctx.fillStyle = C.pink;
-      ctx.fillText('ガス切れ注意！食べて！', W - 16, 62);
+      ctx.fillText(T().lowGas, W - 16, 62);
     }
     if (time < 3.5) {
       ctx.globalAlpha = Math.min(1, 3.5 - time);
       ctx.textAlign = 'center';
       ctx.fillStyle = C.yellow;
       ctx.font = `18px ${F_DISP}`;
-      ctx.fillText('おしっぱなしでおならジェット！', W / 2, H * 0.7);
+      ctx.fillText(T().hint, W / 2, H * 0.7);
       ctx.globalAlpha = 1;
     }
     // event timer pill
@@ -1003,7 +1150,7 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
       ctx.textAlign = 'center';
       ctx.fillStyle = C.yellow;
       ctx.font = `14px ${F_CHALK}`;
-      ctx.fillText(`${EVENTS[ev.type].short}　あと${Math.ceil(ev.dur - ev.t)}秒`, W / 2, H - 12);
+      ctx.fillText(T().evLeft(T().ev[ev.type][2], Math.ceil(ev.dur - ev.t)), W / 2, H - 12);
     }
   }
 
@@ -1017,17 +1164,20 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
     ctx.fillStyle = 'rgba(19,40,31,.78)';
     ctx.fillRect(0, cy - 40, W, 82);
     ctx.translate(W / 2, cy);
+    const [text, sub] = T().ev[banner.type];
+    ctx.font = `16px ${F_CHALK}`;
+    const sw = ctx.measureText(sub).width;
     ctx.font = `28px ${F_DISP}`;
-    const tw = ctx.measureText(banner.text).width;
+    const tw = Math.max(ctx.measureText(text).width, sw);
     const fit = Math.min(1, (W - 32) / tw);
     ctx.scale(pop * fit, pop * fit);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = C.yellow;
-    ctx.fillText(banner.text, 0, -8);
+    ctx.fillText(text, 0, -8);
     ctx.font = `16px ${F_CHALK}`;
     ctx.fillStyle = C.chalk;
-    ctx.fillText(banner.sub, 0, 24);
+    ctx.fillText(sub, 0, 24);
     ctx.restore();
   }
 
@@ -1084,8 +1234,39 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
   let dodges = 0, overReady = false;
 
   function renderBest() {
-    document.getElementById('titleBest').textContent = `さいこう記録 ${best}m`;
+    document.getElementById('titleBest').textContent = T().best(best);
   }
+
+  const langBtn = document.getElementById('langBtn');
+  function applyLang() {
+    const t = T();
+    document.documentElement.lang = t.htmlLang;
+    document.title = t.docTitle;
+    cv.setAttribute('aria-label', t.canvasLabel);
+    document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t[el.dataset.t]; });
+    document.getElementById('h1').innerHTML = t.h1;
+    const rules = document.getElementById('rules');
+    rules.replaceChildren();
+    t.rules.forEach(([term, desc]) => {
+      const dt = document.createElement('dt');
+      const dd = document.createElement('dd');
+      dt.textContent = term;
+      dd.textContent = desc;
+      rules.append(dt, dd);
+    });
+    startBtn.textContent = t.start[Math.min(dodges, 2)];
+    muteBtn.textContent = t.sound(!muted);
+    langBtn.textContent = t.langBtn;
+    langBtn.lang = lang === 'en' ? 'ja' : 'en';
+    renderBest();
+    renderOver();
+  }
+  langBtn.addEventListener('click', () => {
+    lang = lang === 'en' ? 'ja' : 'en';
+    try { localStorage.setItem('onara-lang', lang); } catch (e) {}
+    applyLang();
+    langBtn.blur();
+  });
 
   function startGame() {
     initAudio();
@@ -1109,23 +1290,38 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
       const dx = (Math.random() < 0.5 ? -1 : 1) * rand(Math.min(60, room), room);
       const dy = rand(-50, 30);
       startBtn.style.transform = reduceMotion ? 'none' : `translate(${dx}px, ${dy}px) rotate(${rand(-12, 12)}deg)`;
-      startBtn.textContent = dodges === 1 ? 'おっと！こっちだよ' : 'ほんとのスタート';
+      startBtn.textContent = T().start[dodges];
       return;
     }
     startBtn.style.transform = 'none';
     startGame();
   });
 
+  // The last result is kept as keys, so switching language re-renders it.
+  let lastOver = null;
+  function renderOver() {
+    if (!lastOver) return;
+    const t = T(), o = lastOver;
+    document.getElementById('cause').textContent = o.cause === 'ground' ? t.ground : t.obs[o.cause][1];
+    document.getElementById('sDist').textContent = `${o.score}m`;
+    document.getElementById('sFarts').textContent = t.farts(o.farts);
+    const bestEl = document.getElementById('sBest');
+    bestEl.textContent = `${best}m`;
+    if (o.isNew) {
+      const tag = document.createElement('span');
+      tag.className = 'new';
+      tag.textContent = ' ' + t.newRecord;
+      bestEl.append(tag);
+    }
+    let rank = 0;
+    RANK_MIN.forEach((min, i) => { if (o.score >= min) rank = i; });
+    document.getElementById('rank').textContent = t.ranks[rank];
+    document.getElementById('sensei').textContent = lang === 'ja' ? `「${t.sensei[o.sensei]}」` : `“${t.sensei[o.sensei]}”`;
+    contQ.textContent = o.refused ? t.noReply : t.cont;
+  }
   function showOver(cause, score, isNew) {
-    document.getElementById('cause').textContent = cause;
-    document.getElementById('sDist').textContent = `${score}m`;
-    document.getElementById('sFarts').textContent = `${farts}回`;
-    document.getElementById('sBest').innerHTML = `${best}m${isNew ? ' <span class="new">新記録！</span>' : ''}`;
-    let rank = RANKS[0][1];
-    for (const [min, name] of RANKS) if (score >= min) rank = name;
-    document.getElementById('rank').textContent = rank;
-    document.getElementById('sensei').textContent = `「${pick(SENSEI)}」`;
-    contQ.textContent = 'コンティニュー？';
+    lastOver = { cause, score, isNew, farts, sensei: Math.floor(Math.random() * STR.en.sensei.length), refused: false };
+    renderOver();
     yesBtn.disabled = false;
     noBtn.disabled = false;
     overOv.hidden = false;
@@ -1137,7 +1333,8 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
   yesBtn.addEventListener('click', () => { if (overReady) startGame(); });
   noBtn.addEventListener('click', () => {
     if (!overReady) return;
-    contQ.textContent = 'だめです。もう一回。';
+    lastOver.refused = true;
+    contQ.textContent = T().noReply;
     yesBtn.disabled = true;
     noBtn.disabled = true;
     sputter();
@@ -1146,7 +1343,7 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
 
   muteBtn.addEventListener('click', () => {
     muted = !muted;
-    muteBtn.textContent = muted ? '音 OFF' : '音 ON';
+    muteBtn.textContent = T().sound(!muted);
     if (muted && fartSnd) { fartSnd.stop(); fartSnd = null; }
     muteBtn.blur();
   });
@@ -1188,7 +1385,7 @@ h2 { font-size: clamp(1.8rem, 7vw, 2.8rem); color: var(--pink); }
     if (data && data.best > best) best = data.best;
     resize();
     reset();
-    renderBest();
+    applyLang();
     requestAnimationFrame(ts => { last = ts; requestAnimationFrame(frame); });
   }
   if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(() => ({ best }));
