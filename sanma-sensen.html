@@ -1,0 +1,2180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- standalone-only -->
+<style>:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }</style>
+<!-- /standalone-only -->
+<title>秋刀魚戦線</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="秋サンマ無料配布、整理券は先着300枚。夜明け前の列で、寒さと尿意と世間体を天秤にかける主婦たちの心理戦。オトナ向けターン制戦略ゲーム。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="秋刀魚戦線">
+<meta property="og:title" content="秋刀魚戦線 〜整理券は三百枚〜">
+<meta property="og:description" content="サンマは一晩、ご近所は一生。夜明け前の整理券争奪戦を、割り込み・デマ・告げ口・飴ちゃん外交で生き抜く主婦の戦略ゲーム。">
+<meta property="og:url" content="https://tarukon5.github.io/todo-app/sanma-sensen.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="秋刀魚戦線 〜整理券は三百枚〜">
+<meta name="twitter:description" content="サンマは一晩、ご近所は一生。整理券をめぐる主婦たちの心理戦。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Potta+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: a harbor before dawn. The sky behind everything brightens turn by turn and the sun climbs out of the sea in the header.
+   The queue is a long fish-crate panel on the left; your status, moves and the gossip feed sit beside it.
+   Every notice that interrupts you is a yellow hand-lettered POP sign taped over the board. */
+@property --sky-top { syntax: '<color>'; inherits: true; initial-value: #10173a; }
+@property --sky-bot { syntax: '<color>'; inherits: true; initial-value: #232a55; }
+:root {
+  --sky-top: #10173a;
+  --sky-bot: #232a55;
+  --sea: #0b1736;
+  --crate: #15214a;        /* トロ箱の藍 */
+  --crate-2: #1c2b5c;
+  --crate-3: #24366e;
+  --crate-line: #2f4482;
+  --ink: #eef1f8;
+  --ink-dim: #a7b5d6;      /* サンマの背の銀青 */
+  --ink-faint: #7383ab;
+  --flag-red: #e2412f;     /* 大漁旗の赤 */
+  --flag-gold: #f2b632;    /* くちばしの黄 */
+  --flag-green: #46b384;
+  --pop: #f7e8a6;          /* 手書きPOPの紙 */
+  --pop-hi: #fff6cf;
+  --pop-ink: #2a2216;
+  --pop-red: #c8321f;
+  --scheme: #3a1f3f;
+  --scheme-line: #7c3550;
+  --good: #7fd6a9;
+  --bad: #ff8a78;
+  --badge-ink: #121735;
+  --font-flag: "Potta One", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font-ui: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+  --font-hand: "Klee One", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  min-height: 100%;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 75%) fixed, var(--sky-bot);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.6;
+  transition: --sky-top 1.4s ease, --sky-bot 1.4s ease;
+}
+button { font: inherit; color: inherit; }
+button:focus-visible, summary:focus-visible { outline: 3px solid var(--flag-gold); outline-offset: 2px; }
+
+/* ---------- header ---------- */
+.harbor {
+  position: relative;
+  overflow: hidden;
+  padding-block: 14px 30px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.sky-deco { position: absolute; inset: 0; pointer-events: none; }
+.sun {
+  position: absolute;
+  left: 58%;
+  bottom: calc(var(--sun, -60) * 1%);
+  width: 64px; height: 64px;
+  margin-left: -32px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, #fff1c4 0%, #ffc066 55%, #ff8d48 100%);
+  box-shadow: 0 0 46px 20px rgba(255, 166, 92, .32);
+  transition: bottom 1.4s ease;
+}
+.sea {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 20px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 34px, rgba(167, 181, 214, .28) 34px 52px, transparent 52px 90px),
+    linear-gradient(180deg, #1a2a58, var(--sea));
+  background-size: 90px 2px, 100% 100%;
+  background-position: 0 6px, 0 0;
+  background-repeat: repeat-x, no-repeat;
+}
+.harbor-inner {
+  position: relative;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sign {
+  background: var(--pop);
+  color: var(--pop-ink);
+  padding: 6px 14px 8px;
+  border-radius: 2px;
+  transform: rotate(-1.2deg);
+  box-shadow: 0 6px 16px -6px rgba(0, 0, 0, .55);
+  min-width: 0;
+}
+.sign-org { margin: 0; font-family: var(--font-hand); font-size: 12px; font-weight: 600; letter-spacing: .04em; }
+.sign-title { margin: 0; font-family: var(--font-flag); font-weight: 400; font-size: clamp(22px, 5vw, 32px); line-height: 1.15; color: var(--pop-red); }
+.sign-title small { font-size: .5em; color: var(--pop-ink); margin-left: .4em; }
+.clock-box {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  column-gap: 12px;
+  background: rgba(13, 20, 48, .82);
+  border: 1px solid var(--crate-line);
+  border-radius: 10px;
+  padding: 6px 14px;
+}
+.clock { grid-row: span 2; font-family: var(--font-flag); font-size: clamp(30px, 7vw, 44px); line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink); }
+.clock-sub { font-size: 12px; color: var(--ink-dim); white-space: nowrap; }
+.clock-sub b { color: var(--flag-gold); font-weight: 700; }
+
+/* ---------- board ---------- */
+.board {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr);
+  padding-block: 0 28px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.panel {
+  background: var(--crate);
+  border: 1px solid var(--crate-line);
+  border-radius: 10px;
+  padding: 14px;
+  min-width: 0;
+  box-shadow: 0 14px 30px -18px rgba(0, 0, 0, .7);
+}
+.side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel h2 {
+  margin: 0 0 10px;
+  font-family: var(--font-flag);
+  font-weight: 400;
+  font-size: 17px;
+  letter-spacing: .03em;
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+}
+.panel h2 small { font-family: var(--font-ui); font-size: 12px; color: var(--ink-dim); letter-spacing: 0; }
+@media (min-width: 780px) {
+  .board { grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); align-items: start; }
+  .queue-panel { grid-row: span 2; position: sticky; top: 12px; }
+  .logp { grid-column: 2; }
+}
+@media (min-width: 1200px) {
+  .board { grid-template-columns: minmax(320px, 380px) minmax(0, 1.15fr) minmax(0, 1fr); }
+  .queue-panel { grid-row: auto; }
+  .logp { grid-column: 3; grid-row: 1; position: sticky; top: 12px; }
+}
+
+/* ---------- queue ---------- */
+.qhead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.qhead .tix { font-size: 13px; color: var(--ink-dim); }
+.qhead .tix b { font-family: var(--font-flag); font-weight: 400; font-size: 20px; color: var(--flag-gold); font-variant-numeric: tabular-nums; }
+.qscroll { max-height: 46vh; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; margin-right: -4px; scrollbar-width: thin; }
+@media (min-width: 780px) { .qscroll { max-height: calc(100vh - 210px); } }
+.crowd { font-size: 12px; color: var(--ink-faint); text-align: center; padding: 6px 0 8px; border-bottom: 1px dashed var(--crate-line); margin-bottom: 6px; }
+.queue { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.qrow { position: relative; }
+.rowbtn {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 2.6em 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: var(--crate-2);
+  text-align: left;
+  cursor: pointer;
+}
+.rowbtn:hover { border-color: var(--crate-line); background: var(--crate-3); }
+.num { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13px; color: var(--ink-faint); text-align: right; }
+.qrow.ticket .num { color: var(--flag-gold); }
+.qrow.me .rowbtn { background: linear-gradient(90deg, rgba(242, 182, 50, .3), rgba(242, 182, 50, .08)); border-color: var(--flag-gold); }
+.qrow.me .who b { color: var(--flag-gold); }
+.qrow.away .rowbtn { background: transparent; border: 1px dashed var(--crate-line); }
+.qrow.away .badge { opacity: .5; }
+.badge {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--c, #7d8bb0);
+  color: var(--badge-ink);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  flex: none;
+}
+.badge.sm { width: 24px; height: 24px; font-size: 12px; }
+.badge.lg { width: 52px; height: 52px; font-size: 24px; }
+.who { min-width: 0; }
+.who b { display: block; font-weight: 700; font-size: 13.5px; line-height: 1.3; }
+.who small { display: block; font-size: 11px; color: var(--ink-dim); line-height: 1.35; }
+.tail { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.dots { display: flex; gap: 2px; }
+.dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, .14); }
+.dots i.on { background: #f08ab0; }
+.chips { display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; }
+.chip { font-size: 10px; line-height: 1.5; padding: 0 6px; border-radius: 99px; background: rgba(255, 255, 255, .1); color: var(--ink-dim); white-space: nowrap; }
+.chip.warn { background: rgba(226, 65, 47, .22); color: #ffb3a6; }
+.chip.ok { background: rgba(70, 179, 132, .2); color: var(--good); }
+.chip.gold { background: rgba(242, 182, 50, .2); color: var(--flag-gold); }
+.rope {
+  list-style: none;
+  margin: 4px 0;
+  height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px;
+  background: repeating-linear-gradient(-45deg, var(--flag-red) 0 9px, #f4ede0 9px 18px);
+}
+.rope span { background: var(--crate); color: var(--flag-gold); padding: 0 10px; border-radius: 3px; font-family: var(--font-flag); font-size: 12.5px; line-height: 1.6; }
+.awaybox { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--crate-line); font-size: 12px; color: var(--ink-dim); }
+.awaybox ul { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+
+/* ---------- me ---------- */
+.me-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.me-no {
+  font-family: var(--font-flag);
+  font-size: 30px;
+  line-height: 1;
+  color: var(--pop-red);
+  background: var(--pop);
+  padding: 6px 10px 4px;
+  border-radius: 3px;
+  transform: rotate(-2deg);
+  font-variant-numeric: tabular-nums;
+}
+.me-no small { font-size: 12px; font-family: var(--font-ui); color: var(--pop-ink); margin-right: 2px; }
+.me-status { font-size: 14px; min-width: 0; }
+.me-status b { font-size: 16px; }
+.me-status .in { color: var(--good); }
+.me-status .out { color: var(--bad); }
+.gauges { display: grid; gap: 7px; }
+.gauge { display: grid; grid-template-columns: 5.2em minmax(0, 1fr) 1.8em; align-items: center; gap: 8px; font-size: 12.5px; }
+.gauge .gl { color: var(--ink-dim); white-space: nowrap; }
+.gauge .gv { font-variant-numeric: tabular-nums; text-align: right; font-weight: 700; }
+.gauge.danger .gl, .gauge.danger .gv { color: var(--bad); }
+.cells { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 2px; }
+.cells i { height: 10px; border-radius: 2px; background: rgba(255, 255, 255, .08); }
+.cells i.on { background: var(--g); }
+.gauge.danger .cells i.on { animation: blink 1.2s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: .45; } }
+.items { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.item { font-size: 12px; padding: 3px 9px; border-radius: 99px; border: 1px solid var(--crate-line); color: var(--ink-dim); }
+.item b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.reqs { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.req {
+  font-size: 12.5px;
+  background: #e9f7e4;
+  color: #1e3324;
+  border-radius: 12px 12px 12px 3px;
+  padding: 6px 10px;
+  align-self: flex-start;
+  max-width: 100%;
+}
+.req b { font-weight: 700; }
+.req small { color: #4b6b52; margin-left: 4px; }
+.alert { margin-top: 10px; font-size: 13px; padding: 8px 10px; border-radius: 6px; background: rgba(226, 65, 47, .18); color: #ffc2b8; }
+
+/* ---------- actions ---------- */
+.agroup + .agroup { margin-top: 14px; }
+.agroup h3 { margin: 0 0 8px; font-weight: 700; font-size: 13.5px; display: flex; gap: 8px; align-items: center; }
+.agroup h3 small { font-weight: 400; font-size: 11.5px; color: var(--ink-dim); }
+.seal {
+  display: inline-grid; place-items: center;
+  width: 22px; height: 22px;
+  border: 2px solid currentColor;
+  border-radius: 4px;
+  font-family: var(--font-flag);
+  font-size: 12px;
+  line-height: 1;
+  transform: rotate(-6deg);
+  flex: none;
+}
+.seal.mi { color: var(--flag-green); }
+.seal.sha { color: var(--flag-gold); }
+.seal.bo { color: var(--flag-red); }
+.abtns { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 158px), 1fr)); gap: 8px; }
+.abtn {
+  text-align: left;
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 8px 11px 9px;
+  border-radius: 8px;
+  border: 1px solid var(--crate-line);
+  background: var(--crate-2);
+  cursor: pointer;
+  transition: transform .12s ease, border-color .12s ease, background .12s ease;
+  min-width: 0;
+}
+.abtn b { font-size: 14px; font-weight: 700; }
+.abtn small { font-size: 11.5px; color: var(--ink-dim); line-height: 1.45; }
+.abtn:hover:not(:disabled) { border-color: var(--ink-dim); background: var(--crate-3); transform: translateY(-1px); }
+.abtn:disabled { opacity: .42; cursor: not-allowed; }
+.abtn.scheme { background: var(--scheme); border-color: var(--scheme-line); }
+.abtn.scheme:hover:not(:disabled) { background: #4a2650; border-color: #b34f6e; }
+.abtn.urgent { border-color: var(--flag-red); box-shadow: 0 0 0 2px rgba(226, 65, 47, .35); }
+.turnnote { margin-top: 12px; font-size: 12px; color: var(--ink-faint); }
+
+/* ---------- memo ---------- */
+.memo-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.memo-list li { font-family: var(--font-hand); font-size: 13.5px; line-height: 1.6; padding: 8px 10px; background: rgba(247, 232, 166, .08); border-radius: 6px; }
+.memo-list li .src { display: block; font-family: var(--font-ui); font-size: 11px; color: var(--ink-faint); }
+.memo-empty { font-size: 13px; color: var(--ink-faint); margin: 0; }
+.ev { color: #ffc2b8; }
+
+/* ---------- log ---------- */
+.logp { background: rgba(10, 16, 40, .72); }
+.log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 70vh; overflow-y: auto; scrollbar-width: thin; padding-right: 4px; }
+@media (min-width: 1200px) { .log { max-height: calc(100vh - 120px); } }
+.ltime { font-family: var(--font-flag); font-size: 13px; color: var(--flag-gold); border-bottom: 1px solid var(--crate-line); padding-top: 4px; }
+.lsay { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 8px; align-items: start; }
+.lsay b { font-size: 12px; color: var(--ink-dim); font-weight: 500; }
+.lsay p { margin: 0; font-size: 14px; }
+.honne {
+  margin-top: 3px !important;
+  font-family: var(--font-hand);
+  font-size: 13px !important;
+  color: #f3b5c9;
+  padding: 3px 8px;
+  border: 1px dashed rgba(243, 181, 201, .45);
+  border-radius: 10px;
+  display: inline-block;
+}
+.lnar { font-size: 13.5px; color: var(--ink); }
+.lsys { font-size: 12.5px; display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; color: var(--ink-dim); }
+.lsys .delta { font-weight: 700; font-size: 11.5px; padding: 0 7px; border-radius: 99px; white-space: nowrap; }
+.lsys.good .delta { background: rgba(127, 214, 169, .18); color: var(--good); }
+.lsys.bad .delta { background: rgba(255, 138, 120, .18); color: var(--bad); }
+.lsys.info .delta { background: rgba(242, 182, 50, .18); color: var(--flag-gold); }
+.lintel { font-family: var(--font-hand); font-size: 13.5px; padding: 6px 10px; border-radius: 6px; background: rgba(247, 232, 166, .1); }
+.lintel em { font-style: normal; font-family: var(--font-ui); font-size: 11px; color: var(--flag-gold); display: block; }
+
+/* ---------- POP overlay ---------- */
+.overlay {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(6, 9, 26, .62);
+  padding-block: 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  overflow-y: auto;
+}
+.pop {
+  position: relative;
+  width: min(100%, 31rem);
+  margin: auto;
+  background: var(--pop);
+  color: var(--pop-ink);
+  padding: 24px 22px 18px;
+  border-radius: 2px;
+  transform: rotate(-.7deg);
+  box-shadow: 0 22px 44px -12px rgba(0, 0, 0, .7);
+  font-family: var(--font-hand);
+}
+.pop::before, .pop::after {
+  content: "";
+  position: absolute; top: -10px;
+  width: 84px; height: 22px;
+  background: rgba(255, 255, 255, .55);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+}
+.pop::before { left: 18px; transform: rotate(-5deg); }
+.pop::after { right: 18px; transform: rotate(4deg); }
+.pop h2 { margin: 0 0 8px; font-family: var(--font-flag); font-weight: 400; font-size: 26px; line-height: 1.2; color: var(--pop-red); text-wrap: balance; }
+.pop .kicker { font-family: var(--font-ui); font-size: 11.5px; letter-spacing: .12em; color: #6b5a33; margin: 0 0 2px; }
+.pop .body { margin: 0; font-size: 16px; line-height: 1.85; white-space: pre-line; }
+.pop .hint { margin: 12px 0 0; font-size: 14.5px; line-height: 1.7; padding: 8px 12px; background: var(--pop-hi); border-radius: 4px; white-space: pre-line; }
+.popt { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.popt button {
+  font-family: var(--font-ui);
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 2px solid var(--pop-ink);
+  background: var(--pop-hi);
+  color: var(--pop-ink);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+}
+.popt button small { display: block; font-weight: 400; font-size: 12.5px; color: #5a4a2c; }
+.popt button:hover { background: var(--pop-ink); color: var(--pop); }
+.popt button:hover small { color: var(--pop); }
+.popt button:focus-visible { outline-color: var(--pop-red); }
+.prof { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; margin-bottom: 10px; }
+.prof h2 { margin: 0; font-size: 22px; }
+.prof .role { font-family: var(--font-ui); font-size: 12.5px; color: #5a4a2c; }
+.traits { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5em, 1fr)); gap: 4px 12px; margin: 10px 0 0; font-family: var(--font-ui); font-size: 13px; }
+.traits div { display: flex; justify-content: space-between; gap: 6px; border-bottom: 1px dotted rgba(42, 34, 22, .3); }
+.traits dt { color: #5a4a2c; }
+.traits dd { margin: 0; font-weight: 700; }
+
+/* ---------- title & end ---------- */
+.screen {
+  min-height: 100vh;
+  padding-block: 28px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+.hero { display: flex; flex-direction: column; gap: 10px; }
+.hero .eyebrow { margin: 0; font-size: 13px; letter-spacing: .14em; color: var(--ink-dim); }
+.hero h1 {
+  margin: 0;
+  font-family: var(--font-flag);
+  font-weight: 400;
+  font-size: clamp(60px, 15vw, 136px);
+  line-height: 1;
+  color: #fbfbf6;
+  text-shadow: 5px 5px 0 var(--flag-red);
+  letter-spacing: .02em;
+}
+.hero h1 small { display: block; font-size: .24em; color: var(--flag-gold); text-shadow: none; margin-top: 12px; letter-spacing: .1em; }
+.tagline { margin: 0; font-family: var(--font-hand); font-size: clamp(18px, 3.6vw, 24px); font-weight: 600; }
+.sanma-svg { width: min(100%, 560px); height: auto; display: block; margin-top: 4px; }
+.poster {
+  background: var(--pop);
+  color: var(--pop-ink);
+  padding: 18px 20px 16px;
+  border-radius: 2px;
+  transform: rotate(-.8deg);
+  box-shadow: 0 16px 34px -14px rgba(0, 0, 0, .7);
+  font-family: var(--font-hand);
+  max-width: 38rem;
+}
+.poster p { margin: 0; }
+.poster .p1 { font-size: 13px; font-weight: 600; }
+.poster .p2 { font-family: var(--font-flag); font-size: clamp(24px, 5vw, 34px); color: var(--pop-red); line-height: 1.25; }
+.poster .p3 { font-size: 16px; margin-top: 4px; }
+.poster .p3 b { color: var(--pop-red); font-size: 1.25em; }
+.lead { margin: 0; max-width: 40rem; font-size: 16px; line-height: 1.9; }
+.starts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 12px; }
+.start {
+  text-align: left;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--crate-line);
+  background: var(--crate);
+  cursor: pointer;
+  display: flex; flex-direction: column; gap: 6px;
+  transition: transform .15s ease, border-color .15s ease;
+}
+.start:hover { transform: translateY(-2px); border-color: var(--flag-gold); }
+.start .t { font-family: var(--font-flag); font-size: 28px; line-height: 1; color: var(--flag-gold); }
+.start .n { font-weight: 700; font-size: 15px; }
+.start .d { font-size: 13px; color: var(--ink-dim); line-height: 1.6; }
+.start .d span { display: block; }
+.start .stat { font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+.howto { background: rgba(10, 16, 40, .7); border: 1px solid var(--crate-line); border-radius: 10px; padding: 12px 16px; }
+.howto summary { cursor: pointer; font-weight: 700; }
+.howto ol { margin: 10px 0 4px; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; font-size: 14px; max-width: 46rem; }
+.best-line { margin: 0; font-size: 13px; color: var(--ink-dim); }
+
+.end-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (min-width: 820px) { .end-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.stub {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px;
+  background: #f6c9d2;
+  color: #3a1820;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 18px 36px -14px rgba(0, 0, 0, .7);
+  transform: rotate(-1.5deg);
+  max-width: 30rem;
+}
+.stub.none { background: #c9ccd6; color: #2c3040; }
+.stub-l { padding: 16px 18px; display: flex; flex-direction: column; gap: 2px; }
+.stub-l .o { font-size: 12px; font-weight: 700; }
+.stub-l .k { font-family: var(--font-flag); font-size: 24px; line-height: 1.2; }
+.stub-l .no { font-family: var(--font-flag); font-size: 46px; line-height: 1.1; color: #b3261e; font-variant-numeric: tabular-nums; }
+.stub.none .stub-l .no { color: #555b70; }
+.stub-l .s { font-size: 12px; }
+.stub-r { border-left: 3px dotted rgba(0, 0, 0, .35); display: grid; place-items: center; text-align: center; font-size: 12px; padding: 8px; writing-mode: vertical-rl; letter-spacing: .2em; font-weight: 700; }
+.stamp {
+  position: absolute; right: 100px; top: 50%;
+  transform: translateY(-50%) rotate(-14deg);
+  border: 3px solid #b3261e;
+  color: #b3261e;
+  font-family: var(--font-flag);
+  font-size: 22px;
+  padding: 2px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .25);
+}
+.stub.none .stamp { border-color: #3a3f55; color: #3a3f55; }
+.rank-k { margin: 0; font-size: 13px; letter-spacing: .14em; color: var(--ink-dim); }
+.rank-t { margin: 2px 0 0; font-family: var(--font-flag); font-weight: 400; font-size: clamp(30px, 6vw, 46px); line-height: 1.2; color: #fbfbf6; text-shadow: 3px 3px 0 var(--flag-red); text-wrap: balance; }
+.epi { margin: 10px 0 0; font-family: var(--font-hand); font-size: 18px; line-height: 1.9; max-width: 34rem; }
+.notes { margin: 10px 0 0; padding-left: 1.2em; font-size: 14px; color: var(--ink-dim); display: flex; flex-direction: column; gap: 4px; }
+.score { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.score td { padding: 7px 4px; border-bottom: 1px solid var(--crate-line); }
+.score td:last-child { text-align: right; font-weight: 700; }
+.score tr.total td { border-bottom: 0; font-size: 18px; color: var(--flag-gold); font-family: var(--font-flag); font-weight: 400; }
+.statchips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.bigbtn {
+  padding: 12px 22px;
+  border-radius: 8px;
+  border: 0;
+  background: var(--flag-gold);
+  color: #241a05;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+.bigbtn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--ink-dim); }
+.bigbtn:hover { filter: brightness(1.08); }
+.newbest { color: var(--flag-gold); font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="titleScreen" class="screen" hidden>
+  <div class="wrap">
+    <div class="hero">
+      <p class="eyebrow">十月某日　午前四時　さざなみ漁港</p>
+      <h1>秋刀魚戦線<small>〜 整理券は三百枚 〜</small></h1>
+      <svg class="sanma-svg" viewBox="0 0 420 64" role="img" aria-label="サンマのイラスト">
+        <defs>
+          <linearGradient id="sanmaBody" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#263f78"/>
+            <stop offset=".42" stop-color="#5f7fb4"/>
+            <stop offset=".58" stop-color="#c3d1e6"/>
+            <stop offset="1" stop-color="#f2f5fb"/>
+          </linearGradient>
+        </defs>
+        <path d="M30 32 L4 12 L14 32 L4 52 Z" fill="#2b4478"/>
+        <path d="M28 32 C70 14 300 12 368 26 L404 31 L368 37 C300 50 70 50 28 32 Z" fill="url(#sanmaBody)"/>
+        <path d="M60 30 C150 26 280 26 352 30" stroke="#8fa6cc" stroke-width="1.2" fill="none"/>
+        <path d="M150 17 L160 10 L166 16 Z M190 15 L198 9 L204 15 Z M110 19 L118 13 L124 18 Z" fill="#2b4478"/>
+        <path d="M396 31 L414 33 L398 36 Z" fill="#f2c230"/>
+        <circle cx="356" cy="29" r="5.5" fill="#f4f6fb"/>
+        <circle cx="357" cy="29" r="3" fill="#0d1230"/>
+      </svg>
+      <p class="tagline">サンマは一晩、ご近所は一生。</p>
+    </div>
+
+    <div class="poster">
+      <p class="p1">さざなみ漁港　秋の大感謝祭</p>
+      <p class="p2">生サンマ　無料配布！</p>
+      <p class="p3">先着 <b>300</b> 名様　お一人様 3 尾まで<br>整理券は午前 <b>7:00</b> より配布　※場所取り・割り込みはご遠慮ください</p>
+    </div>
+
+    <p class="lead">あなたは町内の主婦。整理券の列に並び、7時の時点で300番以内にいれば勝ち。ただし秋の夜明けは冷え、膀胱には限界があり、列にはご近所さんの目がある。割り込みもデマも告げ口も、見られなければ無かったことになる。見られれば、明日からのゴミ捨て場が戦場になる。</p>
+
+    <section aria-labelledby="startHead">
+      <h2 id="startHead" style="font-family: var(--font-flag); font-weight: 400; font-size: 20px; margin: 0 0 10px;">何時に家を出る？</h2>
+      <div class="starts" id="starts"></div>
+    </section>
+
+    <details class="howto">
+      <summary>遊び方</summary>
+      <ol>
+        <li>1手は10分。7:00の時点で整理番号が整理券の枚数以内なら、サンマ3尾が手に入る。</li>
+        <li>毎手「身じたく」をひとつ（任意）と、「行動」をひとつ選ぶ。行動を選ぶと時間が進む。</li>
+        <li>ぬくもりが0になるか、トイレが10になると列を離れるしかない。前後の人に場所を見ててもらえれば戻れる。頼めるかどうかは好感度しだい。</li>
+        <li>割り込み・デマ・告げ口は強い。ただし見られると世間体が落ちる。会長夫人の前では1.5倍、口の軽い人やインスタ主婦に見られると、さらに広まる。</li>
+        <li>世間話をすると、相手の性格と本音（ログにさかのぼって表示）、町内の秘密がわかる。秘密は告げ口の証拠にも、噂の真偽の手がかりにもなる。</li>
+        <li>好感度の高いご近所さんが整理券を取れば、サンマのおすそわけがもらえることがある。並ばずに勝つ道もある。</li>
+        <li>最後はサンマの尾数、世間体、家庭円満で評価される。サンマを得て町内を失うのも、ひとつの結末。</li>
+      </ol>
+    </details>
+    <p class="best-line" id="bestLine"></p>
+  </div>
+</div>
+
+<div id="gameScreen" hidden>
+  <header class="harbor">
+    <div class="sky-deco" aria-hidden="true"><div class="sun" id="sun"></div><div class="sea"></div></div>
+    <div class="harbor-inner">
+      <div class="sign">
+        <p class="sign-org">さざなみ漁港 秋の大感謝祭</p>
+        <p class="sign-title">秋刀魚戦線<small>整理券は7:00配布</small></p>
+      </div>
+      <div class="clock-box" aria-live="polite">
+        <span class="clock" id="clock">5:00</span>
+        <span class="clock-sub">日の出 5:48</span>
+        <span class="clock-sub" id="clockSub"></span>
+      </div>
+    </div>
+  </header>
+  <main class="board">
+    <section class="panel queue-panel" aria-labelledby="qTitle">
+      <div class="qhead">
+        <h2 id="qTitle" style="margin:0">列<small>名前を押すと人物メモ</small></h2>
+        <span class="tix" id="tix"></span>
+      </div>
+      <div class="qscroll" id="qscroll">
+        <div class="crowd" id="crowd"></div>
+        <ol class="queue" id="queue"></ol>
+        <div class="awaybox" id="awayBox" hidden></div>
+      </div>
+    </section>
+    <div class="side">
+      <section class="panel" id="me" aria-label="あなたの状態"></section>
+      <section class="panel" id="actions" aria-label="行動"></section>
+      <section class="panel" id="memo" aria-label="井戸端メモ"></section>
+    </div>
+    <section class="panel logp" aria-labelledby="logTitle">
+      <h2 id="logTitle">井戸端ログ<small>新しい順。世間話をした相手は本音も見える</small></h2>
+      <ol class="log" id="log"></ol>
+    </section>
+  </main>
+</div>
+
+<div id="endScreen" class="screen" hidden></div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="pop" id="pop" role="dialog" aria-modal="true" aria-labelledby="popTitle"></div>
+</div>
+
+<script>
+'use strict';
+const HEADLESS = typeof window === 'undefined' || !!window.__SANMA_HEADLESS;
+if (!HEADLESS) document.documentElement.lang = 'ja';
+
+// ===== 小道具 =====
+const R = Math.random;
+const chance = p => R() < p;
+const pick = a => a[Math.floor(R() * a.length)];
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const fmt = m => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const PU = 1;            // あなた
+const END_MIN = 420;     // 7:00
+const BEST_KEY = 'sanma-sensen-best';
+
+// ===== 出陣 =====
+const START = {
+  early: { label: '4:30着', name: '夜明け前の覚悟', level: 'やさしい', startMin: 270, startNo: 301, warmth: 6, toilet: 3, tea: 3, candy: 3, kairo: 1, family: 4,
+    pros: 'ラインまであと1人からスタート', cons: '2時間半の長期戦。物音で夫を起こした' },
+  normal: { label: '5:00着', name: '主婦の標準', level: 'ふつう', startMin: 300, startNo: 306, warmth: 7, toilet: 2, tea: 3, candy: 4, kairo: 1, family: 5,
+    pros: 'ラインまで6人。道具もそこそこ', cons: '家族のLINEが容赦なく飛んでくる' },
+  late: { label: '5:30着', name: '作り置き済みの余裕', level: 'むずかしい', startMin: 330, startNo: 309, warmth: 9, toilet: 1, tea: 3, candy: 6, kairo: 2, family: 7,
+    pros: '朝食も弁当も作り置き。体も温かい', cons: 'ラインまで9人。残り1時間半' },
+};
+
+// ===== 登場人物 =====
+// alert=警戒心 gull=信じやすさ bold=図太さ kind=人の良さ mouth=口の軽さ bladder=トイレの近さ quit=帰りやすさ
+const CAST = {
+  tome:    { name: '山本トメ', short: 'ト', role: '町内最古参・82歳', desc: '昭和三十三年から毎年並んでいる。ババシャツ三枚重ね。噂の真偽を見抜く。', c: '#b39ae0', alert: .9, gull: .05, bold: .1, kind: .5, mouth: 1, bladder: .03, quit: 0 },
+  kito:    { name: '鬼頭和代', short: '鬼', role: '町内会長夫人・64歳', desc: '見ている。すべて見ている。来春の会長選に向けて票固め中。', c: '#ef8a76', alert: .75, gull: .15, bold: .05, kind: .3, mouth: .8, bladder: .05, quit: .005 },
+  saionji: { name: '西園寺麗子', short: '麗', role: '坂の上のタワマン・41歳', desc: 'サンマは別に欲しくない。坂の下の人たちに負けたくないだけ。', c: '#e6b3d4', alert: .55, gull: .3, bold: .45, kind: .15, mouth: .6, bladder: .06, quit: .02 },
+  okuma:   { name: '大熊春子', short: '熊', role: '大阪出身・飴ちゃん常備・58歳', desc: '声が大きい。割り込みは「詰めただけ」と言い張る。', c: '#f3ad5c', alert: .5, gull: .4, bold: .7, kind: .7, mouth: .9, bladder: .07, quit: .005 },
+  sasaki:  { name: '佐々木恵美', short: '佐', role: 'ママ友LINE八つ所属・45歳', desc: '「ここ、友達並んでて〜」の使い手。', c: '#6fd0b6', alert: .4, gull: .5, bold: .75, kind: .35, mouth: .7, bladder: .06, quit: .01 },
+  hoshino: { name: '星野みゆ', short: '星', role: 'インスタ主婦・29歳', desc: '#秋刀魚 #朝活 #丁寧な暮らし。画面から目を離さない。見たものは投稿する。', c: '#f597bb', alert: .15, gull: .8, bold: .2, kind: .55, mouth: .5, bladder: .08, quit: .025 },
+  tanaka:  { name: '田中良子', short: '田', role: '夜勤パート明け・52歳', desc: '立ったまま寝られる。とにかく人がいい。', c: '#9fc1e6', alert: .2, gull: .6, bold: .05, kind: .9, mouth: .25, bladder: .14, quit: .025 },
+  kaneda:  { name: '金田ヨシエ', short: '金', role: '場所取り常習・70歳', desc: '並ぶのは孫。本人は車でワイドショー。', c: '#d8c56a', alert: .5, gull: .3, bold: .9, kind: .15, mouth: .5, bladder: .04, quit: .005 },
+  wakana:  { name: '若菜ひかり', short: '若', role: '新婚・初参加・26歳', desc: '町内デビュー戦。失敗は許されない。断れない性格。', c: '#a8db8c', alert: .3, gull: .9, bold: 0, kind: .95, mouth: .15, bladder: .07, quit: .02 },
+};
+const PROXY = { name: '若い男性', short: '？', c: '#c9c3a0', alert: .25, gull: .5, bold: .1, kind: .4, mouth: .2, bladder: .05, quit: 0 };
+const MOBS = [
+  { name: '知らない奥さん', short: '奥', role: '顔は見たことある', desc: '名前は知らない。向こうもたぶん知らない。', alert: .4, gull: .45, bold: .25, kind: .5, mouth: .4, bladder: .07, quit: 0.016 },
+  { name: 'ジャージのご主人', short: '夫', role: '妻に派遣された', desc: '「並んどいて」の一言で送り出されたらしい。', alert: .3, gull: .4, bold: .15, kind: .5, mouth: .2, bladder: .08, quit: 0.024 },
+  { name: '犬連れのご婦人', short: '犬', role: 'トイプードル同伴', desc: '犬も並んでいる。犬の分の整理券はない。', alert: .45, gull: .35, bold: .2, kind: .6, mouth: .6, bladder: .06, quit: 0.02 },
+  { name: '近所の大学生', short: '学', role: '仕送り前', desc: 'サンマは今週唯一のタンパク質。', alert: .35, gull: .55, bold: .35, kind: .45, mouth: .3, bladder: .05, quit: 0.012 },
+  { name: '隣町の奥さん', short: '隣', role: 'アウェイなのに強気', desc: '町内のルールは知らない、という顔をしている。', alert: .4, gull: .3, bold: .5, kind: .3, mouth: .5, bladder: .06, quit: 0.012 },
+  { name: '自転車のおばあちゃん', short: '婆', role: '電動アシスト', desc: '坂道は無敵。列でも無敵。', alert: .6, gull: .3, bold: .3, kind: .55, mouth: .7, bladder: .06, quit: 0.008 },
+];
+const FRIEND = { name: '佐々木さんの友達', short: '友', role: '合流組', desc: '「恵美ちゃんに呼ばれて〜」', c: '#a8e3d2', alert: .3, gull: .5, bold: .4, kind: .4, mouth: .5, bladder: .06, quit: .02 };
+const MIL = { name: 'お義母さん', short: '姑', role: 'あなたの義母', desc: '「たまたま」並んでいた。たまたま。', c: '#e8cf8a', alert: .6, gull: .2, bold: .6, kind: .4, mouth: .8, bladder: .04, quit: 0 };
+const ME = { name: 'あなた', short: '私', c: '#f2b632', alert: 1, gull: 0, bold: 0, kind: 0, mouth: 0, bladder: 0, quit: 0 };
+
+// ===== セリフ（建前, 本音） =====
+const LINES = {
+  tome: {
+    talk: [['あんた、若いのに早起きだねえ', '若いって言っときゃ、この年代は機嫌がいいんだ'], ['昭和の頃はね、サンマなんて猫またぎって言ったもんさ', '今年もあたしが町内で一番の古株だよ']],
+    chat: [['列は姿勢だよ。背筋伸ばしな', '六十年並んでりゃ、誰が何をするか全部わかるのさ'], ['寒いねえ。ババシャツ三枚じゃ足りなかったよ', '四枚目は腹巻きだけどね']],
+    notice: [['ちょいと。順番ってもんがあるだろ', '見てたよ。全部見てたよ']],
+    holdYes: [['いいよ、行っといで', '貸しにしとくよ']],
+    holdNo: [['自分の場所は自分で守りな', '甘えるんじゃないよ']],
+    askHold: [['ちょいと、はばかりに行ってくるよ。見といておくれ', 'これで裏切ったら町内中に言いふらすからね']],
+    quit: [['今年はこの辺にしとくかね', '腰がもう限界だよ']],
+    back: [['なんだい、なかったじゃないか', '言い出しっぺの顔は覚えたよ']],
+    cutYou: [['あたしゃ前からここにいたよ', '年寄りには逆らえないだろ？']],
+    betrayed: [['…へえ。そういう人だったのかい', '明日には町内中が知ってるよ']],
+    tracer: [['言い出しっぺは、あんただね', '六十年並んでりゃ、嘘の匂いはすぐわかる']],
+  },
+  kito: {
+    talk: [['あら、今年もご苦労さま', '名前なんだったかしら。まあいいわ、票は票よ'], ['ゴミ当番、来月よろしくね', 'この人、先月ネット出し忘れてたわね']],
+    chat: [['みなさん、きちんと並びましょうね', '来春の会長選、票固めはこの列から始まるのよ'], ['こういう時こそ、町内の品格が出るのよね', '品格のない人は、全員メモしてあるわ']],
+    notice: [['まあ。見ましたよ、今の', '回覧板の文面、もう浮かんだわ']],
+    holdYes: [['ええ、どうぞ。町内は助け合いですもの', 'これで一票']],
+    holdNo: [['ごめんなさいね、立場上、特定の方だけというのは', '私が見張り番なんて、するわけないでしょう']],
+    askHold: [['ちょっと失礼。少しだけ場所をお願いできるかしら', 'まさか会長夫人の場所を詰めたりしないわよね？']],
+    quit: [['町内会の用事があるので失礼するわ', 'サンマより会長選よ']],
+    back: [['…まさか、町内の誰かが嘘を？', '犯人捜しは得意なの']],
+    cutYou: [['あら、ここ私の場所だったはずよ', '会長夫人に意見できる人なんていないわよね']],
+    betrayed: [['そう。覚えておきますね', '来年の班長、決まりね']],
+    approve: [['よく言ってくれたわ。町内の鑑ね', 'これで一票']],
+  },
+  saionji: {
+    talk: [['朝の空気って気持ちいいわよね', '早く帰ってシャワー浴びたい。なんで私並んでるの'], ['うち、普段は豊洲から取り寄せてるの', 'でも「無料」って聞くと、体が勝手に']],
+    chat: [['魚焼きグリル？うちのは飾りよ', '煙が出る料理は管理規約で実質禁止なの'], ['（電話で）ええ、今ちょっと地域活動中なの', '絶対に負けたくない。坂の下の人たちには']],
+    notice: [['ちょっと。今、前に入りました？', 'こういう人がいるから坂の下は']],
+    holdYes: [['…別にいいけど。早くしてね', '貸しは高くつくわよ']],
+    holdNo: [['ごめんなさい、私そういうの責任持てないので', '他人の場所なんて知らないわよ']],
+    askHold: [['悪いけど、ちょっと場所見ててくださる？', '詰めたら一生口きかない']],
+    quit: [['もういいわ。ネットで買う', '寒さに負けたんじゃない。時間がもったいないだけ']],
+    back: [['…なかったわよ？誰が言ったの', 'こういう嘘、坂の下っぽい']],
+    cutYou: [['あら、私ここでしたけど？', '堂々としてれば誰も文句言わないのよ']],
+    betrayed: [['…ふうん。覚えておくわ', '一生口きかない']],
+  },
+  okuma: {
+    talk: [['あんた飴ちゃん食べる？ほれ', 'これで今日四人目。飴ちゃん外交は投資やで'], ['大阪やったらな、こんな列とっくに崩壊しとるで', '崩壊させたろか思てる']],
+    chat: [['寒いなあ！誰かカイロ持ってへん？', '持ってたら一個もろたろ'], ['うち去年もここ並んでん。三尾もろたで', '去年は二回並んだんやけどな']],
+    notice: [['ちょっとあんた！今なにしたん！', 'うちが言うんもアレやけどな']],
+    holdYes: [['ええよええよ、行っといで！', '帰ってくるまでに半歩くらい詰めとこ']],
+    holdNo: [['ごめんやで〜、うちも余裕ないねん', 'なんでうちが']],
+    askHold: [['ちょっとトイレ行ってくるわ、見といて！', '帰ってきて場所なかったら大声出すで']],
+    quit: [['あかん、旦那の弁当忘れとった！', '弁当はまあええけど、寒すぎるわ']],
+    back: [['なんやねん！なんもあらへんかったで！', '言うたん誰や。顔見たらわかるで']],
+    cutYou: [['ごめんやで〜、ちょっと詰めただけやねん', '詰めた言うたもん勝ちや']],
+    betrayed: [['あんた、ええ根性しとるなあ！', '町内のLINEに流したろ']],
+    rumor: [['ちょっと！裏の第二駐車場でも整理券配り始めたって！', 'さあ、何人釣れるやろな']],
+  },
+  sasaki: {
+    talk: [['え〜、奥さんもLINEグループ入ってたっけ？', '入れてあげない。情報は武器だから'], ['PTA、今年ほんと大変で〜', '話を振っとけば警戒されないのよ']],
+    chat: [['（電話）うん、今どこ？うんうん、こっちこっち', 'あと二人ねじ込めば完璧'], ['みんなで並ぶと楽しいよね〜', 'みんな＝私の友達']],
+    notice: [['え、今の割り込みじゃない？', '割り込みは友達がやるから許されるのよ']],
+    holdYes: [['いいよ〜、行ってきな〜', 'ついでに友達入れとこ']],
+    holdNo: [['ごめ〜ん、今ちょっとLINE返してて', '既読つけるほうが大事']],
+    askHold: [['ごめん、ちょっとトイレ！見てて〜', '詰めたらグループで晒すからね']],
+    quit: [['あ、子どもの朝練だ！ごめん帰る〜', '寒いし、もういいや']],
+    back: [['え、ガセ？マジで？', 'スクショ撮ってある。誰が言ったか']],
+    cutYou: [['あ、ごめ〜ん、ここ友達の場所で〜', '友達って言えば全部通る']],
+    betrayed: [['…今のスクショしたから', 'グループ八つに流す']],
+    merge: [['あ、こっちこっち〜！ここ友達の分も並んでて〜', 'ねじ込み完了']],
+    rumor: [['ねえ聞いた？裏の第二駐車場でも配ってるって、グループで回ってる！', '本当かどうかは知らない']],
+  },
+  hoshino: {
+    talk: [['あっ、おはようございます！寒いですね〜', '映えない会話はノーカン'], ['これストーリーに上げてもいいですか？顔は隠すので', 'いいねの数だけ寒さに耐えられる']],
+    chat: [['#秋刀魚 #朝活 #丁寧な暮らし…っと', '寒すぎ無理。いいね来ないと割に合わない'], ['朝焼け、エモ〜い', 'フィルターかければもっとエモい']],
+    notice: [['え、今の…撮っちゃった', '炎上案件きた']],
+    holdYes: [['あ、全然いいですよ〜', '「優しいご近所さん」って投稿しよ']],
+    holdNo: [['すみません、今ライブ配信中で…', '画角に入ってこないで']],
+    askHold: [['すみません、ちょっとお手洗い！', 'バッテリーも膀胱も限界']],
+    quit: [['寒すぎるんで、今日はストーリーだけにします', '撮れ高はもう十分']],
+    back: [['え、なかったんですけど…', 'これは晒し案件']],
+    cutYou: [['（画面を見たまま一歩前へ）', '前とか見てないし。知らんし']],
+    betrayed: [['…え、ひどくないですか', 'これ投稿します']],
+  },
+  tanaka: {
+    talk: [['あら、どうも…寝てないから変な顔でしょ', '夜勤明けで並ぶとか、正気じゃないわね私'], ['うちの子、サンマだけは食べるのよ', 'サンマのためなら徹夜もする。母は強い']],
+    chat: [['…zzz…はっ、寝てないわよ', '寝てた'], ['腰が…ああ、腰が…', '早く帰って布団に入りたい']],
+    notice: [['え？あら…前に誰か…？', '気のせいかしら。眠い']],
+    holdYes: [['いいわよ、行ってらっしゃい', '人に親切にすると眠気が飛ぶのよね']],
+    holdNo: [['ごめんなさいね、立ってるのがやっとで…', '人の場所まで責任持てない']],
+    askHold: [['ごめんなさい、お手洗い…場所見ててもらえる？', 'この人なら大丈夫そう']],
+    quit: [['もう限界…帰って寝るわ', 'サンマより布団']],
+    back: [['あら、なかったわ…あたしったら', '寝ぼけてたのかしら']],
+    cutYou: [['（ふらっと前に）あら…ごめんなさい、よろけちゃって', '本当によろけただけ']],
+    betrayed: [['…そう。あなたもそうなのね', '人を信じたあたしが馬鹿だった']],
+  },
+  kaneda: {
+    talk: [['あら奥さん。孫？さあ、何のことかしら', 'バレてないバレてない'], ['並ぶのは若い人の仕事よ', '三千円払ってるもの']],
+    chat: [['あたしは最初からここにいたわよ', '車のヒーター最高だったわ'], ['近頃の若い人は我慢が足りないわね', '我慢は孫にさせるもの']],
+    notice: [['あんた今なにしたの！', '割り込みはプロに任せなさい']],
+    holdYes: [['…しょうがないわね', 'ついでに詰めとこうかしら']],
+    holdNo: [['いやよ。あたしは誰も信用しないの', '自分がやるから他人もやると思ってる']],
+    askHold: [['ちょっとお手洗い。見といて', '詰めたら孫を呼ぶわよ']],
+    quit: [['寒い！車に戻るわ', 'ワイドショー始まっちゃう']],
+    back: [['なによ、ないじゃない！', 'あたしを騙すなんていい度胸']],
+    cutYou: [['あら、ここ元々あたしの場所よ', 'システム上は合法よ']],
+    betrayed: [['…やるわね、あんた', '同類の匂いがする']],
+  },
+  wakana: {
+    talk: [['あの、みなさん毎年並んでるんですか…？', '町内デビュー、失敗できない…！'], ['夫がサンマ好きで…初めて来ました', 'いい奥さんだと思われたい。町内に']],
+    chat: [['寒いですね…', '帰りたい。でも帰ったら負けな気がする'], ['あの、おにぎり作ってきたんですけど…', '誰か受け取って…お願い…']],
+    notice: [['あ…あの…今…いえ、なんでもないです', '言えなかった。私の馬鹿']],
+    holdYes: [['は、はい！見てます！', '頼られた…町内デビュー成功…！']],
+    holdNo: [['え、えっと…すみません、自信がなくて', '断っちゃった…嫌われたかも']],
+    askHold: [['あ、あの、すみません…お手洗いに…', '頼んでよかったのかな…']],
+    quit: [['すみません、夫が起きちゃったみたいで…', '新婚なので朝ごはんは作りたい']],
+    back: [['え…なかったです…', 'でも誰も責められない性格なんです私']],
+    cutYou: [['（何もしない）', '割り込みなんてできない']],
+    betrayed: [['え…あ…はい…', '町内、こわい']],
+  },
+  proxy: {
+    talk: [['あ、ばあちゃんに…いや、自分で並んでます', '口止めされてたんだった']],
+    chat: [['（スマホゲームの音）', 'バイト代三千円…割に合わねえ']],
+    notice: [['え、あ、はい…？', 'どうでもいい']],
+    holdYes: [['あ、いっすよ', 'どうでもいい']],
+    holdNo: [['いや、ばあちゃんに怒られるんで', 'ばあちゃん怖い']],
+    askHold: [['すんません、ちょっとトイレ…', 'ばあちゃんにバレませんように']],
+    quit: [['あ、ばあちゃんから電話…帰ります', '三千円は前払いでもらってる']],
+    back: [['え、なかったっす', 'ま、いいや']],
+    cutYou: [['（スマホを見ながら半歩前へ）', '前とか見てない']],
+    betrayed: [['え、ちょ…', 'ばあちゃんに言お']],
+  },
+  friend: {
+    chat: [['恵美ちゃんおはよ〜！', '並ばずに済んでラッキー'], ['え、こんなに並んでるの？', '私たちは並んでないけど']],
+    talk: [['あ、どうも〜。恵美ちゃんの友達で〜', '「友達」って便利な言葉']],
+  },
+  mil: {
+    chat: [['あなた、朝ごはんは作ってきたの？', 'どうせ作ってないわね'], ['うちの息子、ちゃんと起きられたかしら', 'あなたに任せたのが心配']],
+    talk: [['あら、偶然ねえ', '偶然なわけないでしょう']],
+  },
+};
+const GENERIC = {
+  talk: [['おはようございます。冷えますねえ', '知り合いだったかしら、この人'], ['毎年すごい人ですよねえ', '今年こそ三尾持って帰る']],
+  chat: [['寒いですねえ', '早く7時にならないかな'], ['サンマ、最近お高いものねえ', '一尾398円なんて、もう高級魚よ'], ['うちの主人なんて、まだ寝てるわよ', '起きてても役に立たないけど'], ['今年は脂のってるのかしら', 'のってなくても無料なら許す']],
+  notice: [['ちょっと、今の割り込みですよね？', '見ちゃった以上、黙ってられない']],
+  holdYes: [['ええ、どうぞ。見てますよ', '困ったときはお互いさまね']],
+  holdNo: [['ごめんなさい、ちょっと責任持てなくて', '知らない人の場所まで守れない']],
+  askHold: [['すみません、お手洗いに…場所、見ててもらえます？', '断られたらどうしよう']],
+  quit: [['もう無理、帰ります', 'スーパーで買ったほうが早い']],
+  back: [['なによ、何もなかったじゃない！', '誰よ、言い出したの']],
+  cutYou: [['あ、すみません、前の人と一緒なんで…', '一緒じゃない']],
+  betrayed: [['…ちょっと、私の場所！', '信じられない']],
+  reported: [['な、なによ…', '覚えてなさいよ']],
+  backoff: [['あら、ごめんなさいね〜。気づかなかったわ', 'チッ']],
+  tracer: [['ねえ、言い出したのあの人じゃない？', '見てたわよ']],
+  accuse: [['係員さーん！この人、さっき割り込んでましたよ！', 'やられたらやり返す']],
+  thanks: [['ありがとう、助かったわ！', 'この人、信用できる']],
+  rumor: [['ねえ、裏の第二駐車場でも配ってるらしいわよ！', '本当かしら']],
+};
+
+// ===== 井戸端の秘密 =====
+const INTEL = {
+  kaneda: { text: '金田さんの場所に並んでるの、お孫さんらしいわよ。本人は車でワイドショー見てるって。', need: () => castInLine('kaneda') && P(castUid('kaneda')).proxy,
+    apply() { const u = castUid('kaneda'); setEvidence(u, '孫に場所取りをさせている', 'proxy', 999); } },
+  sasaki: { text: '佐々木さん、ママ友を呼んでるらしいわよ。LINEで「場所確保✌」って。', need: () => castInLine('sasaki') && !st.flags.sasakiMerged && !st.flags.sasakiBlocked, apply() {} },
+  hoshino: { text: '星野さん、ずーっとスマホ見てるでしょ。前に誰が来ても気づかないわよ。', need: () => castInLine('hoshino'), apply() { revealCast('hoshino'); } },
+  tanaka: { text: '田中さん、夜勤明けでほとんど寝てるわよ。立ったまま。', need: () => castInLine('tanaka'), apply() { revealCast('tanaka'); } },
+  saionji: { text: '西園寺さんってサンマ焼けないのよ。タワマンは煙NGなんですって。もらっても困るんじゃない？', need: () => castInLine('saionji'), apply() { st.flags.saionjiNoFish = true; } },
+  tome: { text: '噂の真偽なら、トメさんに聞きなさい。仲良くしとけば、こっそり教えてくれるわよ。', need: () => castInLine('tome'), apply() {} },
+  okuma: { text: '大熊さん、去年も割り込みで揉めたのよ。「詰めただけ」って言い張って。', need: () => castInLine('okuma'), apply() { revealCast('okuma'); } },
+  kito: { text: '会長の奥さんの前では良い子にしときなさい。悪いことは1.5倍で広まるから。', need: () => castInLine('kito'), apply() { revealCast('kito'); } },
+  wakana: { text: '若菜さん、初参加で心細そうよ。親切にしたら、何でも引き受けてくれるタイプね。', need: () => castInLine('wakana'), apply() { revealCast('wakana'); } },
+  second: { text: '今年は漁協が裏に「第二配布所」を作るって、組合の人がポロッと言ってたわ。', need: () => st.flags.rumorTrue && !st.flags.rumorDone, apply() {} },
+  fake: { text: '「第二配布所ができた」って噂、毎年流れるのよ。毎年ガセ。', need: () => !st.flags.rumorTrue && !st.flags.rumorDone, apply() {} },
+};
+
+const REQUESTS = [
+  { at: 280, who: 'お義母さん', text: '玄関の鍵、開けっぱなしよ', reply: 'すみません、お義母さん。閉めておいてください…' },
+  { at: 320, who: '夫', text: '靴下どこ？', reply: 'タンスの二段目。毎回言ってるでしょ' },
+  { at: 350, who: '娘', text: 'ママ、今日お弁当の日だった', reply: '冷凍庫のハンバーグ、チンして詰めて！', skipLate: true },
+  { at: 380, who: '夫', text: '腹へった', reply: 'パン焼いて。トースターの使い方は前に教えた', skipLate: true },
+];
+
+const SKY = [[270, '#0b1029', '#182046'], [300, '#10173a', '#232a55'], [330, '#1f2453', '#4a3f72'], [348, '#384184', '#c27869'], [370, '#5a78b1', '#e8ad88'], [420, '#7fa6d3', '#efd2b0']];
+
+// ===== 状態 =====
+let st = { phase: 'title' };
+let best = 0;
+const ui = { detail: null };
+
+const P = uid => st.people[uid];
+const now = () => st.startMin + st.turn * 10;
+const pIdx = () => st.line.indexOf(PU);
+const numAt = i => st.crowd + i + 1;
+const castUid = cid => { for (const k in st.people) if (st.people[k].cid === cid) return +k; return null; };
+const castInLine = cid => { const u = castUid(cid); return u != null && st.line.includes(u); };
+const inLine = uid => st.line.includes(uid);
+
+function tr(x) {
+  if (x.kind === 'cast') return x.proxy ? PROXY : CAST[x.cid];
+  if (x.kind === 'mob') return MOBS[x.mob];
+  if (x.kind === 'friend') return FRIEND;
+  if (x.kind === 'mil') return MIL;
+  return ME;
+}
+function nameOf(x) {
+  if (x.kind === 'player') return 'あなた';
+  if (x.kind === 'cast' && x.proxy) return st.intel.includes('kaneda') ? '健太くん（金田さんの孫）' : '若い男性';
+  if (x.kind === 'mob') return MOBS[x.mob].name + (x.tag || '');
+  if (x.kind === 'friend') return '佐々木さんの友達' + x.tag;
+  return tr(x).name;
+}
+const san = x => x.kind === 'player' ? 'あなた' : nameOf(x) + (x.kind === 'cast' && !x.proxy ? 'さん' : '');
+function shortOf(x) {
+  if (x.kind === 'cast' && x.proxy) return st.intel.includes('kaneda') ? '孫' : '？';
+  return tr(x).short;
+}
+const colorOf = x => tr(x).c || '#8794b8';
+function roleOf(x) {
+  if (x.kind === 'cast' && x.proxy) return st.intel.includes('kaneda') ? '金田さんの代理' : '大学生くらい';
+  return tr(x).role || '';
+}
+
+function addPerson(o) {
+  const uid = st.uidSeq++;
+  st.people[uid] = Object.assign({ uid, aff: 0, known: false, away: 0, heldBy: null, bag: false, owes: false, betrayed: false, gone: false }, o);
+  return uid;
+}
+const mobTags = {};
+function addMob(i) {
+  mobTags[i] = (mobTags[i] || 0) + 1;
+  const letters = 'ABCDEFGHIJKLMNOP';
+  return addPerson({ kind: 'mob', mob: i, tag: letters[mobTags[i] - 1] });
+}
+
+// ===== ログ =====
+function log(e) { e.time = now(); st.log.push(e); if (st.log.length > 160) st.log.splice(0, st.log.length - 160); }
+function lineOf(x, key) {
+  let src = null;
+  if (x.kind === 'cast') src = x.proxy ? LINES.proxy : LINES[x.cid];
+  else if (x.kind === 'friend') src = LINES.friend;
+  else if (x.kind === 'mil') src = LINES.mil;
+  const arr = (src && src[key]) || GENERIC[key] || GENERIC.chat;
+  return pick(arr);
+}
+function say(x, key) { const [t, h] = lineOf(x, key); log({ type: 'say', uid: x.uid, text: t, honne: h }); }
+const narr = text => log({ type: 'nar', text });
+function sys(text, delta, tone) { log({ type: 'sys', text, delta: delta || '', tone: tone || 'info' }); }
+
+function repAdd(d, why) {
+  if (!d) return;
+  st.p.rep = clamp(st.p.rep + d, 0, 10);
+  sys(why, `世間体 ${d > 0 ? '+' : '−'}${Math.abs(d)}`, d > 0 ? 'good' : 'bad');
+}
+function famAdd(d, why) {
+  if (!d) return;
+  st.p.family = clamp(st.p.family + d, 0, 10);
+  sys(why, `家庭円満 ${d > 0 ? '+' : '−'}${Math.abs(d)}`, d > 0 ? 'good' : 'bad');
+}
+const affAdd = (uid, d) => { const x = P(uid); if (x) x.aff = clamp(x.aff + d, -5, 10); };
+
+// ===== 列の操作 =====
+function removeFromLine(uid) { const i = st.line.indexOf(uid); if (i >= 0) st.line.splice(i, 1); }
+function swapLine(i, j) { const t = st.line[i]; st.line[i] = st.line[j]; st.line[j] = t; }
+function moveTo(uid, idx) { removeFromLine(uid); st.line.splice(clamp(idx, 0, st.line.length), 0, uid); }
+function sendBack(uid, turns, why) { removeFromLine(uid); st.away.push({ uid, turns, why }); }
+function setEvidence(uid, why, kind, until) {
+  const cur = st.evidence[uid];
+  if (cur && cur.until >= (until || st.turn + 3)) return;
+  st.evidence[uid] = { why, kind, until: until || st.turn + 3 };
+}
+function evidenceTargets() { return Object.keys(st.evidence).map(Number).filter(u => inLine(u) && !P(u).away && u !== PU); }
+function revealCast(cid) { const u = castUid(cid); if (u != null) P(u).known = true; }
+function near(uid, r) { const i = st.line.indexOf(uid), pi = pIdx(); return i >= 0 && pi >= 0 && Math.abs(i - pi) <= r; }
+function rivalsWithin(center, r, exclude) {
+  const out = [];
+  for (let j = Math.max(0, center - r); j <= Math.min(st.line.length - 1, center + r); j++) {
+    const u = st.line[j];
+    if (u === PU || P(u).away || (exclude && exclude.includes(u))) continue;
+    out.push(u);
+  }
+  return out;
+}
+function seers(center, r, mult, exclude) {
+  const m = mult * (st.mods.tv ? 1.6 : 1);
+  return rivalsWithin(center, r, exclude).filter(u => chance(tr(P(u)).alert * m));
+}
+function holdOdds(x) {
+  if (x.owes) return .97;
+  const t = tr(x);
+  let p = x.aff >= 4 ? .92 : clamp(t.kind * .7 + x.aff * .08, .05, .9);
+  if (st.p.rep <= 2) p *= .5;
+  return p;
+}
+const oddsWord = p => p >= .8 ? '快く引き受けてくれそう' : p >= .55 ? 'たぶん大丈夫' : p >= .3 ? '五分五分' : '断られそう';
+const traitWord = v => v >= .65 ? '高' : v >= .35 ? '中' : '低';
+const rumorCred = () => Math.max(.15, 1 - .3 * st.p.rumorCount);
+
+// 見られたときの世間体ダメージ
+function incident(base, seerUids, label) {
+  if (!seerUids.length) return 0;
+  let dmg = base, extra = 0;
+  const notes = [];
+  for (const u of seerUids) {
+    if (tr(P(u)).mouth >= .8 && extra < 2) { extra++; notes.push(`${san(P(u))}は口が軽い`); }
+  }
+  dmg += extra;
+  if (seerUids.some(u => P(u).cid === 'kito')) { dmg = Math.ceil(dmg * 1.5); notes.push('会長夫人が見ていた'); }
+  if (seerUids.some(u => P(u).cid === 'hoshino')) { dmg += 2; notes.push('星野さんがSNSに投稿した'); }
+  if (st.mods.tv) { dmg *= 2; notes.push('カメラが回っていた'); }
+  dmg = Math.min(dmg, 6);
+  st.p.marks++;
+  repAdd(-dmg, `${label}を見られた（${seerUids.map(u => san(P(u))).join('、')}）${notes.length ? '　' + notes.join('／') : ''}`);
+  return dmg;
+}
+
+// ===== ゲーム開始 =====
+function newGame(key) {
+  const S = START[key];
+  for (const k in mobTags) delete mobTags[k];
+  st = {
+    v: 1, phase: 'play', key, turn: 0, maxTurns: (END_MIN - S.startMin) / 10, startMin: S.startMin,
+    crowd: 292, tickets: 300, uidSeq: 2, people: {}, line: [], away: [],
+    p: { warmth: S.warmth, toilet: S.toilet, rep: 5, family: S.family, tea: S.tea, candy: S.candy, kairo: S.kairo,
+      smallUsed: false, endured: false, candyThisTurn: false, candyGiven: 0, rumorCount: 0,
+      husband: 0, husbandEta: 0, husbandStay: 0, requests: [], marks: 0, ticket: null, holdingFor: null, interviewed: false, warned: {} },
+    intel: [], evidence: {}, mods: { tv: 0, patrol: 0, cold: 0, rain: 0 },
+    flags: {}, deck: shuffle(['patrol', 'wind', 'tv', 'fewfish', 'bigcatch', 'mil', 'faint', 'crow', 'tworows', 'rain']),
+    prompts: [], log: [], result: null,
+    stats: { cuts: 0, rumors: 0, reports: 0, betray: 0, helped: 0, held: 0, traced: 0 },
+  };
+  const after = t => t > S.startMin && t < END_MIN;
+  st.flags = {
+    rumorTrue: chance(.3),
+    sasakiAt: pick([320, 330, 340, 350, 360].filter(after)),
+    kanedaAt: pick([360, 370, 380]),
+    rumorAt: pick([340, 350, 360, 370].filter(after)),
+    sasakiMerged: false, sasakiBlocked: false, kitoBonus: false, rumorDone: false, mil: false, saionjiNoFish: false,
+  };
+  st.people[PU] = { uid: PU, kind: 'player', aff: 0, known: true, away: 0, heldBy: null, bag: false };
+  const order = ['kito', 'm5', 'tome', 'kaneda', 'm4', 'saionji', 'sasaki', 'm1', 'okuma', 'hoshino', 'm0', 'tanaka', 'm3', 'wakana', 'm2', 'm0', 'm5', 'm1', 'm4', 'm0', 'm2', 'm3'];
+  for (const k of order) st.line.push(k[0] === 'm' ? addMob(+k.slice(1)) : addPerson({ kind: 'cast', cid: k, proxy: k === 'kaneda' }));
+  st.line.splice(S.startNo - st.crowd - 1, 0, PU);
+  narr(`${fmt(S.startMin)}。さざなみ漁港の駐車場。吐く息が白い。`);
+  narr(`列はもう${st.crowd + st.line.length}人ほど。あなたは${numAt(pIdx())}番目。整理券は先着${st.tickets}枚。`);
+  if (key === 'early') famAdd(-1, '家を出る物音で、夫を起こしてしまった');
+  ambient();
+  render();
+}
+
+// ===== 身じたく（1手に1回） =====
+function smallAct(kind) {
+  const p = st.p;
+  if (st.phase !== 'play' || st.prompts.length || p.smallUsed) return;
+  if (kind === 'tea' && p.tea > 0) {
+    p.tea--; p.warmth = clamp(p.warmth + 4, 0, 10); p.toilet = clamp(p.toilet + 2, 0, 10);
+    narr('水筒のほうじ茶をすする。五臓六腑にしみわたる。…そして膀胱にも。');
+  } else if (kind === 'kairo' && p.kairo > 0) {
+    p.kairo--; p.warmth = clamp(p.warmth + 5, 0, 10);
+    narr('背中にカイロを貼った。じわじわと、文明のぬくもり。');
+  } else if (kind === 'candy' && p.candy > 0) {
+    p.candy--; p.candyThisTurn = true;
+    const pi = pIdx();
+    const got = rivalsWithin(pi, 2);
+    got.forEach(u => affAdd(u, 1));
+    narr(`「よかったら飴ちゃん、どうぞ」${got.length ? got.map(u => san(P(u))).join('、') + 'に配った。' : '…受け取る人がいない。'}`);
+    if (got.length && p.candyGiven < 2) repAdd(1, '気配りの人だと思われた');
+    p.candyGiven++;
+  } else if (kind === 'line' && p.requests.length) {
+    const r = p.requests.shift();
+    narr(`${r.who}にLINEを返した。「${r.reply}」`);
+    famAdd(1, `${r.who}の用事を片づけた`);
+  } else if (kind === 'husband' && p.husband === 0) {
+    p.husband = 1; p.husbandEta = 2;
+    narr('夫にLINE。「カイロとお茶持ってきて。今すぐ」…既読。');
+    famAdd(-1, '休日の夫を叩き起こした');
+  } else return;
+  p.smallUsed = true;
+  render();
+}
+
+// ===== 行動（時間が進む） =====
+function forcedReason() { const p = st.p; return p.toilet >= 10 ? 'toilet' : p.warmth <= 0 ? 'cold' : null; }
+
+function mainAct(kind, arg) {
+  if (st.phase !== 'play' || st.prompts.length) return;
+  const forced = forcedReason();
+  if (forced && kind !== 'trip') return;
+  const pi = pIdx();
+  if (pi < 0) return;
+  const p = st.p;
+  const front = pi > 0 ? P(st.line[pi - 1]) : null;
+  const back = pi < st.line.length - 1 ? P(st.line[pi + 1]) : null;
+
+  if (kind === 'endure') {
+    p.endured = true;
+    narr(pick(['足踏みしながら、じっと耐える。', '手をこすり合わせて、時が過ぎるのを待つ。', 'ポケットの中で指を動かす。まだ動く。', '列の先を見つめる。漁協の建物の灯りが、やけに遠い。']));
+    return endTurn();
+  }
+
+  if (kind === 'talk') {
+    const x = arg < 0 ? front : back;
+    if (!x || x.away) return;
+    const t = tr(x);
+    const first = !x.known;
+    x.known = true;
+    affAdd(x.uid, 2 + (t.kind >= .7 ? 1 : 0));
+    narr(`あなたは${san(x)}に話しかけた。`);
+    say(x, 'talk');
+    if (first) sys(`${san(x)}の人となりがわかった。これまでの発言の本音も見える。`, '人物メモ', 'info');
+    if (x.proxy && !st.intel.includes('kaneda') && chance(.6)) learnIntel(x, 'kaneda');
+    else if (chance(.35 + t.mouth * .5)) learnIntel(x);
+    if (x.cid === 'kito' && x.aff >= 4 && !st.flags.kitoBonus) { st.flags.kitoBonus = true; repAdd(1, '会長夫人に顔を覚えてもらった'); }
+    return endTurn();
+  }
+
+  if (kind === 'sneak') {
+    if (!front || (front.away && front.heldBy === PU)) return;
+    const ft = tr(front);
+    let notice = front.away ? (typeof front.heldBy === 'number' ? tr(P(front.heldBy)).alert * .8 : 0) : ft.alert;
+    if (front.aff >= 4) notice *= .6;
+    if (p.candyThisTurn) notice *= .7;
+    if (st.mods.tv) notice = Math.min(1, notice * 1.3);
+    st.stats.cuts++;
+    narr(`あなたは${san(front)}の前へ、さりげなく半歩…`);
+    if (chance(notice)) {
+      const witness = front.away && typeof front.heldBy === 'number' ? P(front.heldBy) : front;
+      say(witness, 'notice');
+      affAdd(witness.uid, -3);
+      incident(2, [witness.uid, ...seers(pi, 3, .5, [witness.uid, front.uid])], '割り込み未遂');
+      return endTurn();
+    }
+    swapLine(pi, pi - 1);
+    narr(`${san(front)}の前に、音もなく収まった。`);
+    const s = seers(pi - 1, 3, .6, [front.uid]);
+    if (s.length) { s.forEach(u => affAdd(u, -1)); incident(1, s, '割り込み'); }
+    else sys('誰にも見られていない…はず。', '成功', 'good');
+    return endTurn();
+  }
+
+  if (kind === 'rumor') {
+    const cred = rumorCred();
+    narr(pick([
+      'あなたは声をひそめた。「…裏の第二駐車場でも、整理券配り始めたらしいわよ」',
+      'あなたはスマホを見ながら呟いた。「え、整理券、今年は漁協の裏口でも配ってるって…」',
+      'あなたは隣にだけ聞こえる声で言った。「さっき係員さんが、裏でも配るって話してたの」',
+    ]));
+    const range = rivalsWithin(pi, 5);
+    const believers = range.filter(u => chance(tr(P(u)).gull * cred));
+    let ahead = 0;
+    for (const u of believers) { if (st.line.indexOf(u) < pIdx()) ahead++; sendBack(u, 2, 'rumor'); }
+    if (believers.length) narr(`${believers.map(u => san(P(u))).join('、')}が列を飛び出した！${ahead ? `（あなたの前から${ahead}人）` : ''}`);
+    else narr('…誰も動かなかった。冷ややかな沈黙。');
+    const hasTome = range.find(u => P(u).cid === 'tome');
+    const hasKito = range.some(u => P(u).cid === 'kito');
+    const traceP = .15 + .25 * p.rumorCount + (hasTome ? .3 : 0) + (hasKito ? .15 : 0) + (believers.length ? 0 : .2);
+    p.rumorCount++; st.stats.rumors++;
+    if (chance(traceP)) {
+      const tracer = hasTome ? P(hasTome) : (range.length ? P(pick(range)) : null);
+      if (tracer) say(tracer, 'tracer');
+      believers.forEach(u => affAdd(u, -3));
+      st.stats.traced++;
+      p.marks++;
+      repAdd(-(hasKito ? 4 : 3), 'デマの出どころがバレた');
+    }
+    return endTurn();
+  }
+
+  if (kind === 'report') {
+    if (arg === 'sasakiWarn') {
+      const s = castUid('sasaki');
+      st.flags.sasakiBlocked = true;
+      narr('あなたは係員に耳打ちした。「あの人、あとでお友達を合流させるつもりみたいで…」');
+      narr('係員「お連れ様の合流は、ご遠慮くださいねー」 佐々木さんのスマホが、静かにポケットにしまわれた。');
+      affAdd(s, -3);
+      st.stats.reports++;
+      return endTurn();
+    }
+    if (!st.evidence[arg] || !inLine(arg)) return;
+    doReport(arg);
+    return endTurn();
+  }
+
+  if (kind === 'betray') {
+    const x = P(p.holdingFor);
+    if (!x || pi < 1 || !inLine(x.uid) || st.line.indexOf(x.uid) !== pi - 1) return;
+    swapLine(pi, pi - 1);
+    x.betrayed = true; p.holdingFor = null; st.stats.betray++;
+    narr(`あなたは、預かっていた${san(x)}の場所へ、そっと一歩進んだ。`);
+    return endTurn();
+  }
+
+  if (kind === 'trip') {
+    pushToiletPrompt(forced || 'toilet', !!forced);
+    return render();
+  }
+}
+
+function doReport(uid) {
+  const x = P(uid);
+  const ev = st.evidence[uid];
+  narr(`あなたは係員を呼び止めた。「あの、${san(x)}が…」`);
+  say(x, 'reported');
+  if (ev.kind === 'merge') {
+    const fr = st.line.filter(u => P(u).owner === uid);
+    fr.forEach(u => { removeFromLine(u); P(u).gone = true; });
+    narr(`係員「お連れ様の合流はご遠慮くださーい」 ${fr.length ? `合流した${fr.length}人が列から外された。` : ''}`);
+  } else {
+    moveTo(uid, st.line.length);
+    if (x.proxy) narr('係員「代理のかたの場所取りは無効でーす。最後尾にどうぞ」');
+    else narr(`係員「最後尾に並び直してくださーい」 ${san(x)}は列の後ろへ歩いていった。`);
+  }
+  x.aff = -5;
+  delete st.evidence[uid];
+  st.stats.reports++;
+  const pi = pIdx();
+  const kito = rivalsWithin(pi, 5).find(u => P(u).cid === 'kito');
+  if (kito) { say(P(kito), 'approve'); repAdd(1, '会長夫人のおぼえがめでたい'); }
+  if (st.stats.reports >= 2 && rivalsWithin(pi, 3).some(u => tr(P(u)).mouth >= .8) && chance(.5)) repAdd(-1, '「あの人、すぐ係員に言いつけるのよ」と噂された');
+}
+
+function learnIntel(src, force) {
+  const pool = Object.keys(INTEL).filter(k => !st.intel.includes(k) && INTEL[k].need());
+  const id = force || (pool.length ? pick(pool) : null);
+  if (!id) return;
+  st.intel.push(id);
+  log({ type: 'intel', uid: src.uid, text: INTEL[id].text });
+  INTEL[id].apply();
+}
+
+// ===== トイレ・離脱 =====
+function pushToiletPrompt(reason, forced) {
+  const pi = pIdx();
+  const opts = [];
+  for (const [dir, j] of [['後ろ', pi + 1], ['前', pi - 1]]) {
+    const u = st.line[j];
+    if (u == null || P(u).away) continue;
+    const odds = holdOdds(P(u));
+    opts.push({ id: 'ask:' + u, label: `${dir}の${san(P(u))}に頼む`, hint: oddsWord(odds) });
+  }
+  if (st.p.husband === 2) opts.push({ id: 'husband', label: '夫に代わりに立ってもらう', hint: '確実。夫のパジャマ姿が町内に知れ渡る' });
+  opts.push({ id: 'bag', label: 'エコバッグを置いていく', hint: '図太い人が近くにいると、どかされるかも' });
+  opts.push({ id: 'leave', label: '列を抜ける', hint: '戻るときは最後尾から' });
+  if (!forced) opts.push({ id: 'cancel', label: 'やっぱりやめる', hint: '時間は進まない' });
+  st.prompts.unshift({
+    type: 'toilet', reason, forced, kicker: forced ? '限界' : '離脱',
+    title: reason === 'cold' ? '体が冷え切った' : forced ? 'トイレが限界' : 'トイレに行く',
+    body: reason === 'cold' ? '指先の感覚がない。漁協の待合所のストーブで温まるしかない。\n10分、列を離れる。場所はどうする？' : forced ? 'もう一歩も我慢できない。\n10分、列を離れる。場所はどうする？' : '漁協の建物のトイレまで往復10分。\n場所はどうする？',
+    options: opts,
+  });
+}
+function trip(reason) {
+  const p = st.p;
+  p.toilet = 0;
+  p.warmth = clamp(Math.max(p.warmth + 3, 5), 0, 10);
+  narr(reason === 'cold' ? '待合所のストーブで、指先に血が戻ってきた。ついでにトイレも済ませた。' : 'トイレは漁協の建物の中。暖房が効いていて、ちょっと泣きそうになった。');
+  endTurn();
+}
+
+// ===== ライバルたちの手番 =====
+function rivalsAct() {
+  const me = P(PU);
+  // 置いていったエコバッグ
+  if (me.bag && me.away && inLine(PU)) {
+    const pi = pIdx();
+    const bold = rivalsWithin(pi, 2).filter(u => chance(tr(P(u)).bold * .3));
+    if (st.mods.patrol || bold.length) {
+      me.away = 0; me.bag = false;
+      sendBack(PU, 1, 'bagged');
+      narr(st.mods.patrol ? '巡回中の係員が、あなたのエコバッグを列の外に移した。' : `${san(P(bold[0]))}が、あなたのエコバッグを列の外にそっと置いた。`);
+    }
+  }
+  let askedPlayer = false, cutPlayer = false;
+  for (const uid of st.line.filter(u => u !== PU)) {
+    const x = P(uid), t = tr(x);
+    const i = st.line.indexOf(uid);
+    if (i < 0 || x.away) continue;
+    const q = t.quit + (st.mods.cold ? .03 : 0) + (st.mods.rain ? .03 : 0);
+    if (chance(q)) {
+      if (near(uid, 5)) say(x, 'quit');
+      removeFromLine(uid); x.gone = true;
+      continue;
+    }
+    if (chance(t.bladder)) {
+      const b = st.line[i + 1];
+      if (b === PU && !me.away && !askedPlayer && st.p.holdingFor == null) {
+        askedPlayer = true;
+        const [tt, hh] = lineOf(x, 'askHold');
+        st.prompts.push({ type: 'holdAsk', uid, kicker: '頼みごと', title: `${san(x)}から頼まれた`,
+          body: `「${tt}」`, honne: x.known ? hh : null,
+          options: [
+            { id: 'yes', label: '「どうぞ、見てますよ」', hint: '好感度・世間体が上がる。戻るまで、その場所を預かる' },
+            { id: 'no', label: '「ごめんなさい、ちょっと…」', hint: '断れば、その人は場所を失う（あなたは一つ前へ）' },
+          ] });
+        continue;
+      }
+      rivalLeave(uid, b);
+      continue;
+    }
+    const boldP = t.bold * .09 * (st.mods.patrol ? .3 : 1) * (st.mods.tv ? .2 : 1);
+    if (i > 0 && chance(boldP)) {
+      const fu = st.line[i - 1];
+      if (P(fu).away) continue;
+      if (fu === PU) {
+        if (!cutPlayer && !me.away) {
+          cutPlayer = true;
+          const [tt, hh] = lineOf(x, 'cutYou');
+          st.prompts.push({ type: 'cutYou', uid, kicker: '割り込み', title: `${san(x)}が前に入ってきた`,
+            body: `「${tt}」`, honne: x.known ? hh : null,
+            options: [
+              { id: 'protest', label: '「ちょっと、私が先ですよ」', hint: st.p.rep >= 5 ? '世間体が高いので、たぶん引き下がる' : '世間体が低いと、聞き流されるかも' },
+              { id: 'allow', label: '黙って半歩下がる', hint: '一つ後ろへ。相手に「貸し」ができる' },
+            ] });
+        }
+        continue;
+      }
+      const f = P(fu);
+      if (chance(tr(f).alert)) {
+        if (near(uid, 4)) { say(f, 'notice'); narr(`${san(x)}の割り込みは、あえなく失敗した。`); }
+      } else {
+        swapLine(i, i - 1);
+        if (near(uid, 4)) { narr(`${san(x)}が、${san(f)}の前にすっと入った。`); setEvidence(uid, '割り込みしていた', 'cut'); }
+      }
+    }
+  }
+}
+function rivalLeave(uid, behind) {
+  const x = P(uid);
+  if (behind != null && behind !== PU && !P(behind).away && chance(.6 + tr(P(behind)).kind * .4)) {
+    x.away = 2; x.heldBy = behind;
+    if (near(uid, 4)) narr(`${san(x)}がトイレへ。場所は${san(P(behind))}が見ている。`);
+    return;
+  }
+  sendBack(uid, 2, 'toilet');
+  if (near(uid, 5)) narr(`${san(x)}がトイレへ。…誰にも場所を頼まずに。戻ったら最後尾だ。`);
+}
+
+// 列の途中への「連れ」の合流
+function tagalong() {
+  const pi = pIdx();
+  if (pi <= 0 || !chance(.14)) return;
+  const cand = st.line.slice(Math.max(0, pi - 8), pi).filter(u => !P(u).away && (P(u).kind === 'mob' || P(u).kind === 'cast') && !(P(u).kind === 'cast' && P(u).proxy) && tr(P(u)).bold >= .2);
+  if (!cand.length) return;
+  const u = pick(cand), x = P(u);
+  const f = addMob(Math.floor(R() * MOBS.length));
+  P(f).owner = u;
+  st.line.splice(st.line.indexOf(u) + 1, 0, f);
+  narr(`${san(x)}のところに「連れ」が来た。「ここ、うちの人の分も並んでて〜」 あなたの順番が一つ下がった。`);
+  setEvidence(u, '連れを合流させた', 'merge');
+}
+
+function crowdDrift() {
+  let d = 0;
+  const r = R(), r2 = R();
+  if (r < .05) d -= 2; else if (r < .25) d -= 1;
+  if (r2 < .08) d += 2; else if (r2 < .33) d += 1;
+  if (!d) return;
+  st.crowd = Math.max(0, st.crowd + d);
+  narr(d < 0 ? `ずっと前の方で${-d}人が列を離れた。寒さに負けたらしい。` : `ずっと前の方で、誰かの「連れ」が${d}人合流した。`);
+}
+
+function processReturns() {
+  for (const uid of [...st.line]) {
+    const x = P(uid);
+    if (x.away > 0) { x.away--; if (x.away === 0) onReturnHeld(uid); }
+  }
+  for (const a of [...st.away]) {
+    a.turns--;
+    if (a.turns > 0) continue;
+    st.away.splice(st.away.indexOf(a), 1);
+    const x = P(a.uid);
+    if (x.gone) continue;
+    st.line.push(a.uid);
+    if (a.uid === PU) narr('あなたは最後尾に並び直した。さっきまでの自分の場所を、遠くに眺めながら。');
+    else if (a.why === 'rumor') { say(x, 'back'); narr(`戻ってきた${san(x)}は、最後尾に並び直した。`); }
+    else if (a.why === 'toilet' && near(a.uid, 99)) narr(`トイレから戻った${san(x)}は、最後尾へ。`);
+  }
+}
+function onReturnHeld(uid) {
+  const x = P(uid);
+  const holder = x.heldBy;
+  x.heldBy = null;
+  if (uid === PU) {
+    x.bag = false;
+    const pi = pIdx();
+    if (typeof holder === 'number' && st.line[pi + 1] === holder) {
+      const h = P(holder), ht = tr(h);
+      if (ht.kind < .3 && ht.bold >= .4 && chance(.35)) {
+        swapLine(pi, pi + 1);
+        narr(`戻ると、${san(h)}が一歩前に立っていた。「あら、詰めちゃった〜」`);
+        setEvidence(holder, '預けた場所を詰めた', 'cut');
+        return;
+      }
+    }
+    narr(holder === 'husband' ? '夫と交代して列に戻った。夫は「じゃ、二度寝するわ」と言いかけて、睨まれてやめた。' : '列に戻った。場所はちゃんと残っていた。');
+    return;
+  }
+  if (holder === PU) {
+    if (x.betrayed) {
+      say(x, 'betrayed');
+      x.aff = -5;
+      const pi = pIdx();
+      incident(3, [uid, ...seers(pi, 3, .7, [uid])], '預かった場所を詰めたこと');
+      x.betrayed = false;
+    } else if (st.p.holdingFor === uid) {
+      say(x, 'thanks');
+      affAdd(uid, 1); x.owes = true; st.stats.held++;
+      st.p.holdingFor = null;
+    }
+  }
+}
+
+function retaliation(prob) {
+  if (st.p.marks < 2) return;
+  const pi = pIdx();
+  if (pi < 0) return;
+  const foe = rivalsWithin(pi, 4).find(u => P(u).aff <= -3 && tr(P(u)).bold >= .3);
+  if (!foe || !chance(prob)) return;
+  say(P(foe), 'accuse');
+  narr('係員「…念のため、後ろに並び直してもらえますか」 あなたは三つ後ろへ下げられた。');
+  moveTo(PU, pi + 3);
+  st.p.marks = 0;
+  repAdd(-1, '係員に注意されるところを見られた');
+}
+
+// ===== 1手の終わり =====
+function endTurn() {
+  const p = st.p;
+  rivalsAct();
+  tagalong();
+  crowdDrift();
+  retaliation(.12);
+  const drain = (p.endured ? 0 : 1) + (st.mods.cold ? 1 : 0) + (st.mods.rain ? 1 : 0);
+  p.warmth = clamp(p.warmth - drain, 0, 10);
+  p.toilet = clamp(p.toilet + 1, 0, 10);
+  for (const k in st.mods) st.mods[k] = Math.max(0, st.mods[k] - 1);
+  for (const r of [...p.requests]) {
+    if (st.turn + 1 >= r.until) { p.requests.splice(p.requests.indexOf(r), 1); famAdd(-2, `${r.who}のLINEを未読スルー認定された`); }
+  }
+  for (const k in st.evidence) if (st.evidence[k].until < st.turn + 1) delete st.evidence[k];
+  processReturns();
+  if (now() < 400 && st.line.length < 28 && chance(.7)) st.line.push(addMob(Math.floor(R() * MOBS.length)));
+  st.turn++;
+  p.smallUsed = false; p.endured = false; p.candyThisTurn = false;
+  if (p.husband === 1 && --p.husbandEta <= 0) {
+    p.husband = 2; p.husbandStay = 3;
+    if (chance(.7)) { p.kairo++; p.tea++; narr('夫が来た。カイロとお茶を持って。パジャマの上にダウンを羽織って。'); }
+    else narr('夫が来た。持ってきたのは冷えピタだった。');
+  } else if (p.husband === 2 && --p.husbandStay <= 0) {
+    p.husband = 3; narr('夫は「じゃ、二度寝するわ」と帰っていった。');
+  }
+  if (st.turn >= st.maxTurns) return finish(null);
+  const prompted = scheduled();
+  if (!prompted && st.turn >= 1 && chance(.32)) drawEvent();
+  if (p.toilet >= 8 && p.toilet < 10) sys('トイレが近い。そろそろ手を打たないと…', '注意', 'bad');
+  if (p.warmth > 0 && p.warmth <= 2) sys('体が冷えてきた。ぬくもりが0になると列を離れることになる。', '注意', 'bad');
+  ambient();
+  render();
+}
+
+function ambient() {
+  const pi = pIdx();
+  if (pi < 0) return;
+  const cand = rivalsWithin(pi, 4);
+  if (!cand.length) return;
+  const u = pick(cand);
+  if (u === st.lastAmbient && cand.length > 1) return ambient();
+  st.lastAmbient = u;
+  say(P(u), 'chat');
+}
+
+// ===== 予定されたできごと =====
+function scheduled() {
+  const t = now();
+  let prompted = false;
+  for (const r of REQUESTS) {
+    if (r.at !== t || (st.key === 'late' && r.skipLate)) continue;
+    st.p.requests.push({ who: r.who, text: r.text, reply: r.reply, until: st.turn + 2 });
+    narr(`スマホが震えた。${r.who}からLINE「${r.text}」`);
+  }
+  if (t === 350) { narr('5時48分、日の出。海が銀色に光った。サンマの背中みたいな色だ。'); st.p.warmth = clamp(st.p.warmth + 1, 0, 10); }
+  if (t === 390) breakfast();
+  if (t === st.flags.sasakiAt) sasakiMerge();
+  if (t === st.flags.kanedaAt) kanedaSwap();
+  if (t === st.flags.rumorAt) prompted = rivalRumor();
+  return prompted;
+}
+function breakfast() {
+  narr('6時半。各家庭の朝ごはんの時間。列から何人か、家族の待つ台所へ消えていく。');
+  const rate = { tanaka: .25, wakana: .2, hoshino: .15, sasaki: .1 };
+  for (const u of st.line.filter(u => u !== PU && !P(u).away)) {
+    const x = P(u);
+    const q = x.kind === 'mob' ? .12 : x.kind === 'friend' ? .2 : (rate[x.cid] || .03);
+    if (chance(q)) { if (near(u, 5)) say(x, 'quit'); removeFromLine(u); x.gone = true; }
+  }
+  st.crowd = Math.max(0, st.crowd - Math.floor(R() * 3));
+  if (st.p.requests.length) famAdd(-1, '朝ごはんの時間なのに、LINEが溜まっている');
+}
+function sasakiMerge() {
+  const s = castUid('sasaki');
+  if (s == null || !inLine(s) || P(s).away || st.flags.sasakiBlocked || st.flags.sasakiMerged) return;
+  st.flags.sasakiMerged = true;
+  const i = st.line.indexOf(s);
+  const f1 = addPerson({ kind: 'friend', owner: s, tag: 'A' }), f2 = addPerson({ kind: 'friend', owner: s, tag: 'B' });
+  st.line.splice(i + 1, 0, f1, f2);
+  say(P(s), 'merge');
+  narr('佐々木さんのママ友が二人、するりと列に入った。');
+  if (pIdx() > i) sys('あなたの順番が二つ下がった。', '−2', 'bad');
+  setEvidence(s, 'ママ友を合流させた', 'merge', st.turn + 3);
+}
+function kanedaSwap() {
+  const k = castUid('kaneda');
+  if (k == null || !inLine(k) || !P(k).proxy) return;
+  P(k).proxy = false;
+  narr('白い軽自動車から金田さんが降りてきた。「健太、ご苦労さん。はい三千円」 孫と入れ替わった。');
+  setEvidence(k, '孫と入れ替わった（場所取り）', 'proxy', st.turn + 3);
+}
+function rivalRumor() {
+  if (st.flags.rumorDone) return false;
+  const pi = pIdx();
+  if (pi < 0) return false;
+  let src = ['okuma', 'sasaki'].map(castUid).find(u => u != null && inLine(u) && !P(u).away);
+  if (src == null) src = st.line.find(u => u !== PU && !P(u).away && P(u).kind === 'mob');
+  if (src == null) return false;
+  st.flags.rumorDone = true;
+  const x = P(src);
+  const [tt] = lineOf(x, 'rumor');
+  const truth = st.flags.rumorTrue;
+  const hints = [];
+  const tome = castUid('tome');
+  if (tome != null && inLine(tome) && P(tome).aff >= 3) hints.push(`トメさんがあなたの袖を引いた。「${truth ? '…今年のは本当らしいね' : 'ガセだよ。六十年並んでるあたしが言うんだ'}」`);
+  if (st.intel.includes('second')) hints.push('井戸端メモ：組合の人が「第二配布所」と口を滑らせていた。');
+  if (st.intel.includes('fake')) hints.push('井戸端メモ：この噂は毎年流れて、毎年ガセらしい。');
+  if (x.aff >= 5 && !hints.length) hints.push(`${san(x)}が小声で付け足した。「${truth ? 'これ、マジらしいで' : '…まあ、話半分やけどな'}」`);
+  st.prompts.push({ type: 'rumor', uid: src, kicker: '噂', title: '第二配布所の噂', body: `${san(x)}「${tt}」\n列が一気に浮き足立つ。`, hint: hints.join('\n'),
+    options: [
+      { id: 'go', label: '裏の駐車場へ走る', hint: '本当なら、その場で整理券。嘘なら最後尾から' },
+      { id: 'stay', label: '動かない', hint: '信じた人が抜ければ、列は前に進む' },
+    ] });
+  return true;
+}
+
+// ===== ランダムなできごと =====
+const EVENTS = {
+  patrol: {
+    cond: () => true,
+    make() {
+      st.mods.patrol = 3;
+      const opts = [{ id: 'nod', label: '会釈しておく', hint: '何もしない' }];
+      for (const u of evidenceTargets().slice(0, 2)) opts.push({ id: 'tell:' + u, label: `${san(P(u))}のことを伝える`, hint: `${st.evidence[u].why}。行動を使わずに告げ口できる` });
+      return { title: '係員の巡回', body: '漁協の法被を着た係員が、列をゆっくり見回っている。\n「場所取り・割り込みは、ご遠慮くださーい」', options: opts };
+    },
+    resolve(id) {
+      if (id.startsWith('tell:')) doReport(+id.slice(5));
+      else narr('あなたは係員に、模範的な会釈をした。');
+      retaliation(.5);
+    },
+  },
+  wind: {
+    cond: () => true,
+    make() { st.mods.cold = 3; return { title: '北風', body: '海から北風が吹きつけてきた。指先の感覚がなくなっていく。\n列のあちこちから「もう帰ろうかしら」の声。', options: [{ id: 'ok', label: 'マフラーを巻き直す', hint: 'しばらく、ぬくもりの減りが倍になる' }] }; },
+    resolve() {},
+  },
+  rain: {
+    cond: () => true,
+    make() {
+      st.mods.rain = 2;
+      return { title: 'にわか雨', body: 'ぽつり、ぽつり。秋の冷たい雨。\nバッグには主婦の常備品、折りたたみ傘。', options: [
+        { id: 'share', label: '前後の人と相合い傘', hint: '前後の好感度+2・ぬくもり−1' },
+        { id: 'solo', label: '自分だけ差す', hint: '前後の好感度−1' }] };
+    },
+    resolve(id) {
+      const pi = pIdx();
+      rivalsWithin(pi, 1).forEach(u => affAdd(u, id === 'share' ? 2 : -1));
+      if (id === 'share') { st.p.warmth = clamp(st.p.warmth - 1, 0, 10); narr('小さな傘に三人。肩が濡れる。でも、少し仲良くなった。'); }
+      else narr('あなたは傘を差した。両隣の視線が、雨より冷たい。');
+      let n = 0;
+      for (const u of st.line.filter(u => P(u).kind === 'mob' && !P(u).away)) if (chance(.15)) { removeFromLine(u); P(u).gone = true; n++; }
+      if (n) narr(`傘のない人が${n}人、帰っていった。`);
+    },
+  },
+  tv: {
+    cond: () => true,
+    make() {
+      st.mods.tv = 3;
+      return { title: 'テレビ取材', body: '地元局「おはよう港町」のカメラがやってきた。\n「サンマの列に並ぶ皆さんの声を〜！」\nしばらくは、何をしても映る。', options: [
+        { id: 'yes', label: 'インタビューに答える', hint: '世間体と家庭円満が上がる…はず' },
+        { id: 'no', label: '顔を伏せてやり過ごす', hint: '何もしない' }] };
+    },
+    resolve(id) {
+      if (id !== 'yes') return narr('あなたはマフラーに顔をうずめた。');
+      st.p.interviewed = true;
+      if (chance(.7)) { narr('「家族の喜ぶ顔が見たくて」完璧な主婦の受け答え。'); repAdd(1, 'テレビで好感度の高い主婦を演じた'); famAdd(1, '娘から「ママ映ってる！」とLINE'); }
+      else { narr('「正直、サンマよりご近所の目が怖いです」…そのまま放送された。'); repAdd(-1, '本音がテレビに乗った'); famAdd(1, '娘から「ママ映ってる！」とLINE'); }
+    },
+  },
+  fewfish: {
+    cond: () => true,
+    make() {
+      const before = st.tickets;
+      st.tickets -= 4;
+      return { title: '不漁のお知らせ', body: `拡声器「えー、今年は記録的な不漁のため、整理券を${before}枚から${st.tickets}枚に変更させていただきまーす」\n列のあちこちから、短い悲鳴。`, options: [{ id: 'ok', label: '…（無言で空を見る）' }] };
+    },
+    resolve() {},
+  },
+  bigcatch: {
+    cond: () => true,
+    make() {
+      st.tickets += 3;
+      return { title: '追加入荷', body: `拡声器「ただいま追加の船が入りましたー！整理券、${st.tickets}枚まで増やしまーす！」\n港に大漁旗がひるがえった。`, options: [{ id: 'ok', label: '大漁旗に手を合わせる' }] };
+    },
+    resolve() {},
+  },
+  mil: {
+    cond: () => pIdx() >= 6 && !st.flags.mil,
+    make() {
+      st.flags.mil = true;
+      const m = addPerson({ kind: 'mil', known: true });
+      st.line.splice(Math.max(0, pIdx() - 5), 0, m);
+      st.crowd = Math.max(0, st.crowd - 1);
+      st.milUid = m;
+      return { title: 'お義母さん', body: '「あら！あなたも来てたの？」\n列の前のほうで、お義母さんが手を振っている。\n「こっちいらっしゃいよ。一緒に並べばいいじゃない」', options: [
+        { id: 'join', label: 'お言葉に甘える', hint: '一気に前へ。ただし、周りは全部見ている' },
+        { id: 'decline', label: '「いえ、私はここで…」', hint: 'お義母さんの機嫌が悪くなる' }] };
+    },
+    resolve(id) {
+      const m = st.milUid;
+      if (id === 'join') {
+        moveTo(PU, st.line.indexOf(m) + 1);
+        const pi = pIdx();
+        const s = seers(pi, 3, .9, [m]);
+        if (st.line[pi + 1] != null && st.line[pi + 1] !== PU && !s.includes(st.line[pi + 1])) s.push(st.line[pi + 1]);
+        narr('あなたは小走りでお義母さんの隣へ。「すみません、家族なので…」');
+        incident(3, s.filter(u => !P(u).away), 'お義母さんとの合流');
+        famAdd(2, 'お義母さんの機嫌がいい');
+      } else {
+        narr('お義母さん「あらそう。…あらそう」');
+        famAdd(-1, 'お義母さんの誘いを断った');
+      }
+    },
+  },
+  faint: {
+    cond: () => faintVictim() != null,
+    make() {
+      const v = faintVictim();
+      st.faintUid = v;
+      return { title: '急病人', body: `前のほうで、${san(P(v))}がふらりとよろけて、しゃがみこんだ。\n顔が真っ白だ。`, options: [
+        { id: 'help', label: '駆け寄って介抱する', hint: '世間体が大きく上がる。ただし列を離れることになる' },
+        { id: 'call', label: '係員を呼びに走る', hint: 'この手の行動を使う。場所は周りが守ってくれる' },
+        { id: 'ignore', label: '見なかったことにする', hint: '見られていたら世間体が下がる' }] };
+    },
+    resolve(id) {
+      const v = st.faintUid, x = P(v);
+      if (id === 'help') {
+        removeFromLine(v); x.gone = true; affAdd(v, 5); st.stats.helped++;
+        narr(`あなたは列を飛び出し、${san(x)}の背中をさすった。水筒のお茶を飲ませると、少し顔色が戻った。`);
+        repAdd(3, '急病人を介抱した');
+        removeFromLine(PU);
+        if (chance(.4)) {
+          narr('係員が駆け寄ってきて、小声で言った。「…これ、組合長からです。内緒ですよ」 手渡されたのは、番号のない整理券だった。');
+          st.p.ticket = 'staff';
+          return finish('staff');
+        }
+        narr('係員「ご協力ありがとうございました！」 …それだけだった。あなたの場所は、もうない。');
+        st.away.push({ uid: PU, turns: 1, why: 'help' });
+        return endTurn();
+      }
+      if (id === 'call') {
+        removeFromLine(v); x.gone = true;
+        narr(`あなたは係員を呼びに走った。${san(x)}は救護テントへ運ばれていった。戻ると、前後の人が「ここ、あなたの場所よ」と空けておいてくれた。`);
+        repAdd(2, '急病人のために係員を呼んだ');
+        return endTurn();
+      }
+      const s = seers(pIdx(), 4, .7, [v]);
+      narr(`しばらくして、${san(x)}はなんとか立ち上がった。`);
+      if (s.length) repAdd(-2, `見て見ぬふりを見られた（${s.map(u => san(P(u))).join('、')}）`);
+    },
+  },
+  crow: {
+    cond: () => crowVictim() != null,
+    make() {
+      const v = crowVictim();
+      const x = P(v);
+      sendBack(v, 2, 'crow');
+      return { title: 'カラス', body: `カラスが急降下！\n前のほうの${san(x)}のエコバッグから、何かをくわえて飛び去った。\n「ちょっと、待ちなさーい！」 ${san(x)}は列を飛び出していった。`, options: [{ id: 'ok', label: '（心の中で、カラスに礼を言う）' }] };
+    },
+    resolve() {},
+  },
+  tworows: {
+    cond: () => pIdx() > 0,
+    make() {
+      return { title: '二列に並び直し', body: '係員「すみませーん、二列でお願いしまーす！」\n列がざわりと揺れる。混乱は、好機でもある。', options: [
+        { id: 'push', label: 'どさくさで一つ前へ', hint: '一つ前へ。見られると世間体が下がる' },
+        { id: 'flow', label: '流れに身を任せる', hint: '前に出るか、下がるか、運しだい' },
+        { id: 'yield', label: '隣の人に先を譲る', hint: '一つ後ろへ。好感度と世間体が上がる' }] };
+    },
+    resolve(id) {
+      const pi = pIdx();
+      if (id === 'push' && pi > 0) {
+        swapLine(pi, pi - 1);
+        narr('人の波に乗って、するりと一つ前へ。');
+        incident(1, seers(pi - 1, 3, .5), 'どさくさの前進');
+      } else if (id === 'flow') {
+        const r = R();
+        if (r < .4 && pi > 0) { swapLine(pi, pi - 1); narr('流れに乗ったら、一つ前に出ていた。'); }
+        else if (r < .7 || pi >= st.line.length - 1) narr('並び直してみたら、元の位置だった。');
+        else { swapLine(pi, pi + 1); narr('気づいたら、一つ後ろになっていた。'); }
+      } else if (id === 'yield' && pi < st.line.length - 1) {
+        const u = st.line[pi + 1];
+        swapLine(pi, pi + 1);
+        affAdd(u, 2);
+        narr(`「どうぞ、お先に」 ${san(P(u))}が目を丸くした。`);
+        repAdd(1, '順番を譲った');
+      }
+    },
+  },
+};
+function faintVictim() {
+  const pi = pIdx();
+  if (pi <= 0) return null;
+  const t = castUid('tanaka');
+  if (t != null && inLine(t) && !P(t).away && st.line.indexOf(t) < pi && pi - st.line.indexOf(t) <= 6) return t;
+  const c = st.line.slice(Math.max(0, pi - 4), pi).filter(u => !P(u).away && P(u).kind !== 'mil');
+  return c.length ? pick(c) : null;
+}
+function crowVictim() {
+  const pi = pIdx();
+  if (pi <= 0) return null;
+  const c = st.line.slice(Math.max(0, pi - 6), pi).filter(u => !P(u).away && P(u).kind !== 'mil');
+  return c.length ? pick(c) : null;
+}
+function drawEvent() {
+  const k = st.deck.findIndex(id => EVENTS[id].cond());
+  if (k < 0) return false;
+  const id = st.deck.splice(k, 1)[0];
+  const ev = EVENTS[id].make();
+  st.prompts.push(Object.assign({ type: 'event', eid: id, kicker: 'できごと' }, ev));
+  return true;
+}
+
+// ===== 選択の解決 =====
+const RESOLVERS = {
+  event(pr, id) { EVENTS[pr.eid].resolve(id); },
+  holdAsk(pr, id) {
+    const x = P(pr.uid);
+    if (!inLine(pr.uid) || x.away) return;
+    if (id === 'yes') {
+      x.away = 1; x.heldBy = PU; st.p.holdingFor = pr.uid;
+      affAdd(pr.uid, 2);
+      narr(`${san(x)}は小走りでトイレへ。あなたは、その場所を預かった。`);
+      repAdd(1, '人の場所を預かった');
+    } else {
+      narr(`${san(x)}は一瞬だけ固まって、何も言わずにトイレへ向かった。`);
+      affAdd(pr.uid, -3);
+      repAdd(-1, '困っている人の頼みを断った');
+      sendBack(pr.uid, 1, 'toilet');
+    }
+  },
+  cutYou(pr, id) {
+    const x = P(pr.uid);
+    const i = st.line.indexOf(pr.uid), pi = pIdx();
+    if (i < 0 || pi < 0 || i !== pi + 1 || x.away) return;
+    if (id === 'protest') {
+      if (st.p.rep >= 5 || chance(.35)) { say(x, 'backoff'); affAdd(pr.uid, -2); }
+      else {
+        swapLine(i, pi);
+        narr(`${san(x)}は聞こえないふりをした。あなたの世間体では、押し返せなかった。`);
+        affAdd(pr.uid, -2);
+        setEvidence(pr.uid, 'あなたの前に割り込んだ', 'cut');
+      }
+    } else {
+      swapLine(i, pi);
+      affAdd(pr.uid, 3); x.owes = true;
+      narr(`あなたは黙って半歩下がった。${san(x)}に「貸し」ができた。`);
+    }
+  },
+  toilet(pr, id) {
+    if (id === 'cancel') return;
+    const me = P(PU);
+    if (id.startsWith('ask:')) {
+      const x = P(+id.slice(4));
+      if (chance(holdOdds(x))) { say(x, 'holdYes'); me.away = 1; me.heldBy = x.uid; return trip(pr.reason); }
+      say(x, 'holdNo');
+      affAdd(x.uid, -1);
+      st.prompts.unshift(Object.assign({}, pr, { options: pr.options.filter(o => o.id !== id), body: `${san(x)}に断られた。どうする？` }));
+      return;
+    }
+    if (id === 'husband') { me.away = 1; me.heldBy = 'husband'; narr('夫が、パジャマにダウンのまま列に立った。'); return trip(pr.reason); }
+    if (id === 'bag') { me.away = 1; me.bag = true; narr('エコバッグをそっと地面に置いた。「すぐ戻ります」という顔をして。'); return trip(pr.reason); }
+    if (id === 'leave') { sendBack(PU, 1, 'leave'); narr('あなたは列を抜けた。戻る場所は、最後尾。'); return trip(pr.reason); }
+  },
+  rumor(pr, id) {
+    const truth = st.flags.rumorTrue;
+    const leavers = st.line.filter(u => u !== PU && u !== pr.uid && !P(u).away && chance(tr(P(u)).gull * .35));
+    const pi0 = pIdx();
+    const ahead = leavers.filter(u => st.line.indexOf(u) < pi0).length;
+    for (const u of leavers) { if (truth) { removeFromLine(u); P(u).gone = true; } else sendBack(u, 3, 'rumor'); }
+    if (leavers.length) narr(`${leavers.map(u => san(P(u))).join('、')}が列を飛び出した。${ahead ? `（あなたの前から${ahead}人）` : ''}`);
+    else narr('誰も動かなかった。');
+    if (id === 'go') {
+      if (truth) {
+        narr('裏の第二駐車場には、本当に臨時の配布所ができていた！ あなたの手に、整理券が一枚。');
+        st.p.ticket = 'second';
+        removeFromLine(PU);
+        return finish('second');
+      }
+      narr('裏の駐車場には…軽トラが一台。それだけだった。');
+      sendBack(PU, 1, 'rumor');
+      return endTurn();
+    }
+    narr(truth ? '…あとで知った。第二配布所は本当にあったらしい。抜けていった人たちは、もう戻ってこない。' : '動かなくて正解。噂はガセだった。');
+  },
+};
+function resolvePrompt(id) {
+  const pr = st.prompts.shift();
+  if (!pr) return;
+  RESOLVERS[pr.type](pr, id);
+  if (st.phase === 'play') render();
+}
+
+// ===== 結末 =====
+function finish(early) {
+  const p = st.p;
+  const pi = pIdx();
+  const myNo = pi >= 0 ? numAt(pi) : null;
+  const ticket = !!p.ticket || (myNo != null && myNo <= st.tickets);
+  let sanma = ticket ? 3 : 0;
+  const gifts = [];
+  st.line.forEach((u, j) => {
+    const x = P(u);
+    if (x.kind !== 'cast' || x.proxy || numAt(j) > st.tickets) return;
+    const nofish = x.cid === 'saionji';
+    const need = x.owes ? 3 : nofish && st.flags.saionjiNoFish ? 3 : nofish ? 4 : 6;
+    if (x.aff >= need) gifts.push({ uid: u, n: nofish ? 2 : 1 });
+  });
+  const giftN = Math.min(4, gifts.reduce((a, g) => a + g.n, 0));
+  sanma += giftN;
+  const score = sanma * 100 + p.rep * 25 + p.family * 15;
+  const [title, epi] = rankOf({ ticket, sanma, rep: p.rep, family: p.family });
+  const notes = [];
+  if (gifts.length) notes.push(`おすそわけ：${gifts.map(g => `${san(P(g.uid))}から${g.n}尾`).join('、')}${giftN < gifts.reduce((a, g) => a + g.n, 0) ? '（上限4尾）' : ''}`);
+  if (early === 'second') notes.push('第二配布所の噂を信じて、勝った。');
+  if (early === 'staff') notes.push('組合長の「内緒の整理券」。人助けは、たまに報われる。');
+  if (st.stats.traced) notes.push('「オオカミ奥さん」というあだ名がついた。');
+  if (st.stats.reports >= 2) notes.push('「係員さんのお友達」と呼ばれるようになった。');
+  if (st.stats.betray) notes.push('預かった場所を詰めた話は、三年は語り継がれる。');
+  if (st.stats.helped) notes.push('後日、介抱した人から手編みのアクリルたわしが届いた。');
+  if (st.stats.held) notes.push(`場所を預かった相手（${st.stats.held}人）から、年賀状が一枚ずつ増えた。`);
+  if (p.interviewed) notes.push('夕方のニュースに3秒映った。');
+  if (p.husband >= 2) notes.push('夫のパジャマ姿は、町内のLINEで静かに共有された。');
+  const isNew = score > best;
+  if (isNew) { best = score; try { localStorage.setItem(BEST_KEY, String(best)); } catch (e) {} }
+  st.result = { ticket, myNo, early, sanma, giftN, score, title, epi, notes, isNew, rep: p.rep, family: p.family };
+  st.phase = 'end';
+  st.prompts = [];
+  render();
+}
+function rankOf(r) {
+  if (r.ticket && r.rep >= 8 && r.family >= 7) return ['秋刀魚の女帝', '翌朝から、回覧板はあなたの家を起点に回り始めた。'];
+  if (r.ticket && r.rep <= 2) return ['サンマを得て、町内を失う', '七輪の煙だけが味方だった。ゴミ捨て場で挨拶をしても、誰も返してくれない。'];
+  if (r.ticket && r.family <= 2) return ['焼き上がる頃、夫はいなかった', '食卓には三尾のサンマと、冷めた味噌汁と、書き置き。「実家に帰ります（土曜まで）」'];
+  if (!r.ticket && r.sanma >= 3) return ['人脈の勝利', `整理券なしで、サンマ${r.sanma}尾。並ぶより、つながる。それがオトナの戦い方。`];
+  if (r.ticket && r.sanma >= 5) return ['大漁', 'グリルに入りきらないサンマを前に、あなたは静かに七輪を出した。'];
+  if (r.ticket) return ['整理券ホルダー', '大根おろしは、勝者の味がした。'];
+  if (r.rep >= 8) return ['徳の人', 'サンマは逃した。でも翌週、町内会の副会長に推された。断れなかった。'];
+  if (r.rep <= 2) return ['何も得なかった人', 'サンマもない。信用もない。帰りのスーパーで、サンマは一尾398円だった。'];
+  if (r.sanma > 0) return ['おすそわけの人', `整理券は逃したけれど、ご近所から${r.sanma}尾。持つべきものは隣人。`];
+  return ['ふつうの主婦', '帰り道、スーパーで一尾298円のサンマを買った。まあまあの味だった。'];
+}
+
+// ===== 描画 =====
+const $ = s => document.querySelector(s);
+const reduceMotion = !HEADLESS && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mix = (a, b, t) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',')})`; };
+function skyAt(m) {
+  let k = 0;
+  while (k < SKY.length - 2 && m > SKY[k + 1][0]) k++;
+  const [m0, t0, b0] = SKY[k], [m1, t1, b1] = SKY[k + 1];
+  const t = clamp((m - m0) / (m1 - m0), 0, 1);
+  return [mix(t0, t1, t), mix(b0, b1, t)];
+}
+
+function render() {
+  if (HEADLESS) return;
+  const phase = st.phase;
+  $('#titleScreen').hidden = phase !== 'title';
+  $('#gameScreen').hidden = phase !== 'play';
+  $('#endScreen').hidden = phase !== 'end';
+  const m = phase === 'title' ? 285 : phase === 'end' ? END_MIN : now();
+  const [top, bot] = skyAt(m);
+  document.body.style.setProperty('--sky-top', top);
+  document.body.style.setProperty('--sky-bot', bot);
+  if (phase === 'title') renderTitle();
+  if (phase === 'play') { renderHeader(); renderQueue(); renderMe(); renderActions(); renderMemo(); renderLog(); }
+  if (phase === 'end') renderEnd();
+  renderOverlay();
+}
+
+function renderTitle() {
+  $('#starts').innerHTML = Object.entries(START).map(([k, s]) => `
+    <button class="start" data-act="start:${k}">
+      <span class="t">${s.label}</span>
+      <span class="n">${s.name}</span>
+      <span class="d"><span>＋ ${s.pros}</span><span>− ${s.cons}</span></span>
+      <span class="stat">難易度 ${s.level} ・ ${(END_MIN - s.startMin) / 10}手 ・ 整理番号 ${s.startNo}番</span>
+    </button>`).join('');
+  $('#bestLine').textContent = best ? `これまでの最高点：${best}点` : '';
+}
+
+function renderHeader() {
+  $('#clock').textContent = fmt(now());
+  const left = st.maxTurns - st.turn;
+  $('#clockSub').innerHTML = `配布まで あと<b>${left}</b>手`;
+  const m = now();
+  const sun = m <= 348 ? -70 + (m - 270) / 78 * 52 : -18 + (m - 348) / 72 * 90;
+  $('#sun').style.setProperty('--sun', sun.toFixed(1));
+  $('#tix').innerHTML = `整理券 <b>${st.tickets}</b> 枚`;
+}
+
+function personChips(x) {
+  const c = [];
+  if (x.away) {
+    if (x.bag) c.push('<span class="chip warn">荷物で場所取り</span>');
+    else if (x.heldBy === PU) c.push(`<span class="chip gold">${x.betrayed ? '詰めた' : 'あなたが預かり中'}</span>`);
+    else c.push('<span class="chip">トイレ中</span>');
+  }
+  if (st.evidence[x.uid]) c.push('<span class="chip warn">証拠あり</span>');
+  if (x.owes) c.push('<span class="chip ok">貸しあり</span>');
+  if (x.kind === 'cast' && x.proxy && st.intel.includes('kaneda')) c.push('<span class="chip warn">代理</span>');
+  if (x.aff <= -3) c.push('<span class="chip warn">険悪</span>');
+  return c.join('');
+}
+function dots(aff) {
+  const n = clamp(Math.ceil(aff / 2), 0, 5);
+  return `<span class="dots" aria-label="好感度 ${aff}">${[0, 1, 2, 3, 4].map(i => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span>`;
+}
+
+function renderQueue() {
+  const ol = $('#queue'), sc = $('#qscroll');
+  const before = new Map();
+  ol.querySelectorAll('[data-uid]').forEach(el => before.set(el.dataset.uid, el.getBoundingClientRect().top));
+  const ticketSlots = st.tickets - st.crowd;
+  const rope = `<li class="rope" aria-hidden="true"><span>ここまで 整理券${st.tickets}枚</span></li>`;
+  let html = ticketSlots <= 0 ? rope : '';
+  st.line.forEach((u, i) => {
+    const x = P(u);
+    const me = u === PU;
+    const cls = ['qrow', me ? 'me' : '', numAt(i) <= st.tickets ? 'ticket' : '', x.away ? 'away' : ''].join(' ');
+    html += `<li class="${cls}" data-uid="${u}"><button class="rowbtn" data-act="detail:${u}">
+      <span class="num">${numAt(i)}</span>
+      <span class="badge" style="--c:${colorOf(x)}">${esc(shortOf(x))}</span>
+      <span class="who"><b>${esc(me ? 'あなた' : nameOf(x))}</b><small>${esc(me ? '町内の主婦' : roleOf(x))}</small></span>
+      <span class="tail">${me ? '' : dots(x.aff)}<span class="chips">${me ? '' : personChips(x)}</span></span>
+    </button></li>`;
+    if (i === ticketSlots - 1) html += rope;
+  });
+  ol.innerHTML = html;
+  $('#crowd').textContent = `▲ この先に${st.crowd}人（列の先頭は漁協の建物の前）`;
+  const ab = $('#awayBox');
+  const aw = st.away.filter(a => a.uid !== PU && !P(a.uid).gone);
+  ab.hidden = !aw.length;
+  const why = { rumor: '噂を追って', toilet: 'トイレ', crow: 'カラスを追って', help: '' };
+  ab.innerHTML = aw.length ? `列を離れている人<ul>${aw.map(a => `<li>${esc(san(P(a.uid)))}（${why[a.why] || '離席'}・戻ったら最後尾）</li>`).join('')}</ul>` : '';
+  const meEl = ol.querySelector('.qrow.me');
+  if (meEl) {
+    const sr = sc.getBoundingClientRect(), mr = meEl.getBoundingClientRect();
+    if (mr.top < sr.top + 30 || mr.bottom > sr.bottom - 30) sc.scrollTop += (mr.top - sr.top) - sc.clientHeight / 2 + mr.height / 2;
+  }
+  if (reduceMotion || !before.size) return;
+  ol.querySelectorAll('[data-uid]').forEach(el => {
+    const b = before.get(el.dataset.uid);
+    const a = el.getBoundingClientRect().top;
+    if (b == null) el.animate([{ opacity: 0, transform: 'translateX(-10px)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: 'ease-out' });
+    else if (Math.abs(b - a) > 1) el.animate([{ transform: `translateY(${b - a}px)` }, { transform: 'none' }], { duration: 520, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  });
+}
+
+function gauge(label, v, color, danger) {
+  return `<div class="gauge${danger ? ' danger' : ''}" style="--g:${color}"><span class="gl">${label}</span><span class="cells">${Array.from({ length: 10 }, (_, i) => `<i class="${i < v ? 'on' : ''}"></i>`).join('')}</span><span class="gv">${v}</span></div>`;
+}
+function renderMe() {
+  const p = st.p, pi = pIdx();
+  const no = pi >= 0 ? numAt(pi) : null;
+  let status;
+  if (no == null) status = '<span class="out">列を離れている</span>';
+  else if (no <= st.tickets) status = `<b class="in">整理券ライン内</b>　余裕 ${st.tickets - no}人`;
+  else status = `<b class="out">ラインまで あと${no - st.tickets}人</b>`;
+  const hus = ['', `夫：向かっている（あと${p.husbandEta}手）`, `夫：到着（あと${p.husbandStay}手）`, '夫：二度寝に戻った'][p.husband];
+  const forced = forcedReason();
+  $('#me').innerHTML = `
+    <div class="me-top"><span class="me-no"><small>No.</small>${no ?? '—'}</span><span class="me-status">${status}</span></div>
+    <div class="gauges">
+      ${gauge('ぬくもり', p.warmth, '#ffa86b', p.warmth <= 2)}
+      ${gauge('トイレ', p.toilet, p.toilet >= 8 ? '#ff6b5a' : '#8fc3ff', p.toilet >= 8)}
+      ${gauge('世間体', p.rep, '#7fd6a9', p.rep <= 2)}
+      ${gauge('家庭円満', p.family, '#f2b632', p.family <= 2)}
+    </div>
+    <div class="items">
+      <span class="item">水筒のお茶 <b>${p.tea}</b></span>
+      <span class="item">飴ちゃん <b>${p.candy}</b></span>
+      <span class="item">カイロ <b>${p.kairo}</b></span>
+      ${hus ? `<span class="item">${hus}</span>` : ''}
+      ${st.mods.tv ? '<span class="item" style="color:var(--bad)">カメラ回ってる</span>' : ''}
+      ${st.mods.patrol ? '<span class="item">係員が巡回中</span>' : ''}
+      ${st.mods.cold || st.mods.rain ? '<span class="item">冷え込み中</span>' : ''}
+    </div>
+    ${p.requests.length ? `<div class="reqs">${p.requests.map(r => `<div class="req"><b>${esc(r.who)}</b>「${esc(r.text)}」<small>あと${r.until - st.turn}手で未読スルー認定</small></div>`).join('')}</div>` : ''}
+    ${forced ? `<div class="alert">${forced === 'toilet' ? 'トイレが限界。列を離れる以外の行動はできない。' : '体が冷え切った。お茶かカイロで持ち直すか、温まりに行くしかない。'}</div>` : ''}`;
+}
+
+function btn(act, title, sub, opts = {}) {
+  return `<button class="abtn${opts.scheme ? ' scheme' : ''}${opts.urgent ? ' urgent' : ''}" data-act="${act}"${opts.disabled ? ' disabled' : ''}><b>${title}</b><small>${sub}</small></button>`;
+}
+function renderActions() {
+  const p = st.p, pi = pIdx();
+  const blocked = st.prompts.length > 0;
+  const forced = forcedReason();
+  const front = pi > 0 ? P(st.line[pi - 1]) : null;
+  const back = pi >= 0 && pi < st.line.length - 1 ? P(st.line[pi + 1]) : null;
+  const sd = blocked || p.smallUsed;
+  const md = blocked || !!forced;
+  const known = x => x && x.known;
+  let small = '';
+  small += btn('small:tea', 'お茶を飲む', `ぬくもり+4・トイレ+2（残り${p.tea}）`, { disabled: sd || !p.tea });
+  small += btn('small:kairo', 'カイロを貼る', `ぬくもり+5（残り${p.kairo}）`, { disabled: sd || !p.kairo });
+  small += btn('small:candy', '飴ちゃんを配る', `前後2人ずつの好感度+1（残り${p.candy}）`, { disabled: sd || !p.candy });
+  if (p.requests.length) small += btn('small:line', 'LINEに返信', `${esc(p.requests[0].who)}「${esc(p.requests[0].text)}」`, { disabled: sd });
+  if (p.husband === 0) small += btn('small:husband', '夫を呼ぶ', '2手後にカイロとお茶が届く（たぶん）。家庭円満−1', { disabled: sd });
+
+  let social = '';
+  social += btn('main:talk:-1', '世間話（前）', front ? `${esc(san(front))}と。好感度+2・本音と秘密がわかる` : '前に人がいない', { disabled: md || !front || front.away });
+  social += btn('main:talk:1', '世間話（後ろ）', back ? `${esc(san(back))}と。トイレのときに頼れる相手を作る` : '後ろに人がいない', { disabled: md || !back || back.away });
+  social += btn('main:endure', '足踏みして耐える', 'この手はぬくもりが減らない', { disabled: md });
+
+  let scheme = '';
+  const cred = rumorCred();
+  const frontHeldByMe = front && front.away && front.heldBy === PU;
+  scheme += btn('main:sneak', 'さりげなく前へ', !front ? 'もう先頭だ' : frontHeldByMe ? '前の場所はあなたが預かっている' : `${esc(san(front))}の前に入る。警戒心：${front.away ? 'トイレ中' : known(front) ? traitWord(tr(front).alert) : '？'}${p.candyThisTurn ? '（飴ちゃんで油断中）' : ''}`, { scheme: true, disabled: md || !front || frontHeldByMe });
+  scheme += btn('main:rumor', 'デマを流す', `前後5人に「第二配布所」の噂。信じてもらえる度：${cred >= .7 ? '高' : cred >= .4 ? '中' : '低'}`, { scheme: true, disabled: md });
+  const ev = evidenceTargets();
+  for (const u of ev) scheme += btn(`main:report:${u}`, `告げ口：${esc(san(P(u)))}`, `${esc(st.evidence[u].why)}。係員に言う`, { scheme: true, disabled: md });
+  if (st.intel.includes('sasaki') && !st.flags.sasakiMerged && !st.flags.sasakiBlocked && castInLine('sasaki')) scheme += btn('main:report:sasakiWarn', '告げ口：合流の予告', '佐々木さんがママ友を呼ぶ前に、係員に釘を刺す', { scheme: true, disabled: md });
+  if (!ev.length && !(st.intel.includes('sasaki') && !st.flags.sasakiMerged && !st.flags.sasakiBlocked)) scheme += btn('main:none', '告げ口する', '証拠がない。世間話で秘密を集めるか、割り込みを目撃しよう', { scheme: true, disabled: true });
+  const hf = p.holdingFor != null ? P(p.holdingFor) : null;
+  if (hf && hf.away && pi > 0 && st.line[pi - 1] === hf.uid) scheme += btn('main:betray', '預かった場所を詰める', `${esc(san(hf))}の場所に一歩進む。戻ってきたら修羅場`, { scheme: true, disabled: md });
+
+  const trip = btn('main:trip', forced === 'cold' ? '温まりに行く' : 'トイレに行く', forced ? '列を離れる。場所をどうするか決める' : `トイレ${p.toilet}/10。前後に場所を頼むか、荷物を置くか`, { disabled: blocked, urgent: !!forced });
+
+  $('#actions').innerHTML = `
+    <h2>この手の行動<small>${blocked ? '先に張り紙の選択を' : p.smallUsed ? '身じたく済み。行動を選ぶと10分進む' : '身じたくを一つ（任意）＋行動を一つ'}</small></h2>
+    <div class="agroup"><h3><span class="seal mi">身</span>身じたく<small>1手に1つ・時間は進まない</small></h3><div class="abtns">${small}</div></div>
+    <div class="agroup"><h3><span class="seal sha">社</span>付き合い<small>選ぶと10分進む</small></h3><div class="abtns">${social}${trip}</div></div>
+    <div class="agroup"><h3><span class="seal bo">謀</span>謀略<small>見られると世間体が下がる</small></h3><div class="abtns">${scheme}</div></div>`;
+}
+
+function renderMemo() {
+  const intel = st.intel.map(k => `<li>${esc(INTEL[k].text)}</li>`).join('');
+  const ev = evidenceTargets().map(u => `<li class="ev"><span class="src">証拠</span>${esc(san(P(u)))}：${esc(st.evidence[u].why)}${st.evidence[u].until < 900 ? `（あと${st.evidence[u].until - st.turn + 1}手有効）` : ''}</li>`).join('');
+  $('#memo').innerHTML = `<h2>井戸端メモ<small>世間話で集めた秘密と、告げ口の証拠</small></h2>${intel || ev ? `<ul class="memo-list">${ev}${intel}</ul>` : '<p class="memo-empty">まだ何も知らない。口の軽い人ほど、よく喋る。</p>'}`;
+}
+
+function renderLog() {
+  let html = '', lastT = null;
+  for (let k = st.log.length - 1; k >= 0; k--) {
+    const e = st.log[k];
+    if (e.time !== lastT) { html += `<li class="ltime">${fmt(e.time)}</li>`; lastT = e.time; }
+    if (e.type === 'say') {
+      const x = P(e.uid);
+      html += `<li class="lsay"><span class="badge sm" style="--c:${colorOf(x)}">${esc(shortOf(x))}</span><div><b>${esc(nameOf(x))}</b><p>「${esc(e.text)}」</p>${x.known && e.honne ? `<p class="honne">本音：${esc(e.honne)}</p>` : ''}</div></li>`;
+    } else if (e.type === 'intel') {
+      html += `<li class="lintel"><em>井戸端メモに追加（${esc(san(P(e.uid)))}より）</em>${esc(e.text)}</li>`;
+    } else if (e.type === 'sys') {
+      html += `<li class="lsys ${e.tone}"><span class="delta">${esc(e.delta)}</span><span>${esc(e.text)}</span></li>`;
+    } else {
+      html += `<li class="lnar">${esc(e.text)}</li>`;
+    }
+  }
+  $('#log').innerHTML = html;
+}
+
+function renderOverlay() {
+  const ov = $('#overlay'), pop = $('#pop');
+  const pr = st.phase === 'play' ? st.prompts[0] : null;
+  const wasHidden = ov.hidden;
+  if (pr) {
+    pop.innerHTML = `
+      <p class="kicker">${esc(pr.kicker || '')}　${fmt(now())}</p>
+      <h2 id="popTitle">${esc(pr.title)}</h2>
+      <p class="body">${esc(pr.body)}</p>
+      ${pr.honne ? `<p class="hint">本音：${esc(pr.honne)}</p>` : ''}
+      ${pr.hint ? `<p class="hint">${esc(pr.hint)}</p>` : ''}
+      <div class="popt">${pr.options.map(o => `<button data-act="opt:${esc(o.id)}">${esc(o.label)}${o.hint ? `<small>${esc(o.hint)}</small>` : ''}</button>`).join('')}</div>`;
+    ov.hidden = false;
+    pop.querySelector('button').focus({ preventScroll: true });
+    return;
+  }
+  if (st.phase === 'play' && ui.detail != null && P(ui.detail)) {
+    const x = P(ui.detail), t = tr(x);
+    const me = x.kind === 'player';
+    const i = st.line.indexOf(x.uid);
+    const traits = x.known && !me ? `<dl class="traits">${[['警戒心', t.alert], ['信じやすさ', t.gull], ['図太さ', t.bold], ['人の良さ', t.kind], ['口の軽さ', t.mouth]].map(([k, v]) => `<div><dt>${k}</dt><dd>${traitWord(v)}</dd></div>`).join('')}</dl>` : '';
+    const desc = x.kind === 'cast' && x.proxy ? (st.intel.includes('kaneda') ? 'バイト代三千円で、祖母の代わりに並ばされている。' : 'スマホゲームに夢中。誰かの代理っぽい。') : (t.desc || '');
+    pop.innerHTML = `
+      <div class="prof"><span class="badge lg" style="--c:${colorOf(x)}">${esc(shortOf(x))}</span><div><h2 id="popTitle">${esc(me ? 'あなた' : nameOf(x))}</h2><span class="role">${esc(me ? '町内の主婦' : roleOf(x))}${i >= 0 ? `　・　${numAt(i)}番目` : ''}</span></div></div>
+      <p class="body">${esc(me ? 'サンマ3尾と、明日からの平穏な暮らしを賭けて並んでいる。' : desc)}</p>
+      ${me ? '' : `<p class="hint">好感度 ${x.aff}${x.owes ? '　・　あなたに「貸し」がある' : ''}${st.evidence[x.uid] ? `\n証拠：${st.evidence[x.uid].why}` : ''}${x.known ? '' : '\nまだよく知らない。世間話をすると性格がわかる。'}</p>`}
+      ${traits}
+      <div class="popt"><button data-act="close">閉じる</button></div>`;
+    ov.hidden = false;
+    if (wasHidden) pop.querySelector('[data-act="close"]').focus({ preventScroll: true });
+    return;
+  }
+  ov.hidden = true;
+}
+
+function renderEnd() {
+  const r = st.result;
+  const S = START[st.key];
+  const stub = r.ticket
+    ? `<div class="stub"><div class="stub-l"><span class="o">さざなみ漁港 秋の大感謝祭</span><span class="k">生サンマ引換券</span><span class="no">${r.early === 'staff' ? '特別' : r.early === 'second' ? '第二' : 'No.' + r.myNo}</span><span class="s">お一人様3尾　午前7時配布</span></div><div class="stub-r">整理券</div><span class="stamp">引換済</span></div>`
+    : `<div class="stub none"><div class="stub-l"><span class="o">さざなみ漁港 秋の大感謝祭</span><span class="k">生サンマ引換券</span><span class="no">${r.myNo ? 'No.' + r.myNo : '—'}</span><span class="s">整理券は${st.tickets}番まででした</span></div><div class="stub-r">整理券</div><span class="stamp">配布終了</span></div>`;
+  $('#endScreen').innerHTML = `
+    <div class="wrap">
+      <div class="end-grid">
+        <div>
+          <p class="rank-k">${S.label}・${esc(S.name)}　の結末</p>
+          <h1 class="rank-t">${esc(r.title)}</h1>
+          <p class="epi">${esc(r.epi)}</p>
+          ${r.notes.length ? `<ul class="notes">${r.notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:22px">
+          ${stub}
+          <div class="panel">
+            <table class="score">
+              <tr><td>サンマ（整理券${r.ticket ? 3 : 0}尾＋おすそわけ${r.giftN}尾）× 100</td><td>${r.sanma}尾 ／ ${r.sanma * 100}</td></tr>
+              <tr><td>世間体 × 25</td><td>${r.rep} ／ ${r.rep * 25}</td></tr>
+              <tr><td>家庭円満 × 15</td><td>${r.family} ／ ${r.family * 15}</td></tr>
+              <tr class="total"><td>総合</td><td>${r.score}点</td></tr>
+            </table>
+            <div class="statchips">
+              <span class="chip">割り込み ${st.stats.cuts}</span><span class="chip">デマ ${st.stats.rumors}</span><span class="chip">告げ口 ${st.stats.reports}</span>
+              <span class="chip">裏切り ${st.stats.betray}</span><span class="chip">人助け ${st.stats.helped}</span><span class="chip">場所を預かった ${st.stats.held}</span>
+            </div>
+            <p class="best-line" style="margin-top:10px">${r.isNew ? '<span class="newbest">自己ベスト更新</span>　' : ''}最高点：${best}点</p>
+          </div>
+        </div>
+      </div>
+      <div class="btnrow">
+        <button class="bigbtn" data-act="start:${st.key}">同じ時刻にもう一度</button>
+        <button class="bigbtn ghost" data-act="title">出陣時刻を選び直す</button>
+      </div>
+    </div>`;
+  window.scrollTo(0, 0);
+}
+
+// ===== 入力 =====
+if (!HEADLESS) {
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-act]');
+    if (!b || b.disabled) return;
+    const [a, x, y] = b.dataset.act.split(':');
+    if (a === 'start') { ui.detail = null; newGame(x); window.scrollTo(0, 0); }
+    else if (a === 'title') { st = { phase: 'title' }; render(); window.scrollTo(0, 0); }
+    else if (a === 'small') smallAct(x);
+    else if (a === 'main') { ui.detail = null; mainAct(x, y === 'sasakiWarn' ? y : y != null ? +y : undefined); }
+    else if (a === 'opt') resolvePrompt(b.dataset.act.slice(4));
+    else if (a === 'detail') { ui.detail = +x; render(); }
+    else if (a === 'close') { const u = ui.detail; ui.detail = null; render(); const el = document.querySelector(`[data-act="detail:${u}"]`); if (el) el.focus({ preventScroll: true }); }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && ui.detail != null && !st.prompts?.length) { ui.detail = null; render(); }
+  });
+
+  const boot = data => {
+    try { best = Number(localStorage.getItem(BEST_KEY)) || 0; } catch (e) {}
+    if (data && data.st && data.st.v === 1) st = data.st;
+    if (data && data.best > best) best = data.best;
+    render();
+  };
+  window.claude?.hot?.snapshot?.(() => ({ st, best }));
+  window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+}
+</script>
+</body>
+</html>
