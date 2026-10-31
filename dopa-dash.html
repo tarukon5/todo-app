@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ドパドパダッシュ</title>
-<meta name="description" content="四角いキャラでトゲとブロックをよけまくれ！音楽に合わせて画面が光ってゆれる、演出MAXのジャンプアクション。">
+<meta name="description" content="四角いキャラでトゲ・ノコギリ・穴をよけまくれ！重力反転やビートトゲなど仕掛けいっぱい、ビートの効いたBGMに合わせて画面が光ってゆれるジャンプアクション。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Orbitron:wght@700;900&family=M+PLUS+Rounded+1c:wght@500;800&display=swap">
@@ -19,6 +19,7 @@
   --cyan: #22f2ff;
   --yellow: #ffe23d;
   --lime: #7dff4a;
+  --pink: #ff7ab8;
   --font-pop: "Mochiy Pop One", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
   --font-num: "Orbitron", "Arial Black", sans-serif;
   --font-body: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
@@ -46,64 +47,69 @@ body {
   display: flex;
   padding: 16px;
   overflow: auto;
-  background: radial-gradient(ellipse at center, rgba(26, 11, 61, .55), rgba(11, 4, 32, .88));
+  background: radial-gradient(ellipse at center, rgba(26, 11, 61, .55), rgba(11, 4, 32, .9));
 }
 .panel {
   margin: auto;
   width: 100%;
-  max-width: 30rem;
+  max-width: 40rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(8px, 1.8vh, 14px);
+  gap: clamp(8px, 1.6vh, 14px);
   text-align: center;
 }
 .logo {
   margin: 0;
   font-family: var(--font-pop);
   font-weight: 400;
-  font-size: clamp(2rem, min(11vw, 9vh), 4.4rem);
+  font-size: clamp(1.9rem, min(10vw, 8vh), 4.2rem);
   line-height: 1.05;
   color: var(--yellow);
   text-shadow: 3px 3px 0 var(--magenta), 6px 6px 0 var(--cyan), 0 0 24px rgba(255, 43, 214, .6);
   text-wrap: balance;
-  transform: rotate(-4deg);
   animation: wobble 1.1s ease-in-out infinite alternate;
 }
 .logo span { display: block; font-size: .42em; color: var(--cyan); text-shadow: 2px 2px 0 var(--magenta); letter-spacing: .08em; }
 @keyframes wobble { from { transform: rotate(-5deg) scale(1); } to { transform: rotate(-2deg) scale(1.05); } }
 .how {
   margin: 0;
-  padding: 12px 16px;
+  padding: 10px 14px;
   width: 100%;
   box-sizing: border-box;
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: clamp(4px, 1vh, 8px) 14px;
+  gap: 5px 12px;
   text-align: left;
+  font-size: .86rem;
   border: 2px solid rgba(34, 242, 255, .5);
   border-radius: 14px;
   background: rgba(11, 4, 32, .6);
   box-shadow: 0 0 18px rgba(34, 242, 255, .25) inset;
 }
-.how dt { font-family: var(--font-pop); color: var(--cyan); white-space: nowrap; }
+@media (min-width: 700px) { .how { grid-template-columns: auto 1fr auto 1fr; } }
+.how dt { font-family: var(--font-pop); white-space: nowrap; }
 .how dd { margin: 0; min-width: 0; font-weight: 500; }
+.c-cyan { color: var(--cyan); }
+.c-mag { color: var(--magenta); }
+.c-yel { color: var(--yellow); }
+.c-pink { color: var(--pink); }
+.c-lime { color: var(--lime); }
 .go {
   font-family: var(--font-pop);
-  font-size: 1.8rem;
+  font-size: 1.7rem;
   color: var(--night);
   background: linear-gradient(180deg, var(--yellow), #ffb31a);
   border: 0;
   border-radius: 16px;
-  padding: 14px 44px;
+  padding: 12px 44px;
   cursor: pointer;
   box-shadow: 0 6px 0 #b8560b, 0 0 30px rgba(255, 226, 61, .7);
-  animation: pulse .46s ease-in-out infinite alternate;
+  animation: pulse .414s ease-in-out infinite alternate;
 }
 .go:active { transform: translateY(4px); box-shadow: 0 2px 0 #b8560b, 0 0 30px rgba(255, 226, 61, .7); }
 .go:focus-visible, .chip:focus-visible { outline: 3px dashed var(--cyan); outline-offset: 4px; }
 @keyframes pulse { from { scale: 1; } to { scale: 1.07; } }
-.row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 .chip {
   font: inherit;
   font-size: .9rem;
@@ -116,12 +122,12 @@ body {
   cursor: pointer;
 }
 .chip:hover { background: rgba(255, 43, 214, .25); }
-.note { margin: 0; font-size: .8rem; color: var(--text-dim); max-width: 26rem; }
+.note { margin: 0; font-size: .78rem; color: var(--text-dim); max-width: 30rem; }
 .best { font-family: var(--font-num); font-size: 1rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
 .rank {
   font-family: var(--font-num);
   font-weight: 900;
-  font-size: clamp(5rem, 24vw, 8rem);
+  font-size: clamp(4.5rem, min(24vw, 20vh), 8rem);
   line-height: 1;
   color: var(--yellow);
   text-shadow: 4px 4px 0 var(--magenta), 8px 8px 0 var(--cyan);
@@ -130,7 +136,7 @@ body {
 .rank.kanji { font-family: var(--font-pop); }
 @keyframes slam { from { transform: scale(3) rotate(-20deg); opacity: 0; } to { transform: scale(1) rotate(-6deg); opacity: 1; } }
 .cause { margin: 0; font-family: var(--font-pop); font-size: 1.3rem; color: var(--magenta); }
-.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; margin: 0; width: 100%; }
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; margin: 0; width: 100%; max-width: 26rem; }
 .stats div { display: flex; flex-direction: column; gap: 2px; }
 .stats dt { font-size: .8rem; color: var(--text-dim); }
 .stats dd { margin: 0; font-family: var(--font-num); font-weight: 900; font-size: 1.6rem; font-variant-numeric: tabular-nums; }
@@ -155,20 +161,21 @@ body {
 
   <section class="overlay" id="titleOv">
     <div class="panel">
-      <h1 class="logo"><span>DOPA DOPA</span>ドパドパ<br>ダッシュ!!</h1>
+      <h1 class="logo"><span>DOPA DOPA</span>ドパドパダッシュ!!</h1>
       <dl class="how">
-        <dt>タップ</dt><dd>ジャンプ（スペースキーでもOK）</dd>
-        <dt>長押し</dt><dd>着地したしゅんかんに連続ジャンプ</dd>
-        <dt>トゲ・穴</dt><dd>さわったら爆発</dd>
-        <dt>ブロック</dt><dd>上には乗れる。横からぶつかると爆発</dd>
-        <dt>黄色い輪</dt><dd>空中でタップするともう1回ジャンプ</dd>
-        <dt>コンボ40</dt><dd>FEVER突入！トゲをこわして進め</dd>
+        <dt class="c-cyan">タップ</dt><dd>ジャンプ（スペースキーでもOK）</dd>
+        <dt class="c-cyan">長押し</dt><dd>着地したしゅんかんに連続ジャンプ</dd>
+        <dt class="c-mag">トゲ・ノコギリ・穴</dt><dd>さわったら爆発</dd>
+        <dt class="c-cyan">ブロック</dt><dd>上に乗れる。横や下からぶつかると爆発</dd>
+        <dt class="c-yel">黄色/<span class="c-pink">ピンクの台</span></dt><dd>ふむと大ジャンプ／小ジャンプ</dd>
+        <dt class="c-yel">黄色/<span class="c-pink">ピンクの輪</span></dt><dd>空中でタップしてもう1回ジャンプ</dd>
+        <dt class="c-cyan">青いゲート</dt><dd>重力反転！天井を走る（黄色で元にもどる）</dd>
+        <dt class="c-lime">緑のゲート</dt><dd>スピードアップ</dd>
+        <dt class="c-mag">ビートトゲ</dt><dd>音楽に合わせて出たり引っこんだり</dd>
+        <dt class="c-yel">コンボ40</dt><dd>FEVER突入！スコア2倍</dd>
       </dl>
       <button class="go" id="startBtn" type="button">スタート!!</button>
-      <div class="row">
-        <button class="chip" id="fxBtn" type="button">演出：MAX</button>
-      </div>
-      <p class="note">画面がはげしく光ったりゆれたりします。目がつかれたり気分が悪くなったら「演出：ひかえめ」にして、休けいしてください。</p>
+      <p class="note">画面がはげしく光ったりゆれたりします。目がつかれたり気分が悪くなったら、右下のボタンで「演出：ひかえめ」にして休けいしてください。音を出して遊ぶのがおすすめ。</p>
       <div class="best" id="titleBest"></div>
     </div>
   </section>
@@ -203,9 +210,11 @@ body {
   const U = 40;                 // one grid unit in logical px
   const G = 2700;               // gravity
   const JUMP = 830;
-  const PAD_V = 1150;
-  const ORB_V = 880;
-  const BPM = 140;
+  const PAD_V = { y: 1150, p: 650 };
+  const ORB_V = { y: 880, p: 640 };
+  const BPM = 145;
+  const SPB = 60 / BPM;         // seconds per beat
+  const STEP = SPB / 4;         // 16th note
   const F_POP = '"Mochiy Pop One","Hiragino Maru Gothic ProN",sans-serif';
   const F_NUM = '"Orbitron","Arial Black",sans-serif';
   const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -217,26 +226,41 @@ body {
   };
   const CAUSES = {
     spike: ['トゲにささった!!', 'チクッ!!', 'トゲ、いたい!!'],
+    saw: ['ノコギリでまっぷたつ!!', 'ギュイーン!!', '回転ノコギリにやられた!!'],
     block: ['かべに激突!!', 'ゴンッ!!', 'ブロックかたすぎ!!'],
-    pit: ['奈落へ落ちた!!', 'ヒュ〜〜ン…', '穴に吸いこまれた!!']
+    pit: ['奈落へ落ちた!!', 'ヒュ〜〜ン…', '穴に吸いこまれた!!'],
+    space: ['宇宙へ飛んでいった!!', '天井がなかった!!']
   };
 
-  // Patterns in grid units. s=spike(x,y) b=block(x,y,w,h) pit(x,w) pad(x) orb(x,y) c=coin(x,y)
+  // Patterns in grid units (x to the right, y up from the ground).
+  // s=spike si=hanging spike bs=beat spike b=block(x,y,w,h) pit(x,w) pad/ppad(x) orb/porb(x,y)
+  // saw(cx,cy,r,bob,roll) gp=gravity gate(x,dir) spd=speed gate(x)
   const PATTERNS = [
-    { lv: 1, len: 1, o: [['s', 0, 0]], c: [[0.5, 3]] },
-    { lv: 1, len: 2, o: [['s', 0, 0], ['s', 1, 0]], c: [[1, 3.2]] },
-    { lv: 1, len: 2, o: [['b', 0, 0, 2, 1]], c: [[0.5, 1.8], [1.5, 1.8]] },
-    { lv: 1, len: 2, o: [['pit', 0, 2]], c: [[1, 2.6]] },
-    { lv: 1, len: 6, o: [['pad', 0], ['b', 4, 0, 2, 2]], c: [[2, 5], [3, 5.4], [4, 5]] },
-    { lv: 2, len: 3, o: [['s', 0, 0], ['s', 1, 0], ['s', 2, 0]], c: [[0.5, 3], [1.5, 3.4], [2.5, 3]] },
-    { lv: 2, len: 5, o: [['b', 0, 0, 2, 1], ['s', 2, 0], ['b', 3, 0, 2, 2]], c: [[2.5, 3.6], [4, 3]] },
-    { lv: 2, len: 3, o: [['pit', 0, 3]], c: [[0.5, 2.6], [1.5, 3.2], [2.5, 2.6]] },
-    { lv: 2, len: 4, o: [['b', 0, 0, 4, 1], ['s', 2, 1]], c: [[2, 3.8]] },
-    { lv: 3, len: 6, o: [['s', 0, 0], ['s', 1, 0], ['s', 2, 0], ['s', 3, 0], ['s', 4, 0], ['s', 5, 0], ['orb', 2.5, 2.6]], c: [[1, 3], [4, 4], [5, 3.6]] },
-    { lv: 3, len: 5, o: [['pit', 0, 2], ['pit', 3, 2]], c: [[1, 2.6], [4, 2.6]] },
-    { lv: 3, len: 6, o: [['pad', 0], ['s', 3, 0], ['s', 4, 0], ['s', 5, 0]], c: [[2.5, 5], [3.5, 5.6], [4.5, 5]] },
-    { lv: 4, len: 7, o: [['b', 0, 0, 3, 1], ['s', 3, 0], ['s', 4, 0], ['b', 5, 0, 2, 2]], c: [[3.5, 3.6], [4.5, 3.8]] },
-    { lv: 4, len: 4, o: [['pit', 0, 4]], c: [[1, 3], [2, 3.4], [3, 3]] }
+    { lv: 1, len: 1, o: [['s', 0, 0]] },
+    { lv: 1, len: 2, o: [['s', 0, 0], ['s', 1, 0]] },
+    { lv: 1, len: 2, o: [['b', 0, 0, 2, 1]] },
+    { lv: 1, len: 2, o: [['pit', 0, 2]] },
+    { lv: 1, len: 6, o: [['pad', 0], ['b', 4, 0, 2, 2]] },
+    { lv: 1, len: 2, o: [['saw', 1, 0, 0.95, 0, 0]] },
+    { lv: 2, len: 3, o: [['s', 0, 0], ['s', 1, 0], ['s', 2, 0]] },
+    { lv: 2, max: 3, len: 16, o: [['b', 0, 0, 5, 1], ['s', 5, 0], ['s', 6, 0], ['b', 7, 0, 4, 2], ['s', 11, 0], ['s', 12, 0], ['b', 13, 0, 3, 3]] },
+    { lv: 2, len: 3, o: [['pit', 0, 3]] },
+    { lv: 2, len: 4, o: [['b', 0, 0, 4, 1], ['s', 2, 1]] },
+    { lv: 2, len: 3, o: [['bs', 0], ['bs', 1], ['bs', 2]] },
+    { lv: 2, len: 3, o: [['b', 0, 0, 3, 1], ['saw', 1.5, 1, 0.7, 0, 0]] },
+    { lv: 2, len: 6, o: [['b', 0, 2.2, 6, 0.6, 'nojump']] },
+    { lv: 3, len: 6, o: [['s', 0, 0], ['s', 1, 0], ['s', 2, 0], ['s', 3, 0], ['s', 4, 0], ['s', 5, 0], ['orb', 2.5, 2.6]] },
+    { lv: 3, len: 5, o: [['pit', 0, 2], ['pit', 3, 2]] },
+    { lv: 3, len: 6, o: [['pad', 0], ['s', 3, 0], ['s', 4, 0], ['s', 5, 0]] },
+    { lv: 3, len: 18, o: [['gp', 0, -1], ['b', 0, 5, 18, 1], ['si', 8, 4], ['si', 9, 4], ['s', 9, 0], ['s', 10, 0], ['si', 13, 4], ['gp', 16, 1]] },
+    { lv: 3, len: 12, o: [['s', 1, 0], ['s', 2, 0], ['s', 3, 0], ['s', 4, 0], ['s', 5, 0], ['s', 6, 0], ['s', 7, 0], ['s', 8, 0], ['s', 9, 0], ['s', 10, 0], ['b', 1.5, 1.5, 4, 0.5], ['b', 7.5, 1.5, 4, 0.5]] },
+    { lv: 3, len: 10, o: [['spd', 0], ['s', 4, 0], ['s', 8, 0], ['s', 9, 0]] },
+    { lv: 3, len: 9, o: [['bs', 0], ['bs', 1], ['b', 3, 0, 3, 1], ['bs', 7], ['bs', 8]] },
+    { lv: 4, len: 4, o: [['saw', 2, 0, 0.9, 0, 170]] },
+    { lv: 4, len: 5, o: [['ppad', 0], ['s', 2, 0], ['s', 3, 0]] },
+    { lv: 4, len: 8, o: [['s', 0, 0], ['s', 1, 0], ['s', 2, 0], ['s', 3, 0], ['s', 4, 0], ['s', 5, 0], ['s', 6, 0], ['s', 7, 0], ['porb', 2.5, 2.2], ['porb', 5.5, 2.2]] },
+    { lv: 4, len: 4, o: [['pit', 0, 4]] },
+    { lv: 5, len: 20, o: [['gp', 0, -1], ['b', 0, 5, 20, 1], ['bs', 6], ['si', 7, 4], ['si', 8, 4], ['saw', 12, 4.6, 0.8, 0, 0], ['si', 16, 4], ['gp', 18, 1]] }
   ];
 
   // ---------- canvas ----------
@@ -265,19 +289,48 @@ body {
     if (fx) fxMax = fx === 'max';
   } catch (e) {}
 
-  // ---------- audio ----------
-  let actx = null, master = null, musicBus = null, musicFilter = null, sfxBus = null, noiseBuf = null;
-  let nextStepTime = 0, step = 0, musicOn = false;
-  const kickTimes = [];
+  // ---------- audio: a small techno engine ----------
+  let actx = null, master, comp, musicFilter, musicBus, duckBus, kickBus, bassBus, revSend, delaySend, sfxBus, noiseBuf, analyser, freqData;
+  let nextStepTime = 0, songStep = 0, musicOn = false;
+  const kickTimes = [], dropTimes = [];
+
+  function shaperCurve(k) {
+    const n = 1024, c = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; c[i] = Math.tanh(k * x) / Math.tanh(k); }
+    return c;
+  }
+  function makeIR(sec) {
+    const len = Math.floor(actx.sampleRate * sec), b = actx.createBuffer(2, len, actx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = b.getChannelData(ch);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+    }
+    return b;
+  }
+  const gain = v => { const g = actx.createGain(); g.gain.value = v; return g; };
   function initAudio() {
     if (actx) { if (actx.state === 'suspended') actx.resume(); return; }
     try {
       actx = new (window.AudioContext || window.webkitAudioContext)();
-      master = actx.createGain(); master.gain.value = muted ? 0 : 0.7; master.connect(actx.destination);
+      comp = actx.createDynamicsCompressor();
+      comp.threshold.value = -12; comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.12;
+      master = gain(muted ? 0 : 0.85);
+      comp.connect(master).connect(actx.destination);
       musicFilter = actx.createBiquadFilter(); musicFilter.type = 'lowpass'; musicFilter.frequency.value = 18000;
-      musicBus = actx.createGain(); musicBus.gain.value = 0.55;
-      musicBus.connect(musicFilter).connect(master);
-      sfxBus = actx.createGain(); sfxBus.gain.value = 0.8; sfxBus.connect(master);
+      musicFilter.connect(comp);
+      musicBus = gain(0.62); musicBus.connect(musicFilter);
+      analyser = actx.createAnalyser(); analyser.fftSize = 128; analyser.smoothingTimeConstant = 0.7;
+      musicBus.connect(analyser);
+      freqData = new Uint8Array(analyser.frequencyBinCount);
+      duckBus = gain(1); duckBus.connect(musicBus);           // everything that pumps against the kick
+      kickBus = actx.createWaveShaper(); kickBus.curve = shaperCurve(2.2); kickBus.connect(musicBus);
+      bassBus = actx.createWaveShaper(); bassBus.curve = shaperCurve(3); const bassOut = gain(0.7); bassBus.connect(bassOut).connect(duckBus);
+      const conv = actx.createConvolver(); conv.buffer = makeIR(1.6);
+      revSend = gain(0.3); revSend.connect(conv); conv.connect(duckBus);
+      const dl = actx.createDelay(1); dl.delayTime.value = STEP * 3;
+      const fb = gain(0.38), wet = gain(0.5);
+      delaySend = gain(1); delaySend.connect(dl); dl.connect(fb).connect(dl); dl.connect(wet).connect(duckBus);
+      sfxBus = gain(0.6); sfxBus.connect(comp);
       noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
       const d = noiseBuf.getChannelData(0);
       for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -288,43 +341,141 @@ body {
     g.gain.linearRampToValueAtTime(peak, t + a);
     g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec);
   }
-  function tone(type, f0, f1, t, dur, vol, bus = sfxBus, attack = 0.005) {
+  function tone(type, f0, f1, t, dur, vol, bus = sfxBus, attack = 0.004) {
     const o = actx.createOscillator(); o.type = type;
     o.frequency.setValueAtTime(f0, t);
     if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
     const g = actx.createGain(); env(g, t, attack, vol, dur);
     o.connect(g).connect(bus); o.start(t); o.stop(t + attack + dur + 0.02);
   }
-  function noise(t, dur, vol, type, freq, bus = sfxBus) {
-    const s = actx.createBufferSource(); s.buffer = noiseBuf;
-    const f = actx.createBiquadFilter(); f.type = type; f.frequency.value = freq;
+  function noise(t, dur, vol, type, freq, bus = sfxBus, q = 1) {
+    const s = actx.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+    const f = actx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
     const g = actx.createGain(); env(g, t, 0.002, vol, dur);
     s.connect(f).connect(g).connect(bus); s.start(t); s.stop(t + dur + 0.05);
   }
-  const CHORDS = [[220, 261.63, 329.63], [174.61, 220, 261.63], [261.63, 329.63, 392], [196, 246.94, 293.66]];
+
+  // drums & synths
+  function kick(t) {
+    const o = actx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(200, t);
+    o.frequency.exponentialRampToValueAtTime(52, t + 0.07);
+    o.frequency.exponentialRampToValueAtTime(40, t + 0.3);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(1.1, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.42);
+    o.connect(g).connect(kickBus); o.start(t); o.stop(t + 0.45);
+    noise(t, 0.012, 0.35, 'highpass', 3500, musicBus);
+    duckBus.gain.setValueAtTime(0.25, t);
+    duckBus.gain.linearRampToValueAtTime(1, t + 0.22);
+    kickTimes.push(t);
+  }
+  function clap(t, vol) {
+    for (let i = 0; i < 3; i++) noise(t + i * 0.011, 0.02, vol, 'bandpass', 1300, musicBus, 0.9);
+    noise(t + 0.033, 0.2, vol * 0.9, 'bandpass', 1300, musicBus, 0.9);
+    noise(t + 0.033, 0.2, vol * 0.6, 'bandpass', 1300, revSend, 0.9);
+  }
+  function snare(t, vol) {
+    noise(t, 0.12, vol, 'bandpass', 1900, musicBus, 0.7);
+    tone('triangle', 240, 170, t, 0.08, vol * 0.6, musicBus);
+  }
+  function hat(t, open, vol) { noise(t, open ? 0.16 : 0.035, vol, 'highpass', open ? 6500 : 8500, duckBus); }
+  function bass(t, f, dur, bright) {
+    const f1 = actx.createBiquadFilter(); f1.type = 'lowpass'; f1.Q.value = 9;
+    f1.frequency.setValueAtTime(bright ? 3200 : 1800, t);
+    f1.frequency.exponentialRampToValueAtTime(160, t + dur);
+    const g = actx.createGain(); env(g, t, 0.003, 0.42, dur);
+    f1.connect(g).connect(bassBus);
+    [0, 7].forEach(cents => {
+      const o = actx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = cents;
+      o.connect(f1); o.start(t); o.stop(t + dur + 0.03);
+    });
+    const sub = actx.createOscillator(); sub.type = 'sine'; sub.frequency.value = f / 2;
+    const sg = actx.createGain(); env(sg, t, 0.003, 0.35, dur);
+    sub.connect(sg).connect(duckBus); sub.start(t); sub.stop(t + dur + 0.03);
+  }
+  function stab(t, notes, dur, vol) {
+    const f = actx.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 2;
+    f.frequency.setValueAtTime(5200, t);
+    f.frequency.exponentialRampToValueAtTime(900, t + dur);
+    const g = actx.createGain(); env(g, t, 0.004, vol, dur);
+    f.connect(g); g.connect(duckBus); g.connect(revSend);
+    notes.forEach(n => [-11, 0, 11].forEach(c => {
+      const o = actx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = n * 2; o.detune.value = c;
+      o.connect(f); o.start(t); o.stop(t + dur + 0.05);
+    }));
+  }
+  function arp(t, f, vol) {
+    const o = actx.createOscillator(); o.type = 'square'; o.frequency.value = f;
+    const lp = actx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3800;
+    const g = actx.createGain(); env(g, t, 0.003, vol, 0.09);
+    o.connect(lp).connect(g); g.connect(duckBus); g.connect(delaySend);
+    o.start(t); o.stop(t + 0.12);
+  }
+  function riser(t, dur) {
+    const s = actx.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+    const f = actx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 5;
+    f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(9000, t + dur);
+    const g = actx.createGain(); g.gain.setValueAtTime(0.001, t); g.gain.exponentialRampToValueAtTime(0.35, t + dur);
+    s.connect(f).connect(g).connect(musicBus); s.start(t); s.stop(t + dur);
+    tone('sawtooth', 110, 880, t, dur, 0.06, musicBus, dur * 0.9);
+  }
+  function crash(t) {
+    noise(t, 1.4, 0.3, 'highpass', 5000, musicBus);
+    noise(t, 1.4, 0.2, 'highpass', 3000, revSend);
+  }
+
+  // A minor: Am F C G
+  const PROG = [
+    { root: 55, chord: [220, 261.63, 329.63] },
+    { root: 43.65, chord: [174.61, 220, 261.63] },
+    { root: 65.41, chord: [196, 261.63, 329.63] },
+    { root: 49, chord: [196, 246.94, 293.66] }
+  ];
+  const STAB_STEPS = [0, 3, 6, 10, 13];
   function playStep(st, t) {
-    const bar = Math.floor(st / 16) % 4, s = st % 16, ch = CHORDS[bar];
-    const intense = state === 'play' ? Math.min(4, level) : 1;
-    if (s % 4 === 0) { tone('sine', 160, 42, t, 0.16, 0.9, musicBus); kickTimes.push(t); }
-    if (intense >= 2 && (s === 4 || s === 12)) noise(t, 0.14, 0.4, 'bandpass', 1800, musicBus);
-    if (s % 2 === 1 || (fever > 0 && s % 2 === 0)) noise(t, 0.035, s % 4 === 2 ? 0.18 : 0.1, 'highpass', 8000, musicBus);
-    if (s % 2 === 0) tone('sawtooth', ch[0] / 2, ch[0] / 2, t, 0.11, 0.16, musicBus);
-    if (intense >= 3 || fever > 0) tone('square', ch[s % 3] * 2, ch[s % 3] * 2, t, 0.07, fever > 0 ? 0.07 : 0.035, musicBus);
+    const bar = Math.floor(st / 16), s = st % 16, ch = PROG[bar % 4];
+    const sec = bar === 0 ? 'intro' : (bar % 8 === 1 ? 'fill' : 'full');
+    const lv = state === 'play' ? level : 1;
+    const fev = fever > 0;
+    // kick: four on the floor, thins out in the fill
+    if (sec === 'fill') { if (s === 0 || s === 4 || s === 8) kick(t); }
+    else if (s % 4 === 0) kick(t);
+    if (sec === 'full' && bar % 8 === 2 && s === 0) { crash(t); dropTimes.push(t); }
+    // backbeat
+    if (sec !== 'intro' && (s === 4 || s === 12)) clap(t, 0.5);
+    if (sec === 'fill') {
+      if (s === 0) riser(t, STEP * 16);
+      if (s >= 8) snare(t, 0.12 + (s - 8) * 0.05);
+    }
+    // hats
+    if (s % 4 === 2) hat(t, sec === 'full', 0.2);
+    else hat(t, false, s % 2 ? 0.05 : 0.09);
+    // rolling bass on the three 16ths between kicks
+    if (s % 4 !== 0 && sec !== 'fill') bass(t, ch.root * (fev && s % 4 === 3 ? 4 : 2), STEP * 0.85, sec === 'full');
+    if (sec === 'fill' && s < 8 && s % 2 === 1) bass(t, ch.root * 2, STEP * 0.85, false);
+    // supersaw stabs (3-3-2 groove)
+    if (sec === 'full' && (lv >= 2 || fev) && STAB_STEPS.includes(s)) stab(t, ch.chord, STEP * 1.6, fev ? 0.07 : 0.05);
+    // arp through a dotted-eighth delay
+    if (sec === 'full' && (lv >= 3 || fev)) arp(t, ch.chord[s % 3] * (s % 8 < 4 ? 2 : 4), fev ? 0.07 : 0.045);
   }
   function scheduler() {
     if (!actx || !musicOn) return;
-    const stepDur = 60 / BPM / 4;
     if (nextStepTime < actx.currentTime) nextStepTime = actx.currentTime + 0.05;
     while (nextStepTime < actx.currentTime + 0.12) {
-      playStep(step, nextStepTime);
-      nextStepTime += stepDur;
-      step = (step + 1) % 64;
+      playStep(songStep, nextStepTime);
+      nextStepTime += STEP;
+      songStep++;
     }
-    while (kickTimes.length > 4) kickTimes.shift();
+    while (kickTimes.length > 6) kickTimes.shift();
   }
   function startMusic() {
     if (!actx) return;
     musicOn = true;
+    songStep = 0;
+    nextStepTime = actx.currentTime + 0.08;
+    kickTimes.length = 0;
+    dropTimes.length = 0;
     musicFilter.frequency.cancelScheduledValues(actx.currentTime);
     musicFilter.frequency.setValueAtTime(18000, actx.currentTime);
   }
@@ -332,39 +483,38 @@ body {
     if (!actx) return;
     musicFilter.frequency.cancelScheduledValues(actx.currentTime);
     musicFilter.frequency.setValueAtTime(18000, actx.currentTime);
-    musicFilter.frequency.exponentialRampToValueAtTime(380, actx.currentTime + 0.5);
+    musicFilter.frequency.exponentialRampToValueAtTime(350, actx.currentTime + 0.5);
   }
-  // beat pulse 0..1, decays after each kick
-  function beatPulse(nowReal) {
+  // 0..1 position inside the current beat
+  function beatPhase() {
     if (actx && musicOn) {
       const now = actx.currentTime;
       let last = -1;
       for (const k of kickTimes) if (k <= now) last = k;
-      return last < 0 ? 0 : Math.exp(-(now - last) * 9);
+      if (last >= 0) return Math.min(1, (now - last) / SPB);
     }
-    const spb = 60 / BPM;
-    return Math.exp(-((nowReal / 1000) % spb) * 9);
+    return (performance.now() / 1000 / SPB) % 1;
   }
   const sfx = {
-    jump() { if (actx) tone('square', 330, 660, actx.currentTime, 0.09, 0.12); },
+    jump() { if (actx) tone('square', 330, 660, actx.currentTime, 0.08, 0.1); },
     land() { if (actx) tone('sine', 120, 60, actx.currentTime, 0.06, 0.25); },
-    coin(n) { if (!actx) return; const f = 880 * Math.pow(2, Math.min(n, 24) / 12); const t = actx.currentTime; tone('square', f, f, t, 0.05, 0.08); tone('square', f * 1.5, f * 1.5, t + 0.05, 0.08, 0.08); },
-    orb() { if (!actx) return; const t = actx.currentTime; [0, 4, 7, 12].forEach((n, i) => tone('triangle', 660 * Math.pow(2, n / 12), 660 * Math.pow(2, n / 12), t + i * 0.03, 0.08, 0.15)); },
-    pad() { if (actx) tone('sawtooth', 200, 1200, actx.currentTime, 0.25, 0.18); },
-    clear() { if (!actx) return; const t = actx.currentTime; tone('square', 1046, 1046, t, 0.05, 0.06); tone('square', 1568, 1568, t + 0.05, 0.08, 0.06); },
+    orb(pink) { if (!actx) return; const t = actx.currentTime, b = pink ? 880 : 660; [0, 4, 7, 12].forEach((n, i) => tone('triangle', b * Math.pow(2, n / 12), b * Math.pow(2, n / 12), t + i * 0.03, 0.08, 0.15)); },
+    pad(pink) { if (actx) tone('sawtooth', pink ? 400 : 200, pink ? 1400 : 1200, actx.currentTime, 0.22, 0.16); },
+    clear() { if (!actx) return; const t = actx.currentTime; tone('square', 1046, 1046, t, 0.05, 0.05); tone('square', 1568, 1568, t + 0.05, 0.08, 0.05); },
     near() { if (!actx) return; const t = actx.currentTime; noise(t, 0.25, 0.35, 'bandpass', 3000); tone('sine', 1760, 2637, t, 0.2, 0.18); },
-    milestone() { if (!actx) return; const t = actx.currentTime; [0, 4, 7, 12, 16, 19, 24].forEach((n, i) => tone('square', 523 * Math.pow(2, n / 12), 523 * Math.pow(2, n / 12), t + i * 0.045, 0.09, 0.09)); },
-    fever() { if (!actx) return; const t = actx.currentTime; tone('sawtooth', 110, 1760, t, 0.9, 0.2); noise(t, 0.9, 0.25, 'bandpass', 2500); },
-    smash() { if (!actx) return; const t = actx.currentTime; noise(t, 0.15, 0.5, 'lowpass', 1200); tone('square', 880, 220, t, 0.12, 0.12); },
+    milestone() { if (!actx) return; const t = actx.currentTime; [0, 4, 7, 12, 16, 19, 24].forEach((n, i) => tone('square', 523 * Math.pow(2, n / 12), 523 * Math.pow(2, n / 12), t + i * 0.045, 0.09, 0.08)); },
+    fever() { if (!actx) return; const t = actx.currentTime; tone('sawtooth', 110, 1760, t, 0.9, 0.18); noise(t, 0.9, 0.22, 'bandpass', 2500); },
+    gate() { if (!actx) return; const t = actx.currentTime; tone('sine', 1200, 300, t, 0.3, 0.2); noise(t, 0.3, 0.2, 'bandpass', 4000); },
+    boost() { if (actx) tone('sawtooth', 300, 2400, actx.currentTime, 0.35, 0.14); },
     death() { if (!actx) return; const t = actx.currentTime; noise(t, 0.6, 0.9, 'lowpass', 900); tone('sawtooth', 440, 40, t, 0.6, 0.3); },
-    levelUp() { if (!actx) return; const t = actx.currentTime; [0, 7, 12, 19, 24].forEach((n, i) => tone('sawtooth', 392 * Math.pow(2, n / 12), 392 * Math.pow(2, n / 12), t + i * 0.06, 0.12, 0.1)); }
+    levelUp() { if (!actx) return; const t = actx.currentTime; [0, 7, 12, 19, 24].forEach((n, i) => tone('sawtooth', 392 * Math.pow(2, n / 12), 392 * Math.pow(2, n / 12), t + i * 0.06, 0.12, 0.09)); }
   };
 
   // ---------- state ----------
   let state = 'title';
-  let dist, speed, level, nextX, objs, pits, coins, parts, pops, trail;
-  let P, holding, pressBuf, score, shownScore, combo, comboTimer, maxCombo, mult, fever, coinStreak;
-  let shake, flash, zoom, timeScale, slowTimer, hue, deathTimer, deathCause, lastLevelAnnounce, attemptX;
+  let dist, speed, level, nextX, objs, pits, parts, pops, trail;
+  let P, grav, boost, holding, pressBuf, score, shownScore, combo, comboTimer, maxCombo, mult, fever;
+  let shake, flash, zoom, timeScale, slowTimer, hue, deathTimer, deathCause, attemptX;
   let tReal = 0, lastFrame = 0;
 
   const rand = (a, b) => a + Math.random() * (b - a);
@@ -373,48 +523,47 @@ body {
 
   function reset() {
     dist = 0; speed = 360; level = 1; nextX = U * 14;
-    objs = []; pits = []; coins = []; parts = []; pops = []; trail = [];
-    P = { h: 0, vh: 0, rot: 0, grounded: true, coyote: 0, squash: 0 };
+    objs = []; pits = []; parts = []; pops = []; trail = [];
+    P = { h: 0, vh: 0, rot: 0, grounded: true, coyote: 0, squash: 0, flipVis: 1 };
+    grav = 1; boost = 0;
     holding = false; pressBuf = 0;
-    score = 0; shownScore = 0; combo = 0; comboTimer = 0; maxCombo = 0; mult = 1; fever = 0; coinStreak = 0;
+    score = 0; shownScore = 0; combo = 0; comboTimer = 0; maxCombo = 0; mult = 1; fever = 0;
     shake = 0; flash = 0; zoom = 0; timeScale = 1; slowTimer = 0; hue = 280; deathTimer = 0;
-    lastLevelAnnounce = 1; attemptX = PX + U * 6;
+    attemptX = U * 6;
     if (state === 'play') generate();
   }
 
   // ---------- level generation ----------
   function generate() {
-    while (nextX < dist + W + U * 10) {
-      const pool = PATTERNS.filter(p => p.lv <= level);
+    while (nextX < dist + W + U * 12) {
+      const pool = PATTERNS.filter(p => p.lv <= level && (!p.max || level <= p.max));
       const pat = pick(pool);
       const x0 = nextX;
       for (const o of pat.o) {
-        const [t, a, b, c, d] = o;
-        if (t === 's') objs.push({ t: 'spike', x: x0 + a * U, y: b * U, w: U, h: U });
-        else if (t === 'b') objs.push({ t: 'block', x: x0 + a * U, y: b * U, w: c * U, h: d * U });
+        const [t, a, b, c, d, e] = o;
+        if (t === 's') objs.push({ t: 'spike', x: x0 + a * U, y: b * U });
+        else if (t === 'si') objs.push({ t: 'spike', inv: true, x: x0 + a * U, y: b * U });
+        else if (t === 'bs') objs.push({ t: 'spike', beat: true, x: x0 + a * U, y: 0 });
+        else if (t === 'b') objs.push({ t: 'block', x: x0 + a * U, y: b * U, w: c * U, h: d * U, nojump: e === 'nojump' });
         else if (t === 'pit') pits.push({ x: x0 + a * U, w: b * U });
-        else if (t === 'pad') objs.push({ t: 'pad', x: x0 + a * U, y: 0, w: U, h: U * 0.3 });
-        else if (t === 'orb') objs.push({ t: 'orb', x: x0 + a * U, y: b * U, used: false });
+        else if (t === 'pad' || t === 'ppad') objs.push({ t: 'pad', kind: t === 'pad' ? 'y' : 'p', x: x0 + a * U, w: U });
+        else if (t === 'orb' || t === 'porb') objs.push({ t: 'orb', kind: t === 'orb' ? 'y' : 'p', x: x0 + a * U, y: b * U });
+        else if (t === 'saw') objs.push({ t: 'saw', x: x0 + a * U, y: b * U, r: c * U, bob: d * U, vx: e, ph: Math.random() * 6 });
+        else if (t === 'gp') objs.push({ t: 'gate', dir: b, x: x0 + a * U });
+        else if (t === 'spd') objs.push({ t: 'speed', x: x0 + a * U });
       }
-      for (const [cx, cy] of pat.c) coins.push({ x: x0 + cx * U, y: cy * U, got: false, spin: Math.random() * 6 });
       objs.push({ t: 'mark', x: x0 + pat.len * U, done: false });
-      const gap = Math.round(rand(4, 7) + (speed - 360) / 70);
-      // a little coin line on the flat between patterns
-      if (Math.random() < 0.6) for (let i = 1; i < gap - 1; i++) coins.push({ x: x0 + (pat.len + i) * U + U / 2, y: U * 0.6, got: false, spin: i });
-      nextX = x0 + (pat.len + gap) * U;
+      nextX = x0 + (pat.len + Math.round(rand(4, 7) + (speed - 360) / 70)) * U;
     }
-    objs = objs.filter(o => o.x + (o.w || U) > dist - U * 4);
+    objs = objs.filter(o => o.x + (o.w || U * 2) > dist - U * 4);
     pits = pits.filter(p => p.x + p.w > dist - U * 4);
-    coins = coins.filter(c => c.x > dist - U * 4 && !c.got);
   }
 
   // ---------- helpers ----------
   const sx = wx => wx - dist + PX;           // world x -> screen x
-  const overlapsGround = (x0, x1) => {
-    // true if any part of [x0,x1] is over solid ground
-    for (const p of pits) if (x0 >= p.x && x1 <= p.x + p.w) return false;
-    return true;
-  };
+  // true unless [x0,x1] lies entirely inside one pit
+  const overlapsGround = (x0, x1) => !pits.some(p => x0 >= p.x && x1 <= p.x + p.w);
+  const pyScreen = () => GY - P.h - U / 2;    // player centre on screen
 
   function addCombo(n, label) {
     combo += n;
@@ -427,7 +576,7 @@ body {
       const m = Number(k);
       if (combo - n < m && combo >= m) milestone(MILESTONES[k], m);
     }
-    if (label) pop(label, PX + rand(-10, 30), GY - P.h - 70, pick(['#22f2ff', '#ff2bd6', '#ffe23d', '#7dff4a']), 26, 0.7);
+    if (label) pop(label, PX + rand(-10, 30), pyScreen() - 50, pick(['#22f2ff', '#ff2bd6', '#ffe23d', '#7dff4a']), 26, 0.7);
   }
   function milestone(text, m) {
     pop(text, W / 2, H * 0.32, '#ffe23d', m >= 40 ? 76 : 60, 1.5, true);
@@ -436,12 +585,13 @@ body {
     shake = Math.max(shake, 0.5);
     zoom = Math.max(zoom, 0.1);
     burst(W / 2, H * 0.32, 60, null, 520);
-    if (m === 40 || (m > 40 && fever <= 0 && m % 40 === 0)) startFever();
+    if (m % 40 === 0 && fever <= 0) startFever();
   }
   function startFever() {
     fever = 8;
     sfx.fever();
     pop('FEVER TIME!!', W / 2, H * 0.48, '#ff2bd6', 52, 1.6, true);
+    pop('スコア2倍', W / 2, H * 0.48 + 48, '#f5f0ff', 24, 1.6, true);
   }
   function addScore(n) { score += n * mult * (fever > 0 ? 2 : 1); }
 
@@ -461,7 +611,12 @@ body {
     if (parts.length > 700) parts.splice(0, parts.length - 700);
   }
   function ring(x, y, color, r = 60) {
-    parts.push({ x, y, vx: 0, vy: 0, g: 0, life: 0.45, max: 0.45, size: r, color, kind: 'ring' });
+    parts.push({ x, y, vx: 0, vy: 0, g: 0, life: 0.45, max: 0.45, size: r, color, kind: 'ring', rot: 0 });
+  }
+
+  // beat spikes rise on every kick and sink on the off-beat
+  function beatHeight(phase) {
+    return phase < 0.5 ? Math.min(1, 0.3 + phase * 14) : Math.max(0.12, 1 - (phase - 0.5) * 10);
   }
 
   // ---------- update ----------
@@ -470,20 +625,30 @@ body {
     if (slowTimer > 0) { slowTimer -= dtReal; if (slowTimer <= 0) timeScale = 1; }
     const dt = dtReal * timeScale;
 
-    // effects decay (real time)
     shake = Math.max(0, shake - dtReal * 2.2);
     flash = Math.max(0, flash - dtReal * 2.5);
     zoom = Math.max(0, zoom - dtReal * 0.6);
     for (const p of parts) {
-      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += p.g * dt; p.vx *= 0.99; p.life -= dt; if (p.rot !== undefined) p.rot += (p.vr || 0) * dt;
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += p.g * dt; p.vx *= 0.99; p.life -= dt; p.rot += (p.vr || 0) * dt;
     }
     parts = parts.filter(p => p.life > 0);
     for (const p of pops) { p.life -= dtReal; p.y += p.vy * dtReal; }
     pops = pops.filter(p => p.life > 0);
     shownScore += (score - shownScore) * Math.min(1, dtReal * 10);
     if (Math.abs(score - shownScore) < 1) shownScore = score;
-
     hue = (hue + dtReal * (fever > 0 ? 220 : 12)) % 360;
+
+    // the bass drop after each fill
+    if (actx) while (dropTimes.length && dropTimes[0] <= actx.currentTime) {
+      dropTimes.shift();
+      if (state === 'play') {
+        pop('DROP!!', W / 2, H * 0.16, '#22f2ff', 44, 0.8, true);
+        flash = Math.max(flash, 0.3);
+        zoom = Math.max(zoom, 0.12);
+        shake = Math.max(shake, 0.4);
+        burst(W / 2, H * 0.2, 50, null, 600);
+      }
+    }
 
     if (state === 'title') {
       dist += 200 * dtReal;
@@ -503,41 +668,41 @@ body {
     if (newLevel > level) {
       level = newLevel;
       speed = Math.min(640, 360 + (level - 1) * 40);
-      if (level > lastLevelAnnounce) {
-        lastLevelAnnounce = level;
-        pop('SPEED UP!!', W / 2, H * 0.22, '#22f2ff', 56, 1.4, true);
-        pop(`LEVEL ${level}`, W / 2, H * 0.22 + 56, '#ffe23d', 30, 1.4, true);
-        sfx.levelUp();
-        flash = Math.max(flash, 0.25);
-        zoom = Math.max(zoom, 0.08);
-      }
+      pop('SPEED UP!!', W / 2, H * 0.22, '#22f2ff', 56, 1.4, true);
+      pop(`LEVEL ${level}`, W / 2, H * 0.22 + 56, '#ffe23d', 30, 1.4, true);
+      sfx.levelUp();
+      flash = Math.max(flash, 0.25);
+      zoom = Math.max(zoom, 0.08);
     }
     if (fever > 0) { fever -= dt; if (fever <= 0) pop('FEVER END', W / 2, H * 0.3, '#f5f0ff', 32, 1, true); }
+    if (boost > 0) boost -= dt;
     if (comboTimer > 0) {
       comboTimer -= dt;
       if (comboTimer <= 0 && combo > 0) { if (combo >= 5) pop('COMBO BREAK…', PX + 60, GY - 160, '#9a8fb5', 22, 1); combo = 0; mult = 1; }
     }
 
-    dist += speed * dt;
-    score += speed * dt / U * mult * (fever > 0 ? 2 : 1);
-    if (nextX < dist + W + U * 10) generate();
+    const v = speed * (boost > 0 ? 1.35 : 1);
+    dist += v * dt;
+    score += v * dt / U * mult * (fever > 0 ? 2 : 1);
+    if (nextX < dist + W + U * 12) generate();
 
     pressBuf = Math.max(0, pressBuf - dt);
     const px0 = dist + 3, px1 = dist + U - 3;
 
-    // physics
+    // physics (grav 1 = normal, -1 = upside down)
     const prevH = P.h;
-    P.vh -= G * dt;
+    P.vh -= G * grav * dt;
     P.h += P.vh * dt;
-
-    // landing on surfaces
     let landed = false;
-    const surfaces = [];
-    if (overlapsGround(px0, px1)) surfaces.push(0);
-    for (const o of objs) if (o.t === 'block' && px1 > o.x && px0 < o.x + o.w) surfaces.push(o.y + o.h);
-    for (const top of surfaces) {
-      if (P.vh <= 0 && prevH >= top - 2 && P.h <= top + 0.01) {
-        P.h = top; P.vh = 0; landed = true;
+    if (grav === 1) {
+      const tops = [];
+      if (overlapsGround(px0, px1)) tops.push(0);
+      for (const o of objs) if (o.t === 'block' && px1 > o.x && px0 < o.x + o.w) tops.push(o.y + o.h);
+      for (const top of tops) if (P.vh <= 0 && prevH >= top - 2 && P.h <= top + 0.01) { P.h = top; P.vh = 0; landed = true; }
+    } else {
+      for (const o of objs) {
+        if (o.t !== 'block' || !(px1 > o.x && px0 < o.x + o.w)) continue;
+        if (P.vh >= 0 && prevH + U <= o.y + 2 && P.h + U >= o.y - 0.01) { P.h = o.y - U; P.vh = 0; landed = true; }
       }
     }
     const wasGrounded = P.grounded;
@@ -548,45 +713,54 @@ body {
         sfx.land();
         P.squash = 1;
         P.rot = Math.round(P.rot / (Math.PI / 2)) * (Math.PI / 2);
-        burst(PX + U / 2, GY - P.h, 8, '#22f2ff', 160);
+        burst(PX + U / 2, grav === 1 ? GY - P.h : GY - P.h - U, 8, '#22f2ff', 160);
         shake = Math.max(shake, 0.08);
       }
     } else {
       P.coyote -= dt;
-      P.rot += dt * (Math.PI / 0.62);
+      P.rot += grav * dt * (Math.PI / 0.62);
     }
-    if ((P.grounded || P.coyote > 0) && (holding || pressBuf > 0) && P.vh <= 0) jump(JUMP);
+    if ((P.grounded || P.coyote > 0) && (holding || pressBuf > 0) && P.vh * grav <= 0) jump(JUMP);
+    P.flipVis += (grav - P.flipVis) * Math.min(1, dt * 12);
 
-    // hazards
+    // hazards and gadgets
     const hb = { x0: dist + 5, x1: dist + U - 5, y0: P.h + 4, y1: P.h + U - 4 };
+    const phase = beatPhase();
     for (const o of objs) {
       if (o.t === 'block') {
-        const solidTop = o.y + o.h;
-        if (hb.x1 > o.x && hb.x0 < o.x + o.w && hb.y1 > o.y && P.h < solidTop - 1) {
-          if (fever > 0) { smash(o); continue; }
-          return die('block');
+        if (hb.x1 > o.x && hb.x0 < o.x + o.w && hb.y1 > o.y && hb.y0 < o.y + o.h) return die('block');
+      } else if (o.t === 'spike') {
+        let lo, hi;
+        if (o.inv) { lo = o.y + U * 0.4; hi = o.y + U; }
+        else {
+          const f = o.beat ? beatHeight(phase) : 1;
+          if (f < 0.55) continue;
+          lo = o.y; hi = o.y + U * 0.6 * f;
         }
-      } else if (o.t === 'spike' && !o.smashed) {
-        const k0 = o.x + U * 0.28, k1 = o.x + U * 0.72, top = o.y + U * 0.6;
+        const k0 = o.x + U * 0.28, k1 = o.x + U * 0.72;
         if (hb.x1 > k0 && hb.x0 < k1) {
-          if (hb.y0 < top && hb.y1 > o.y) {
-            if (fever > 0) { smash(o); continue; }
-            return die('spike');
-          }
-          if (hb.y0 - top < 16) o.near = true;
+          if (hb.y0 < hi && hb.y1 > lo) return die('spike');
+          const gap = o.inv ? lo - hb.y1 : hb.y0 - hi;
+          if (gap < 16) o.near = true;
         }
-        if (o.near && !o.nearDone && o.x + U < dist) {
-          o.nearDone = true;
-          nearMiss();
-        }
+        if (o.near && !o.nearDone && o.x + U < dist) { o.nearDone = true; nearMiss(); }
+      } else if (o.t === 'saw') {
+        o.x -= o.vx * dt;
+        const cy = o.y + Math.sin(tReal * 3 + o.ph) * o.bob;
+        const qx = clamp(o.x, hb.x0, hb.x1), qy = clamp(cy, hb.y0, hb.y1);
+        const d = Math.hypot(o.x - qx, cy - qy);
+        if (d < o.r * 0.82) return die('saw');
+        if (d < o.r + 16) o.near = true;
+        if (o.near && !o.nearDone && o.x + o.r < dist) { o.nearDone = true; nearMiss(); }
       } else if (o.t === 'pad' && !o.used) {
-        if (px1 > o.x && px0 < o.x + o.w && P.h < 14) {
+        if (px1 > o.x && px0 < o.x + o.w && P.h < 14 && grav === 1) {
           o.used = true;
-          jump(PAD_V, true);
-          sfx.pad();
-          burst(sx(o.x + U / 2), GY, 30, '#ffe23d', 420);
-          ring(sx(o.x + U / 2), GY, '#ffe23d', 80);
-          addCombo(1, 'BOING!');
+          jump(PAD_V[o.kind], true);
+          sfx.pad(o.kind === 'p');
+          const c = o.kind === 'y' ? '#ffe23d' : '#ff7ab8';
+          burst(sx(o.x + U / 2), GY, 30, c, 420);
+          ring(sx(o.x + U / 2), GY, c, 80);
+          addCombo(1, o.kind === 'y' ? 'BOING!' : 'ポンッ!');
           addScore(30);
         }
       } else if (o.t === 'orb' && !o.used) {
@@ -595,13 +769,35 @@ body {
         if (d < 52 && !P.grounded && (holding || pressBuf > 0)) {
           o.used = true;
           pressBuf = 0;
-          jump(ORB_V, true);
-          sfx.orb();
-          ring(sx(cx), GY - cy, '#ffe23d', 90);
-          burst(sx(cx), GY - cy, 24, '#ffe23d', 360);
+          jump(ORB_V[o.kind], true);
+          sfx.orb(o.kind === 'p');
+          const c = o.kind === 'y' ? '#ffe23d' : '#ff7ab8';
+          ring(sx(cx), GY - cy, c, 90);
+          burst(sx(cx), GY - cy, 24, c, 360);
           addCombo(2, 'ORB!!');
           addScore(50);
         }
+      } else if (o.t === 'gate' && !o.used && dist + U / 2 > o.x) {
+        o.used = true;
+        grav = o.dir;
+        P.vh = 0;
+        P.grounded = false;
+        sfx.gate();
+        const c = o.dir === -1 ? '#22f2ff' : '#ffe23d';
+        ring(PX + U / 2, pyScreen(), c, 120);
+        burst(PX + U / 2, pyScreen(), 40, c, 500);
+        pop(o.dir === -1 ? '重力反転!!' : '重力もどった!', W / 2, H * 0.25, c, 44, 1.1, true);
+        flash = Math.max(flash, 0.2);
+        zoom = Math.max(zoom, 0.08);
+        addCombo(1, null);
+      } else if (o.t === 'speed' && !o.used && dist + U / 2 > o.x) {
+        o.used = true;
+        boost = 3.5;
+        sfx.boost();
+        pop('BOOST!!', W / 2, H * 0.25, '#7dff4a', 54, 1.1, true);
+        burst(PX + U / 2, pyScreen(), 40, '#7dff4a', 600);
+        shake = Math.max(shake, 0.3);
+        addCombo(1, null);
       } else if (o.t === 'mark' && !o.done && o.x < dist) {
         o.done = true;
         sfx.clear();
@@ -609,52 +805,27 @@ body {
         addScore(100);
       }
     }
-    // pits
-    // below floor level but partly over solid ground: ran into the far wall of a pit
-    if (P.h < -6 && overlapsGround(dist + 4, dist + U - 4)) return die('pit');
+    // pits and the sky
+    if (grav === 1 && P.h < -6 && overlapsGround(dist + 4, dist + U - 4)) return die('pit');
     if (P.h < -U * 2.5) return die('pit');
+    if (P.h > GY + U) return die('space');
 
-    // coins
-    for (const c of coins) {
-      if (c.got) continue;
-      if (Math.abs(c.x - (dist + U / 2)) < 30 && Math.abs(c.y - (P.h + U / 2)) < 34) {
-        c.got = true;
-        coinStreak++;
-        sfx.coin(coinStreak % 25);
-        burst(sx(c.x), GY - c.y, 10, '#ffe23d', 240);
-        addCombo(1, null);
-        addScore(50);
-        pop('+' + 50 * mult * (fever > 0 ? 2 : 1), sx(c.x), GY - c.y - 20, '#ffe23d', 18, 0.5);
-      }
-    }
-
-    // trail
     trail.push({ x: dist, h: P.h, rot: P.rot, hue });
     if (trail.length > (fxMax ? 14 : 5)) trail.shift();
     P.squash = Math.max(0, P.squash - dt * 6);
   }
 
   function jump(v, special) {
-    P.vh = v;
+    P.vh = v * grav;
     P.grounded = false;
     P.coyote = 0;
     pressBuf = 0;
     if (!special) sfx.jump();
-    burst(PX + U / 2, GY - P.h, special ? 16 : 6, special ? '#ffe23d' : '#ff2bd6', 200);
-  }
-  function smash(o) {
-    o.smashed = true;
-    if (o.t === 'block') objs.splice(objs.indexOf(o), 1);
-    sfx.smash();
-    shake = Math.max(shake, 0.3);
-    burst(sx(o.x + U / 2), GY - o.y - U / 2, 26, null, 480, 'shard');
-    pop('粉砕!!', sx(o.x), GY - o.y - 60, '#ff2bd6', 34, 0.7);
-    addCombo(2, null);
-    addScore(150);
+    burst(PX + U / 2, grav === 1 ? GY - P.h : GY - P.h - U, special ? 16 : 6, special ? '#ffe23d' : '#ff2bd6', 200);
   }
   function nearMiss() {
     sfx.near();
-    pop('ギリギリ!!', PX + 30, GY - P.h - 90, '#7dff4a', 36, 0.9);
+    pop('ギリギリ!!', PX + 30, pyScreen() - 70, '#7dff4a', 36, 0.9);
     addCombo(2, null);
     addScore(200);
     zoom = Math.max(zoom, 0.07);
@@ -668,7 +839,7 @@ body {
     holding = false;
     sfx.death();
     muffleMusic();
-    const x = PX + U / 2, y = GY - P.h - U / 2;
+    const x = PX + U / 2, y = clamp(pyScreen(), 20, H - 20);
     burst(x, y, 70, null, 620, 'shard');
     burst(x, y, 60, '#ffe23d', 520);
     ring(x, y, '#ff2bd6', 140);
@@ -682,8 +853,8 @@ body {
   // ---------- drawing ----------
   const skyline = Array.from({ length: 24 }, (_, i) => ({ x: i * 70 + Math.random() * 30, w: rand(40, 70), h: rand(60, 200), win: Math.random() }));
   const stars = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), s: Math.random() * 1.6 + 0.4, tw: Math.random() * 6 }));
-
   function hsl(h, s, l, a = 1) { return `hsla(${h % 360},${s}%,${l}%,${a})`; }
+  function glow(color, blur) { if (fxMax) { ctx.shadowColor = color; ctx.shadowBlur = blur; } }
 
   function drawBackground(beat) {
     const h = hue;
@@ -692,23 +863,32 @@ body {
     g.addColorStop(1, hsl(h + 40, 80, 22 + beat * (fxMax ? 8 : 2)));
     ctx.fillStyle = g;
     ctx.fillRect(-50, -50, W + 100, H + 100);
-    // stars
     for (const s of stars) {
       const a = 0.4 + 0.6 * Math.abs(Math.sin(tReal * 2 + s.tw));
       ctx.fillStyle = `rgba(255,255,255,${a * 0.7})`;
       const x = ((s.x * W - dist * 0.05) % W + W) % W;
       ctx.fillRect(x, s.y * GY * 0.8, s.s, s.s);
     }
-    // sun / disc pulsing to the beat
+    // sun pulsing to the kick
     const r = 70 + beat * (fxMax ? 16 : 4);
-    const sg = ctx.createLinearGradient(0, GY * 0.25 - r, 0, GY * 0.25 + r);
+    const sg = ctx.createLinearGradient(0, GY * 0.42 - r, 0, GY * 0.42 + r);
     sg.addColorStop(0, hsl(h + 60, 100, 65));
     sg.addColorStop(1, hsl(h + 320, 100, 55));
     ctx.fillStyle = sg;
     ctx.beginPath(); ctx.arc(W * 0.72, GY * 0.42, r, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = hsl(h, 70, 10, 0.9);
     for (let i = 0; i < 5; i++) ctx.fillRect(W * 0.72 - r, GY * 0.42 + i * 14 + 6, r * 2, 3 + i);
-    // skyline
+    // the music's live spectrum along the horizon
+    if (analyser && musicOn) {
+      analyser.getByteFrequencyData(freqData);
+      const n = 40, bw = W / n;
+      for (let i = 0; i < n; i++) {
+        const vv = freqData[Math.min(freqData.length - 1, Math.floor(i * 1.2))] / 255;
+        const bh = vv * vv * (GY * 0.45);
+        ctx.fillStyle = hsl(h + i * 6, 100, 60, 0.28);
+        ctx.fillRect(i * bw + 2, GY - bh, bw - 4, bh);
+      }
+    }
     const span = 24 * 70;
     for (const b of skyline) {
       const x = ((b.x - dist * 0.2) % span + span) % span - 70;
@@ -718,7 +898,6 @@ body {
       ctx.fillStyle = hsl(h + 180, 100, 70, 0.25 + beat * 0.3);
       for (let wy = GY - b.h + 10; wy < GY - 10; wy += 16) for (let wx = x + 6; wx < x + b.w - 8; wx += 12) if ((wx * 7 + wy * 3 + b.win * 100) % 5 < 2) ctx.fillRect(wx, wy, 5, 7);
     }
-    // rotating outline squares (mid layer)
     ctx.lineWidth = 3;
     for (let i = 0; i < 6; i++) {
       const x = ((i * 220 - dist * 0.4) % 1320 + 1320) % 1320 - 100;
@@ -735,13 +914,11 @@ body {
 
   function drawGround(beat) {
     const h = hue;
-    // floor fill
     const g = ctx.createLinearGradient(0, GY, 0, H);
     g.addColorStop(0, hsl(h + 200, 80, 18));
     g.addColorStop(1, hsl(h + 240, 80, 5));
     ctx.fillStyle = g;
     ctx.fillRect(-50, GY, W + 100, H - GY + 60);
-    // perspective grid
     ctx.strokeStyle = hsl(h + 180, 100, 60, 0.35 + beat * 0.3);
     ctx.lineWidth = 1.5;
     ctx.beginPath();
@@ -749,14 +926,12 @@ body {
       const y = GY + Math.pow(i / 8, 1.8) * (H - GY);
       ctx.moveTo(-50, y); ctx.lineTo(W + 50, y);
     }
-    const off = dist % U;
+    const off = ((dist - PX) % U + U) % U;
     for (let x = -off - U * 10; x < W + U * 10; x += U) {
-      const xs = x + PX % U;
-      ctx.moveTo(xs, GY);
-      ctx.lineTo(W / 2 + (xs - W / 2) * 3, H + 10);
+      ctx.moveTo(x, GY);
+      ctx.lineTo(W / 2 + (x - W / 2) * 3, H + 10);
     }
     ctx.stroke();
-    // pits: punch holes
     for (const p of pits) {
       const x = sx(p.x);
       if (x > W + 20 || x + p.w < -20) continue;
@@ -769,10 +944,9 @@ body {
       ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(x, GY); ctx.lineTo(x, H); ctx.moveTo(x + p.w, GY); ctx.lineTo(x + p.w, H); ctx.stroke();
     }
-    // neon edge line, skipping pits
     ctx.strokeStyle = hsl(h + 180, 100, 70);
     ctx.lineWidth = 4;
-    if (fxMax) { ctx.shadowColor = hsl(h + 180, 100, 60); ctx.shadowBlur = 14 + beat * 14; }
+    glow(hsl(h + 180, 100, 60), 14 + beat * 14);
     ctx.beginPath();
     let cur = -60;
     const sorted = pits.map(p => [sx(p.x), sx(p.x + p.w)]).sort((a, b) => a[0] - b[0]);
@@ -782,68 +956,112 @@ body {
     ctx.shadowBlur = 0;
   }
 
-  function drawObjects(beat) {
+  function drawSpike(o, x, phase) {
+    const f = o.beat ? beatHeight(phase) : 1;
+    // base line on screen; hanging spikes point down from the block above them
+    const base = o.inv ? GY - o.y - U : GY - o.y;
+    const dir = o.inv ? -1 : 1;
+    const tip = base - dir * (U - 2) * f;
+    const col = o.near ? '#7dff4a' : (o.beat ? '#ffb31a' : '#ff2bd6');
+    ctx.fillStyle = '#12051f';
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 3;
+    glow(col, 10);
+    ctx.beginPath(); ctx.moveTo(x + 2, base); ctx.lineTo(x + U / 2, tip); ctx.lineTo(x + U - 2, base); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = o.beat ? 'rgba(255,179,26,.4)' : 'rgba(255,43,214,.35)';
+    ctx.beginPath(); ctx.moveTo(x + 12, base); ctx.lineTo(x + U / 2, base - dir * U * 0.55 * f); ctx.lineTo(x + U - 12, base); ctx.closePath(); ctx.fill();
+    if (o.beat) { ctx.fillStyle = '#ffb31a'; ctx.fillRect(x + 4, base - 3, U - 8, 3); }
+  }
+
+  function drawObjects(beat, phase) {
     for (const o of objs) {
       const x = sx(o.x);
-      if (x > W + 80 || x + (o.w || U) < -80) continue;
-      if (o.t === 'spike' && !o.smashed) {
-        const y = GY - o.y;
-        ctx.fillStyle = '#12051f';
-        ctx.strokeStyle = o.near ? '#7dff4a' : '#ff2bd6';
-        ctx.lineWidth = 3;
-        if (fxMax) { ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 10; }
-        ctx.beginPath(); ctx.moveTo(x + 2, y); ctx.lineTo(x + U / 2, y - U + 2); ctx.lineTo(x + U - 2, y); ctx.closePath();
-        ctx.fill(); ctx.stroke();
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = 'rgba(255,43,214,.35)';
-        ctx.beginPath(); ctx.moveTo(x + 12, y); ctx.lineTo(x + U / 2, y - U * 0.55); ctx.lineTo(x + U - 12, y); ctx.closePath(); ctx.fill();
-      } else if (o.t === 'block') {
+      if (x > W + 120 || x + (o.w || U * 2) < -120) continue;
+      if (o.t === 'spike') drawSpike(o, x, phase);
+      else if (o.t === 'block') {
         const y = GY - o.y - o.h;
         ctx.fillStyle = hsl(hue + 220, 70, 14);
         ctx.fillRect(x, y, o.w, o.h);
         ctx.strokeStyle = hsl(hue + 180, 100, 65);
         ctx.lineWidth = 3;
-        if (fxMax) { ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 8 + beat * 10; }
+        glow(ctx.strokeStyle, 8 + beat * 10);
         ctx.strokeRect(x + 1.5, y + 1.5, o.w - 3, o.h - 3);
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = hsl(hue + 180, 100, 65, 0.3);
-        ctx.lineWidth = 1.5;
-        for (let gx = x; gx < x + o.w; gx += U) for (let gy = y; gy < y + o.h; gy += U) ctx.strokeRect(gx + 7, gy + 7, U - 14, U - 14);
+        if (o.nojump) {
+          ctx.font = `16px ${F_POP}`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillStyle = Math.sin(tReal * 12) > 0 ? '#ff2bd6' : '#ffe23d';
+          ctx.fillText('ジャンプ禁止!!', x + o.w / 2, y - 6);
+        }
+        if (o.h >= U) {
+          ctx.strokeStyle = hsl(hue + 180, 100, 65, 0.3);
+          ctx.lineWidth = 1.5;
+          for (let gx = x; gx < x + o.w - 1; gx += U) for (let gy = y; gy < y + o.h - 1; gy += U) ctx.strokeRect(gx + 7, gy + 7, U - 14, U - 14);
+        }
       } else if (o.t === 'pad') {
-        const y = GY;
-        ctx.fillStyle = '#ffe23d';
-        if (fxMax) { ctx.shadowColor = '#ffe23d'; ctx.shadowBlur = 16; }
-        ctx.beginPath(); ctx.ellipse(x + U / 2, y, U / 2, 10 + beat * 4, 0, Math.PI, 0); ctx.fill();
+        const c = o.kind === 'y' ? '#ffe23d' : '#ff7ab8';
+        ctx.fillStyle = c;
+        glow(c, 16);
+        ctx.beginPath(); ctx.ellipse(x + U / 2, GY, U / 2, (o.kind === 'y' ? 10 : 7) + beat * 4, 0, Math.PI, 0); ctx.fill();
         ctx.shadowBlur = 0;
       } else if (o.t === 'orb' && !o.used) {
+        const c = o.kind === 'y' ? '#ffe23d' : '#ff7ab8';
         const cx = x + U / 2, cy = GY - o.y - U / 2;
         const r = 15 + beat * 4;
-        ctx.strokeStyle = '#ffe23d';
-        ctx.lineWidth = 4;
-        if (fxMax) { ctx.shadowColor = '#ffe23d'; ctx.shadowBlur = 18; }
+        ctx.strokeStyle = c; ctx.lineWidth = 4;
+        glow(c, 18);
         ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-        ctx.fillStyle = 'rgba(255,226,61,.35)';
+        ctx.fillStyle = o.kind === 'y' ? 'rgba(255,226,61,.35)' : 'rgba(255,122,184,.35)';
         ctx.beginPath(); ctx.arc(cx, cy, r - 6, 0, Math.PI * 2); ctx.fill();
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = 'rgba(255,226,61,.4)';
-        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.45; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(cx, cy, r + 8 + Math.sin(tReal * 8) * 4, 0, Math.PI * 2); ctx.stroke();
+        ctx.globalAlpha = 1;
+      } else if (o.t === 'saw') {
+        const cy = GY - (o.y + Math.sin(tReal * 3 + o.ph) * o.bob);
+        ctx.save();
+        ctx.translate(x, cy);
+        ctx.rotate(-tReal * 12);
+        const c = o.near ? '#7dff4a' : '#ff5a3c';
+        ctx.fillStyle = '#1a0612';
+        ctx.strokeStyle = c;
+        ctx.lineWidth = 3;
+        glow(c, 14);
+        ctx.beginPath();
+        const teeth = 12;
+        for (let i = 0; i < teeth * 2; i++) {
+          const a = i / (teeth * 2) * Math.PI * 2;
+          const rr = i % 2 ? o.r * 0.78 : o.r;
+          ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+        }
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.beginPath(); ctx.arc(0, 0, o.r * 0.25, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+        if (o.vx) {
+          ctx.fillStyle = 'rgba(255,90,60,.6)';
+          for (let i = 1; i <= 3; i++) ctx.fillRect(x + o.r + i * 12, cy - 2, 8, 4);
+        }
+      } else if (o.t === 'gate' || o.t === 'speed') {
+        const c = o.t === 'speed' ? '#7dff4a' : (o.dir === -1 ? '#22f2ff' : '#ffe23d');
+        const top = GY - U * (o.t === 'speed' ? 4 : 5), mid = (GY + top) / 2;
+        ctx.strokeStyle = c; ctx.lineWidth = 6;
+        glow(c, 20);
+        ctx.beginPath(); ctx.ellipse(x, mid, 14 + beat * 4, (GY - top) / 2, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = c;
+        ctx.font = `22px ${F_POP}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        if (o.t === 'speed') ctx.fillText('»»', x + ((tReal * 40) % 12), mid);
+        else ctx.fillText(o.dir === -1 ? '▲' : '▼', x, mid + Math.sin(tReal * 8) * 6);
       }
     }
-    // coins
-    for (const c of coins) {
-      if (c.got) continue;
-      const x = sx(c.x), y = GY - c.y;
-      if (x < -30 || x > W + 30) continue;
-      const w = Math.abs(Math.cos(tReal * 5 + c.spin)) * 10 + 2;
-      ctx.fillStyle = '#ffe23d';
-      ctx.beginPath(); ctx.ellipse(x, y, w, 11, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ffb31a';
-      ctx.beginPath(); ctx.ellipse(x, y, w * 0.5, 6, 0, 0, Math.PI * 2); ctx.fill();
-    }
-    // attempt counter written into the world
-    const ax = attemptX - dist;
-    if (ax > -400 && ax < W + 200 && state !== 'title') {
+    const ax = sx(attemptX);
+    if (ax > -400 && ax < W + 200) {
       ctx.font = `34px ${F_POP}`;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
@@ -854,24 +1072,22 @@ body {
 
   function drawPlayer() {
     if (state === 'dead' || state === 'result') return;
-    // trail
     trail.forEach((t, i) => {
       const a = (i + 1) / trail.length;
       ctx.save();
       ctx.translate(PX - (dist - t.x) + U / 2, GY - t.h - U / 2);
       ctx.rotate(t.rot);
-      ctx.fillStyle = fever > 0 ? hsl(t.hue + i * 25, 100, 60, a * 0.5) : `rgba(34,242,255,${a * 0.3})`;
+      ctx.fillStyle = fever > 0 ? hsl(t.hue + i * 25, 100, 60, a * 0.5) : (boost > 0 ? `rgba(125,255,74,${a * 0.4})` : `rgba(34,242,255,${a * 0.3})`);
       const s = U * (0.4 + a * 0.5);
       ctx.fillRect(-s / 2, -s / 2, s, s);
       ctx.restore();
     });
-    const cx = PX + U / 2, cy = GY - P.h - U / 2;
     ctx.save();
-    ctx.translate(cx, cy + P.squash * 4);
-    ctx.scale(1 + P.squash * 0.18, 1 - P.squash * 0.18);
+    ctx.translate(PX + U / 2, pyScreen() + P.squash * 4 * grav);
+    ctx.scale(1 + P.squash * 0.18, (1 - P.squash * 0.18) * P.flipVis);
     ctx.rotate(P.rot);
     const main = fever > 0 ? hsl(hue, 100, 60) : '#22f2ff';
-    if (fxMax) { ctx.shadowColor = main; ctx.shadowBlur = 20; }
+    glow(main, 20);
     ctx.fillStyle = main;
     ctx.fillRect(-U / 2, -U / 2, U, U);
     ctx.shadowBlur = 0;
@@ -880,7 +1096,6 @@ body {
     ctx.strokeRect(-U / 2 + 1.5, -U / 2 + 1.5, U - 3, U - 3);
     ctx.fillStyle = '#ff2bd6';
     ctx.fillRect(-U / 2 + 7, -U / 2 + 7, U - 14, U - 14);
-    // face
     ctx.fillStyle = '#fff';
     ctx.fillRect(-10, -8, 8, 9); ctx.fillRect(3, -8, 8, 9);
     ctx.fillStyle = '#0b0420';
@@ -914,8 +1129,9 @@ body {
 
   function drawSpeedLines() {
     if (!fxMax || state !== 'play') return;
-    const n = fever > 0 ? 18 : Math.max(0, level - 1) * 3;
-    ctx.strokeStyle = fever > 0 ? 'rgba(255,255,255,.5)' : 'rgba(255,255,255,.22)';
+    const hot = fever > 0 || boost > 0;
+    const n = hot ? 20 : Math.max(0, level - 1) * 3;
+    ctx.strokeStyle = hot ? 'rgba(255,255,255,.5)' : 'rgba(255,255,255,.22)';
     ctx.lineWidth = 2;
     ctx.beginPath();
     for (let i = 0; i < n; i++) {
@@ -934,9 +1150,8 @@ body {
       const inT = Math.min(1, age / 0.12);
       const punch = p.big ? (1 + (1 - inT) * 1.6) : (0.6 + inT * 0.4);
       const wob = p.big && fxMax ? Math.sin(age * 30) * 0.04 * Math.max(0, 1 - age * 2) : 0;
-      const a = Math.min(1, p.life / 0.25);
       ctx.save();
-      ctx.globalAlpha = a;
+      ctx.globalAlpha = Math.min(1, p.life / 0.25);
       ctx.translate(p.x, p.y);
       ctx.rotate(p.rot + wob);
       ctx.scale(punch, punch);
@@ -945,10 +1160,7 @@ body {
       ctx.lineWidth = p.size * 0.22;
       ctx.strokeStyle = '#0b0420';
       ctx.strokeText(p.text, 0, 0);
-      if (p.big) {
-        ctx.fillStyle = '#ff2bd6';
-        ctx.fillText(p.text, 4, 4);
-      }
+      if (p.big) { ctx.fillStyle = '#ff2bd6'; ctx.fillText(p.text, 4, 4); }
       ctx.fillStyle = p.color;
       ctx.fillText(p.text, 0, 0);
       ctx.restore();
@@ -958,7 +1170,6 @@ body {
   function drawHUD(beat) {
     if (state === 'title') return;
     ctx.textBaseline = 'alphabetic';
-    // score
     ctx.textAlign = 'left';
     ctx.font = `900 ${30 + beat * (fxMax ? 4 : 0)}px ${F_NUM}`;
     ctx.lineWidth = 5;
@@ -970,14 +1181,13 @@ body {
     ctx.font = `700 12px ${F_NUM}`;
     ctx.fillStyle = 'rgba(245,240,255,.7)';
     ctx.fillText(`${Math.floor(dist / U)}m   LV ${level}   BEST ${best.toLocaleString()}`, 18, 64);
-    // combo
     if (combo > 0) {
       ctx.textAlign = 'right';
       const big = 1 + Math.max(0, comboTimer - 2.75) * 3;
       ctx.save();
       ctx.translate(W - 16, 52);
       ctx.scale(big, big);
-      ctx.font = `900 ${40}px ${F_NUM}`;
+      ctx.font = `900 40px ${F_NUM}`;
       ctx.lineWidth = 6;
       ctx.strokeStyle = '#0b0420';
       ctx.strokeText(String(combo), 0, 0);
@@ -987,7 +1197,6 @@ body {
       ctx.font = `700 13px ${F_NUM}`;
       ctx.fillStyle = '#f5f0ff';
       ctx.fillText(`COMBO  ×${mult}${fever > 0 ? '  FEVER' : ''}`, W - 16, 72);
-      // combo timer bar
       ctx.fillStyle = 'rgba(255,255,255,.15)';
       ctx.fillRect(W - 136, 80, 120, 5);
       ctx.fillStyle = fever > 0 ? hsl(hue, 100, 65) : '#7dff4a';
@@ -1008,7 +1217,8 @@ body {
   }
 
   function draw() {
-    const beat = beatPulse(performance.now());
+    const phase = beatPhase();
+    const beat = Math.exp(-phase * SPB * 9);
     ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
     ctx.save();
     if (fxMax) {
@@ -1024,26 +1234,24 @@ body {
     }
     drawBackground(beat);
     drawGround(beat);
-    drawObjects(beat);
+    if (state !== 'title') drawObjects(beat, phase);
     drawPlayer();
     drawParticles();
     ctx.restore();
     drawSpeedLines();
     drawPops();
     drawHUD(beat);
-    // fever frame
     if (fever > 0) {
       ctx.strokeStyle = hsl(hue, 100, 60, 0.8);
       ctx.lineWidth = 10 + beat * (fxMax ? 8 : 0);
       ctx.strokeRect(0, 0, W, H);
     }
-    // vignette
     const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.4, W / 2, H / 2, Math.max(W, H) * 0.75);
     vg.addColorStop(0, 'rgba(0,0,0,0)');
     vg.addColorStop(1, 'rgba(0,0,0,.45)');
     ctx.fillStyle = vg;
     ctx.fillRect(0, 0, W, H);
-    // flash (capped so it never strobes at full white)
+    // flash is capped so it never strobes at full white
     if (flash > 0 && fxMax) {
       ctx.fillStyle = `rgba(255,255,255,${Math.min(0.4, flash)})`;
       ctx.fillRect(0, 0, W, H);
@@ -1065,14 +1273,12 @@ body {
   const overOv = document.getElementById('overOv');
   const startBtn = document.getElementById('startBtn');
   const retryBtn = document.getElementById('retryBtn');
-  const fxBtn = document.getElementById('fxBtn');
   const fxBtn2 = document.getElementById('fxBtn2');
   const muteBtn = document.getElementById('muteBtn');
   let resultAt = 0;
 
   function renderSettings() {
     const t = fxMax ? '演出：MAX' : '演出：ひかえめ';
-    fxBtn.textContent = t;
     fxBtn2.textContent = t;
     muteBtn.textContent = muted ? '音：OFF' : '音：ON';
     document.getElementById('titleBest').textContent = `BEST ${best.toLocaleString()}`;
@@ -1083,11 +1289,10 @@ body {
     renderSettings();
     e.currentTarget.blur();
   }
-  fxBtn.addEventListener('click', toggleFx);
   fxBtn2.addEventListener('click', toggleFx);
   muteBtn.addEventListener('click', () => {
     muted = !muted;
-    if (master) master.gain.value = muted ? 0 : 0.7;
+    if (master) master.gain.value = muted ? 0 : 0.85;
     renderSettings();
     muteBtn.blur();
   });
@@ -1142,7 +1347,7 @@ body {
   }
   function release() { holding = false; }
   cv.addEventListener('pointerdown', e => { e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (err) {} press(); });
-  overOv.addEventListener('pointerdown', e => { if (e.target === overOv || !e.target.closest('button')) press(); });
+  overOv.addEventListener('pointerdown', e => { if (!e.target.closest('button')) press(); });
   cv.addEventListener('pointerup', release);
   cv.addEventListener('pointercancel', release);
   window.addEventListener('pointerup', release);
