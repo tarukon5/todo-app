@@ -133,7 +133,18 @@ body {
   text-shadow: 4px 4px 0 var(--magenta), 8px 8px 0 var(--cyan);
   animation: slam .5s cubic-bezier(.2, 1.6, .4, 1) both;
 }
-.rank.kanji { font-family: var(--font-pop); }
+.pbar {
+  position: relative;
+  width: 100%;
+  max-width: 24rem;
+  height: 14px;
+  border-radius: 7px;
+  overflow: hidden;
+  background: rgba(245, 240, 255, .12);
+  border: 1px solid rgba(245, 240, 255, .3);
+}
+.pbar i { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, var(--cyan), var(--magenta), var(--yellow)); }
+.pbar b { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1px; background: var(--lime); box-shadow: 0 0 8px var(--lime); }
 @keyframes slam { from { transform: scale(3) rotate(-20deg); opacity: 0; } to { transform: scale(1) rotate(-6deg); opacity: 1; } }
 .cause { margin: 0; font-family: var(--font-pop); font-size: 1.3rem; color: var(--magenta); }
 .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; margin: 0; width: 100%; max-width: 26rem; }
@@ -173,7 +184,8 @@ body {
         <dt class="c-lime">◆マーク</dt><dd>音に合わせてここでタップ！PERFECTでボーナス</dd>
         <dt class="c-mag">ピンクのゲート</dt><dd>飛行機に変身！長押しで上、はなすと下</dd>
         <dt class="c-mag">ビートトゲ</dt><dd>音楽に合わせて出たり引っこんだり</dd>
-        <dt class="c-yel">コンボ40</dt><dd>FEVER突入！スコア2倍</dd>
+        <dt class="c-cyan">半ブロック</dt><dd>空中の足場。ジャンプで飛び移れ</dd>
+        <dt class="c-yel">ゴール</dt><dd>100%でステージクリア！コンボ40でFEVER</dd>
       </dl>
       <button class="go" id="startBtn" type="button">スタート!!</button>
       <p class="note">画面がはげしく光ったりゆれたりします。目がつかれたり気分が悪くなったら、右下のボタンで「演出：ひかえめ」にして休けいしてください。音を出して遊ぶのがおすすめ。</p>
@@ -183,12 +195,14 @@ body {
 
   <section class="overlay" id="overOv" hidden>
     <div class="panel">
-      <div class="rank" id="rank">S</div>
+      <div class="rank" id="rank">0%</div>
+      <div class="pbar" aria-hidden="true"><i id="pFill"></i><b id="pBest"></b></div>
+      <div class="best" id="pText"></div>
       <p class="cause" id="cause"></p>
-      <div class="newrec" id="newrec" hidden>NEW RECORD!!</div>
+      <div class="newrec" id="newrec" hidden>NEW BEST!!</div>
       <dl class="stats">
         <div><dt>スコア</dt><dd id="sScore">0</dd></div>
-        <div><dt>ベスト</dt><dd id="sBest">0</dd></div>
+        <div><dt>ハイスコア</dt><dd id="sBest">0</dd></div>
         <div><dt>最大コンボ</dt><dd id="sCombo">0</dd></div>
         <div><dt>PERFECT</dt><dd id="sPerfect">0</dd></div>
       </dl>
@@ -266,9 +280,44 @@ body {
     { lv: 4, len: 4, anchor: 0, o: [['ppad', 0], ['s', 1, 0], ['s', 2, 0]] },
     { lv: 4, len: 13, taps: [-2, 2, 6, 10], o: [['s', 0, 0], ['s', 1, 0], ['s', 2, 0], ['s', 3, 0], ['s', 4, 0], ['s', 5, 0], ['s', 6, 0], ['s', 7, 0], ['s', 8, 0], ['s', 9, 0], ['s', 10, 0], ['s', 11, 0], ['s', 12, 0], ['porb', 2, 2.87], ['porb', 6, 2.87], ['porb', 10, 2.87]] },
     { lv: 4, len: 4, taps: [-1.5], o: [['pit', 0, 4]] },
-    { lv: 5, len: 30, anchor: 0, taps: [4, 12, 20], o: [['gp', 0, -1], ['b', 0, 5, 30, 1], ['si', 6.5, 4], ['si', 7.5, 4], ['bs', 7], ['saw', 15.5, 4.6, 0.8, 0], ['si', 23, 4], ['gp', 28, 1]] }
+    { lv: 5, len: 30, anchor: 0, taps: [4, 12, 20], o: [['gp', 0, -1], ['b', 0, 5, 30, 1], ['si', 6.5, 4], ['si', 7.5, 4], ['bs', 7], ['saw', 15.5, 4.6, 0.8, 0], ['si', 23, 4], ['gp', 28, 1]] },
+    // more spikes
+    { lv: 2, len: 7, taps: [-3, 3], o: [['s', 0, 0], ['b', 1, 0, 5, 1], ['s', 6, 0]] },
+    { lv: 2, len: 8, taps: [-2.5, 3.5], o: [['s', 0, 0], ['s', 1, 0], ['s', 6, 0], ['s', 7, 0]] },
+    { lv: 3, len: 4, taps: [-1.5], o: [['s', 0, 0], ['s', 1, 0], ['s', 2, 0], ['s', 3, 0]] },
+    { lv: 3, len: 14, taps: [-2.5, 3.5, 9.5], o: [['s', 0, 0], ['s', 1, 0], ['s', 6, 0], ['s', 7, 0], ['s', 12, 0], ['s', 13, 0]] },
+    // half-block parkour over a spike carpet
+    { lv: 1, len: 22, taps: [-1, 7, 15], o: [...spikeRow(1, 18), ['b', 3, 1, 5, 0.5], ['b', 11, 1, 5, 0.5]] },
+    { lv: 3, len: 27, taps: [-1, 7, 15], o: [...spikeRow(1, 20), ['b', 3, 1, 5, 0.5], ['b', 11, 2, 5, 0.5], ['b', 19, 3, 4, 0.5]] },
+    { lv: 4, len: 22, taps: [-1, 7, 15], o: [...spikeRow(1, 18), ['b', 3, 1, 13, 0.5], ['s', 10, 1.5], ['s', 11, 1.5]] }
   ];
+  function spikeRow(from, to) { const r = []; for (let x = from; x <= to; x++) r.push(['s', x, 0]); return r; }
   const lvAtBar = bar => 1 + Math.floor(Math.max(0, bar - 2) / 8);   // level rises on every drop
+  const STAGE_BARS = 50;                                  // the stage ends after 50 bars (about 80 s)
+  const END_X = STAGE_BARS * 16 * U;
+  // the same seed every attempt, so the stage is always the same and % means something
+  const STAGE_SEED = 20261031;
+  let seed = STAGE_SEED;
+  function srand(a = 0, b = 1) {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return a + (((t ^ t >>> 14) >>> 0) / 4294967296) * (b - a);
+  }
+  const spick = arr => arr[Math.floor(srand(0, arr.length))];
+  // background colour for each section of the song; it slides to the next one during each build-up
+  const PALETTE = [270, 200, 320, 25, 150, 235, 350, 55];
+  function songHue(st) {
+    const bar = st / (4 * SPB);
+    const sec = bar < 2 ? 0 : 1 + Math.floor((bar - 2) / 8);
+    const inFill = bar >= 1 && Math.floor(bar) % 8 === 1;
+    const from = PALETTE[sec % PALETTE.length], to = PALETTE[(sec + 1) % PALETTE.length];
+    return inFill ? lerpHue(from, to, bar % 1) : from;
+  }
+  function lerpHue(a, b, t) {
+    const d = ((b - a + 540) % 360) - 180;
+    return (a + d * t + 360) % 360;
+  }
 
   // ---------- canvas ----------
   const cv = document.getElementById('cv');
@@ -292,6 +341,7 @@ body {
   let fxMax = !reduceMotion, muted = false, best = 0, attempts = 0;
   try {
     best = Number(localStorage.getItem('dopa-best')) || 0;
+    bestPct = Number(localStorage.getItem('dopa-pct')) || 0;
     const fx = localStorage.getItem('dopa-fx');
     if (fx) fxMax = fx === 'max';
   } catch (e) {}
@@ -591,6 +641,7 @@ body {
   // ---------- state ----------
   let state = 'title';
   let dist, level, nextX, objs, pits, parts, pops, trail;
+  let genDone, clearTimer, pct, bestPct = 0, riseGlow = 0;
   let P, grav, mode, holding, pressBuf, score, shownScore, combo, comboTimer, maxCombo, mult, fever, perfects;
   let shake, flash, zoom, timeScale, slowTimer, hue, deathTimer, deathCause, attemptX, lastSongT, lastBeat;
   let tReal = 0, lastFrame = 0;
@@ -608,20 +659,22 @@ body {
     score = 0; shownScore = 0; combo = 0; comboTimer = 0; maxCombo = 0; mult = 1; fever = 0; perfects = 0;
     shake = 0; flash = 0; zoom = 0; timeScale = 1; slowTimer = 0; hue = 280; deathTimer = 0;
     attemptX = U * 6; lastSongT = 0; lastBeat = -1;
-    if (state === 'play') generate();
+    seed = STAGE_SEED; genDone = false; clearTimer = 0; pct = 0;
+    if (state === 'play') { objs.push({ t: 'goal', x: END_X }); generate(); }
   }
 
   // ---------- level generation (on the beat grid) ----------
   function generate() {
     const beatPx = BEAT_U * U;
-    while (nextX < dist + W + U * 12) {
+    while (!genDone && nextX < dist + W + U * 12) {
       const lv = lvAtBar(Math.floor(nextX / (beatPx * 4)));
       const pool = PATTERNS.filter(p => p.lv <= lv && (!p.max || lv <= p.max));
-      const pat = nextX > U * 60 && Math.random() < (lv >= 2 ? 0.16 : 0.1) ? shipPattern(lv) : pick(pool);
+      const pat = nextX > U * 60 && srand() < (lv >= 2 ? 0.16 : 0.1) ? shipPattern(lv) : spick(pool);
       const a = pat.anchor !== undefined ? pat.anchor : pat.taps[0];
       // earliest origin, then slide forward until the anchor lands on a beat
       const minX = nextX + Math.max(0, -a) * U;
       const x0 = Math.ceil((minX + a * U) / beatPx) * beatPx - a * U;
+      if (x0 + (pat.len + 6) * U > END_X) { genDone = true; break; }   // leave a clear run-up to the goal
       for (const o of pat.o) {
         const [t, p1, p2, p3, p4, p5] = o;
         if (t === 's') objs.push({ t: 'spike', x: x0 + p1 * U, y: p2 * U });
@@ -638,15 +691,15 @@ body {
       }
       for (const tp of pat.taps || []) objs.push({ t: 'cue', x: x0 + tp * U, judged: false });
       objs.push({ t: 'mark', x: x0 + pat.len * U, done: false });
-      nextX = x0 + (pat.len + Math.round(rand(2, 5))) * U;
+      nextX = x0 + (pat.len + Math.round(srand(2, 5))) * U;
     }
-    objs = objs.filter(o => o.x + (o.w || U * 2) > dist - U * 4);
+    objs = objs.filter(o => o.t === 'goal' || o.x + (o.w || U * 2) > dist - U * 4);
     pits = pits.filter(p => p.x + p.w > dist - U * 4);
   }
 
   // A plane tunnel: one wall section per beat, so the gaps switch exactly on the beat.
   function shipPattern(lv) {
-    const gh = lv >= 5 ? 2.5 : lv >= 4 ? 3 : 3.5;        // gap height in units
+    const gh = lv >= 5 ? 3.5 : lv >= 4 ? 4 : 4.5;        // gap height in units
     const segs = lv >= 4 ? 12 : 8;
     const maxStep = 1;                                    // gaps move one unit per beat, so neighbours overlap a lot
     const topU = Math.ceil(GY / U) + 1;                   // ceilings reach past the top of the screen
@@ -659,13 +712,13 @@ body {
         if (left <= Math.ceil(4 / maxStep)) g = Math.max(0, g - maxStep);   // come back down to land
         else {
           const opts = [];
-          for (let d = -maxStep; d <= maxStep; d++) if (g + d >= 0 && g + d <= 4) opts.push(d);
-          g += pick(opts);
+          for (let d = -maxStep; d <= maxStep; d++) if (g + d >= 0 && g + d <= 3) opts.push(d);
+          g += spick(opts);
         }
       }
       if (g > 0) o.push(['b', x, 0, 4, g]);
       o.push(['b', x, g + gh, 4, topU - g - gh]);
-      if (gh >= 3 && i > 0 && left > 2 && Math.random() < 0.3) o.push(['s', x + 1.5, g]);
+      if (i > 0 && left > 2 && srand() < 0.45) o.push(['s', x + 1.5, g]);
       if (i % 2 === 1) o.push(['mk', x + 4]);
     }
     const end = 8 + segs * 4;
@@ -749,7 +802,13 @@ body {
     pops = pops.filter(p => p.life > 0);
     shownScore += (score - shownScore) * Math.min(1, dtReal * 10);
     if (Math.abs(score - shownScore) < 1) shownScore = score;
-    hue = (hue + dtReal * (fever > 0 ? 220 : 12)) % 360;
+    if (fever > 0) hue = (hue + dtReal * 220) % 360;
+    else if (state === 'play' || state === 'clear') hue = lerpHue(hue, songHue(Math.max(0, songTime())), Math.min(1, dtReal * 4));
+    else hue = (hue + dtReal * 12) % 360;
+    if (state === 'play') {
+      const bar = Math.max(0, songTime()) / (4 * SPB);
+      riseGlow = bar >= 1 && Math.floor(bar) % 8 === 1 ? bar % 1 : 0;
+    } else riseGlow = 0;
 
     if (state === 'title') {
       dist += 200 * dtReal;
@@ -759,7 +818,13 @@ body {
     }
     if (state === 'dead') {
       deathTimer += dtReal;
-      if (deathTimer > 1.0 && overOv.hidden) showResult();
+      if (deathTimer > 1.0 && overOv.hidden) showResult(false);
+      return;
+    }
+    if (state === 'clear') {
+      clearTimer += dtReal;
+      if (Math.random() < dtReal * 8) burst(rand(W * 0.1, W * 0.9), rand(H * 0.1, H * 0.5), 40, null, 480);
+      if (clearTimer > 2.8 && overOv.hidden) showResult(true);
       return;
     }
     if (state !== 'play') return;
@@ -784,6 +849,8 @@ body {
       physics(h);
     }
     if (state !== 'play') return;
+    pct = Math.min(100, Math.floor(dist / END_X * 100));
+    if (dist >= END_X) return stageClear();
     if (nextX < dist + W + U * 12) generate();
     trail.push({ x: dist, h: P.h, rot: P.rot, hue, m: mode });
     if (mode === 'ship' && holding) {
@@ -793,6 +860,20 @@ body {
       });
     }
     if (trail.length > (fxMax ? 14 : 5)) trail.shift();
+  }
+
+  function stageClear() {
+    state = 'clear';
+    pct = 100;
+    clearTimer = 0;
+    holding = false;
+    sfx.milestone();
+    sfx.transform(true);
+    if (actx) crash(actx.currentTime);
+    pop('STAGE CLEAR!!', W / 2, H * 0.3, '#ffe23d', 64, 2.6, true);
+    pop('100%', W / 2, H * 0.3 + 64, '#7dff4a', 48, 2.6, true);
+    flash = 0.4; zoom = 0.15; shake = 0.5;
+    for (let i = 0; i < 5; i++) burst(rand(W * 0.2, W * 0.8), rand(H * 0.2, H * 0.6), 60, null, 600);
   }
 
   // things that happen exactly on beats: countdown, drops, level ups
@@ -1063,7 +1144,7 @@ body {
     const h = hue;
     const g = ctx.createLinearGradient(0, 0, 0, GY);
     g.addColorStop(0, hsl(h, 70, 8));
-    g.addColorStop(1, hsl(h + 40, 80, 22 + beat * (fxMax ? 10 : 2)));
+    g.addColorStop(1, hsl(h + 40, 80, 22 + beat * (fxMax ? 10 : 2) + riseGlow * 18));
     ctx.fillStyle = g;
     ctx.fillRect(-50, -50, W + 100, H + 100);
     for (const s of stars) {
@@ -1296,6 +1377,20 @@ body {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(o.dir === -1 ? '▲' : '▼', x, mid + Math.sin(tReal * 8) * 6);
+      } else if (o.t === 'goal') {
+        // checkered finish pillar
+        const cols = 2, rows = Math.ceil(GY / 20);
+        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+          ctx.fillStyle = (r + c) % 2 ? '#f5f0ff' : '#0b0420';
+          ctx.fillRect(x + c * 20, GY - (r + 1) * 20, 20, 20);
+        }
+        ctx.font = `30px ${F_POP}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillStyle = '#ffe23d';
+        glow('#ffe23d', 20);
+        ctx.fillText('GOAL', x + 20, GY * 0.3);
+        ctx.shadowBlur = 0;
       } else if (o.t === 'mode') {
         const c = o.to === 'ship' ? '#ff2bd6' : '#7dff4a';
         const top = GY - U * 6, mid = (GY + top) / 2;
@@ -1468,7 +1563,20 @@ body {
     ctx.fillText(sTxt, 16, 44);
     ctx.font = `700 12px ${F_NUM}`;
     ctx.fillStyle = 'rgba(245,240,255,.7)';
-    ctx.fillText(`${Math.floor(dist / U)}m   LV ${level}   BEST ${best.toLocaleString()}`, 18, 64);
+    ctx.fillText(`LV ${level}   HIGH ${best.toLocaleString()}`, 18, 64);
+    // stage progress
+    const bw = Math.min(240, W * 0.34), bx = W / 2 - bw / 2, by = 12;
+    ctx.fillStyle = 'rgba(245,240,255,.15)';
+    ctx.fillRect(bx, by, bw, 8);
+    const pg = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+    pg.addColorStop(0, '#22f2ff'); pg.addColorStop(0.5, '#ff2bd6'); pg.addColorStop(1, '#ffe23d');
+    ctx.fillStyle = pg;
+    ctx.fillRect(bx, by, bw * Math.min(1, dist / END_X), 8);
+    if (bestPct > 0) { ctx.fillStyle = '#7dff4a'; ctx.fillRect(bx + bw * bestPct / 100 - 1, by - 3, 3, 14); }
+    ctx.textAlign = 'center';
+    ctx.font = `900 14px ${F_NUM}`;
+    ctx.fillStyle = '#f5f0ff';
+    ctx.fillText(`${pct}%`, W / 2, by + 26);
     if (combo > 0) {
       ctx.textAlign = 'right';
       const big = 1 + Math.max(0, comboTimer - 2.75) * 3;
@@ -1494,7 +1602,7 @@ body {
       ctx.textAlign = 'center';
       ctx.font = `22px ${F_POP}`;
       ctx.fillStyle = hsl(hue + 180, 100, 70);
-      ctx.fillText(`FEVER ${fever.toFixed(1)}`, W / 2, 36);
+      ctx.fillText(`FEVER ${fever.toFixed(1)}`, W / 2, 62);
     }
     if (state === 'play' && dist < U * 30) {
       ctx.textAlign = 'center';
@@ -1568,7 +1676,7 @@ body {
   function renderSettings() {
     fxBtn2.textContent = fxMax ? '演出：MAX' : '演出：ひかえめ';
     muteBtn.textContent = muted ? '音：OFF' : '音：ON';
-    document.getElementById('titleBest').textContent = `BEST ${best.toLocaleString()}`;
+    document.getElementById('titleBest').textContent = `BEST ${bestPct}%　・　HIGH SCORE ${best.toLocaleString()}`;
   }
   fxBtn2.addEventListener('click', e => {
     fxMax = !fxMax;
@@ -1596,18 +1704,18 @@ body {
   startBtn.addEventListener('click', startGame);
   retryBtn.addEventListener('click', () => { if (performance.now() - resultAt > 350) startGame(); });
 
-  function showResult() {
+  function showResult(cleared) {
     const s = Math.floor(score);
-    const isNew = s > best;
-    if (isNew) { best = s; try { localStorage.setItem('dopa-best', String(best)); } catch (e) {} }
-    let rank = 'C';
-    if (s >= 30000) rank = '神'; else if (s >= 15000) rank = 'SS'; else if (s >= 8000) rank = 'S';
-    else if (s >= 4000) rank = 'A'; else if (s >= 1500) rank = 'B';
+    if (s > best) { best = s; try { localStorage.setItem('dopa-best', String(best)); } catch (e) {} }
+    const isNew = pct > bestPct;
+    if (isNew) { bestPct = pct; try { localStorage.setItem('dopa-pct', String(bestPct)); } catch (e) {} }
     const rankEl = document.getElementById('rank');
-    rankEl.textContent = rank;
-    rankEl.classList.toggle('kanji', rank === '神');
+    rankEl.textContent = `${pct}%`;
     rankEl.style.animation = 'none'; void rankEl.offsetWidth; rankEl.style.animation = '';
-    document.getElementById('cause').textContent = pick(CAUSES[deathCause]);
+    document.getElementById('pFill').style.width = `${pct}%`;
+    document.getElementById('pBest').style.left = `${bestPct}%`;
+    document.getElementById('pText').textContent = cleared ? 'ステージクリア！' : `ベスト ${bestPct}%　あと${100 - pct}%でゴール`;
+    document.getElementById('cause').textContent = cleared ? 'STAGE CLEAR!! おめでとう!!' : pick(CAUSES[deathCause]);
     document.getElementById('newrec').hidden = !isNew;
     document.getElementById('sScore').textContent = s.toLocaleString();
     document.getElementById('sCombo').textContent = String(maxCombo);
@@ -1660,13 +1768,14 @@ body {
     if (data) {
       if (data.best > best) best = data.best;
       if (data.attempts) attempts = data.attempts;
+      if (data.bestPct > bestPct) bestPct = data.bestPct;
     }
     resize();
     reset();
     renderSettings();
     requestAnimationFrame(ts => { lastFrame = ts; requestAnimationFrame(frame); });
   }
-  if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(() => ({ best, attempts }));
+  if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(() => ({ best, attempts, bestPct }));
   if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(boot);
   else boot((window.claude && window.claude.hot && window.claude.hot.data) || {});
 })();
