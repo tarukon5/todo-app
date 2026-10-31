@@ -184,8 +184,8 @@ body {
         <dt class="c-mag">ピンクのゲート</dt><dd>飛行機に変身！長押しで上、はなすと下</dd>
         <dt class="c-yel">オレンジのゲート</dt><dd>クモに変身！タップで天井⇔床にワープ</dd>
         <dt class="c-mag">ビートトゲ</dt><dd>音楽に合わせて出たり引っこんだり</dd>
-        <dt class="c-cyan">半ブロック</dt><dd>空中の足場。ジャンプで飛び移れ</dd>
-        <dt class="c-yel">ゴール</dt><dd>100%でステージクリア！コンボ40でFEVER</dd>
+        <dt class="c-cyan">浮きブロック</dt><dd>空中の足場。ジャンプで飛び移れ</dd>
+        <dt class="c-yel">ゴール</dt><dd>うずに吸いこまれたらクリア！コンボ40でFEVER</dd>
       </dl>
       <button class="go" id="startBtn" type="button">スタート!!</button>
       <p class="note">画面がはげしく光ったりゆれたりします。目がつかれたり気分が悪くなったら、右下のボタンで「演出：ひかえめ」にして休けいしてください。音を出して遊ぶのがおすすめ。</p>
@@ -290,7 +290,11 @@ body {
     // half-block parkour over a spike carpet
     { lv: 1, len: 23, taps: [-1, 7, 15], o: [...spikeRow(1, 18), ['b', 3, 1, 5, 0.5], ['b', 11, 1, 5, 0.5]] },
     { lv: 3, len: 28, taps: [-1, 7, 15], o: [...spikeRow(1, 20), ['b', 3, 1, 5, 0.5], ['b', 11, 2, 5, 0.5], ['b', 19, 3, 4, 0.5]] },
-    { lv: 4, len: 23, taps: [-1, 7, 15], o: [...spikeRow(1, 18), ['b', 3, 1, 13, 0.5], ['s', 10, 1.5], ['s', 11, 1.5]] }
+    { lv: 4, len: 23, taps: [-1, 7, 15], o: [...spikeRow(1, 18), ['b', 3, 1, 13, 0.5], ['s', 10, 1.5], ['s', 11, 1.5]] },
+    // floating blocks
+    { lv: 1, len: 13, taps: [-1, 5], o: [['s', 1, 0], ['s', 2, 0], ['b', 3, 1, 3, 1], ['s', 6, 0], ['s', 7, 0]] },
+    { lv: 2, len: 23, taps: [-1, 7, 15], o: [['pit', 1, 18], ['b', 3, 1, 5, 1], ['b', 11, 1, 5, 1]] },
+    { lv: 3, len: 24, taps: [-1, 7, 15], o: [...spikeRow(1, 20), ['b', 3, 1, 5, 1], ['b', 10, 2, 6, 1]] }
   ];
   function spikeRow(from, to) { const r = []; for (let x = from; x <= to; x++) r.push(['s', x, 0]); return r; }
   const lvAtBar = bar => 1 + Math.floor(Math.max(0, bar - 2) / 8);   // level rises on every drop
@@ -634,6 +638,8 @@ body {
     near() { if (!actx) return; const t = actx.currentTime; noise(t, 0.25, 0.3, 'bandpass', 3000); tone('sine', 1760, 2637, t, 0.2, 0.16); },
     milestone() { if (!actx) return; const t = actx.currentTime; [0, 4, 7, 12, 16, 19, 24].forEach((n, i) => tone('square', 523 * Math.pow(2, n / 12), 523 * Math.pow(2, n / 12), t + i * 0.045, 0.09, 0.07)); },
     fever() { if (!actx) return; const t = actx.currentTime; tone('sawtooth', 110, 1760, t, 0.9, 0.16); noise(t, 0.9, 0.2, 'bandpass', 2500); },
+    suck() { if (!actx) return; const t = actx.currentTime; tone('sawtooth', 120, 1800, t, 1.2, 0.12, sfxBus, 1.1); noise(t, 1.2, 0.25, 'bandpass', 3000); },
+    shatter() { if (!actx) return; const t = actx.currentTime; noise(t, 0.5, 0.8, 'highpass', 2500); crash(t); [0, 4, 7, 12, 16, 19, 24, 28].forEach((n, i) => tone('square', 523 * Math.pow(2, n / 12), 523 * Math.pow(2, n / 12), t + 0.05 + i * 0.05, 0.12, 0.08)); },
     warp(up) { if (!actx) return; const t = actx.currentTime; tone('square', up ? 300 : 900, up ? 900 : 300, t, 0.07, 0.12); noise(t, 0.06, 0.2, 'highpass', 6000); },
     transform(ship) { if (!actx) return; const t = actx.currentTime; [0, 5, 7, 12, 17, 19, 24].forEach((n, i) => tone('sawtooth', (ship ? 330 : 262) * Math.pow(2, n / 12), (ship ? 330 : 262) * Math.pow(2, n / 12), t + i * 0.03, 0.07, 0.09)); noise(t, 0.3, 0.2, 'bandpass', 5000); },
     gate() { if (!actx) return; const t = actx.currentTime; tone('sine', 1200, 300, t, 0.3, 0.2); noise(t, 0.3, 0.2, 'bandpass', 4000); },
@@ -643,7 +649,7 @@ body {
   // ---------- state ----------
   let state = 'title';
   let dist, level, nextX, objs, pits, parts, pops, trail;
-  let genDone, clearTimer, pct, bestPct = 0, riseGlow = 0;
+  let genDone, nextSpecial, clearTimer, pct, bestPct = 0, riseGlow = 0;
   let P, grav, mode, holding, pressBuf, score, shownScore, combo, comboTimer, maxCombo, mult, fever, perfects;
   let shake, flash, zoom, timeScale, slowTimer, hue, deathTimer, deathCause, attemptX, lastSongT, lastBeat;
   let tReal = 0, lastFrame = 0;
@@ -661,7 +667,7 @@ body {
     score = 0; shownScore = 0; combo = 0; comboTimer = 0; maxCombo = 0; mult = 1; fever = 0; perfects = 0;
     shake = 0; flash = 0; zoom = 0; timeScale = 1; slowTimer = 0; hue = 280; deathTimer = 0;
     attemptX = U * 6; lastSongT = 0; lastBeat = -1;
-    seed = STAGE_SEED; genDone = false; clearTimer = 0; pct = 0;
+    seed = STAGE_SEED; genDone = false; nextSpecial = 'ship'; clearTimer = 0; pct = 0;
     if (state === 'play') { objs.push({ t: 'goal', x: END_X }); generate(); }
   }
 
@@ -672,12 +678,16 @@ body {
       const lv = lvAtBar(Math.floor(nextX / (beatPx * 4)));
       const pool = PATTERNS.filter(p => p.lv <= lv && (!p.max || lv <= p.max));
       const roll = nextX > U * 60 ? srand() : 1;
-      const pat = roll < 0.12 ? shipPattern(lv) : roll < 0.24 ? spiderPattern(lv) : spick(pool);
+      let pat;
+      if (roll < 0.24) {                                   // plane and spider sections take turns
+        pat = nextSpecial === 'ship' ? shipPattern(lv) : spiderPattern(lv);
+        nextSpecial = nextSpecial === 'ship' ? 'spider' : 'ship';
+      } else pat = spick(pool);
       const a = pat.anchor !== undefined ? pat.anchor : pat.taps[0];
       // earliest origin, then slide forward until the anchor lands on a beat
       const minX = nextX + Math.max(0, -a) * U;
       const x0 = Math.ceil((minX + a * U) / beatPx) * beatPx - a * U;
-      if (x0 + (pat.len + 6) * U > END_X) { genDone = true; break; }   // leave a clear run-up to the goal
+      if (x0 + (pat.len + 12) * U > END_X) { genDone = true; break; }   // leave a clear run-up to the goal
       for (const o of pat.o) {
         const [t, p1, p2, p3, p4, p5] = o;
         if (t === 's') objs.push({ t: 'spike', x: x0 + p1 * U, y: p2 * U });
@@ -851,8 +861,23 @@ body {
     }
     if (state === 'clear') {
       clearTimer += dtReal;
-      if (Math.random() < dtReal * 8) burst(rand(W * 0.1, W * 0.9), rand(H * 0.1, H * 0.5), 40, null, 480);
-      if (clearTimer > 2.8 && overOv.hidden) showResult(true);
+      const [vx, vy] = vortexPos();
+      const t = Math.min(1, clearTimer / 1.2), e = t * t;
+      if (!P.shattered) {
+        P.cx = P.cx0 + (vx - P.cx0) * e;
+        P.cy = P.cy0 + (vy - P.cy0) * e - Math.sin(t * Math.PI) * 50;
+        P.rot += dtReal * (5 + 35 * t);
+        P.cs = 1 - 0.55 * t;
+        zoom = Math.max(zoom, 0.14 * t);
+        // sparks spiralling into the vortex
+        for (let i = 0; i < (fxMax ? 3 : 1); i++) {
+          const a = Math.random() * Math.PI * 2, r = rand(90, 170);
+          parts.push({ x: vx + Math.cos(a) * r, y: vy + Math.sin(a) * r, vx: -Math.cos(a) * r * 2.6 - Math.sin(a) * 120, vy: -Math.sin(a) * r * 2.6 + Math.cos(a) * 120,
+            g: 0, life: 0.35, max: 0.35, size: rand(2, 5), color: `hsl(${(hue + rand(0, 120)) % 360} 100% 65%)`, kind: 'spark', rot: 0 });
+        }
+        if (t >= 1) shatter();
+      } else if (Math.random() < dtReal * 6) burst(rand(W * 0.1, W * 0.9), rand(H * 0.1, H * 0.5), 40, null, 480);
+      if (clearTimer > 3.8 && overOv.hidden) showResult(true);
       return;
     }
     if (state !== 'play') return;
@@ -878,7 +903,7 @@ body {
     }
     if (state !== 'play') return;
     pct = Math.min(100, Math.floor(dist / END_X * 100));
-    if (dist >= END_X) return stageClear();
+    if (dist >= END_X - 6 * U && mode === 'cube') return stageClear();
     if (nextX < dist + W + U * 12) generate();
     trail.push({ x: dist, h: P.h, rot: P.rot, hue, m: mode });
     if (mode === 'ship' && holding) {
@@ -890,18 +915,32 @@ body {
     if (trail.length > (fxMax ? 14 : 5)) trail.shift();
   }
 
+  // the goal is a wall with a vortex: the cube gets pulled in, spins faster and faster, then shatters
+  const vortexPos = () => [sx(END_X) + U * 1.5, GY - 3 * U];
   function stageClear() {
     state = 'clear';
     pct = 100;
     clearTimer = 0;
     holding = false;
-    sfx.milestone();
-    sfx.transform(true);
-    if (actx) crash(actx.currentTime);
-    pop('STAGE CLEAR!!', W / 2, H * 0.3, '#ffe23d', 64, 2.6, true);
-    pop('100%', W / 2, H * 0.3 + 64, '#7dff4a', 48, 2.6, true);
-    flash = 0.4; zoom = 0.15; shake = 0.5;
-    for (let i = 0; i < 5; i++) burst(rand(W * 0.2, W * 0.8), rand(H * 0.2, H * 0.6), 60, null, 600);
+    P.cx0 = P.cx = PX + U / 2;
+    P.cy0 = P.cy = pyScreen();
+    P.cs = 1;
+    P.shattered = false;
+    sfx.suck();
+  }
+  function shatter() {
+    P.shattered = true;
+    const [vx, vy] = vortexPos();
+    burst(vx, vy, 90, null, 700, 'shard');
+    burst(vx, vy, 60, '#22f2ff', 500, 'shard');
+    burst(vx, vy, 60, '#ffe23d', 600);
+    ring(vx, vy, '#ffe23d', 160);
+    ring(vx, vy, '#ff2bd6', 110);
+    ring(vx, vy, '#22f2ff', 70);
+    flash = 0.45; shake = 0.8; zoom = 0.18;
+    sfx.shatter();
+    pop('クリア!!', W / 2, H * 0.3, '#ffe23d', 92, 2.6, true);
+    pop('100%', W / 2, H * 0.3 + 70, '#7dff4a', 40, 2.6, true);
   }
 
   // things that happen exactly on beats: countdown, drops, level ups
@@ -1358,6 +1397,10 @@ body {
       else if (o.t === 'cue') drawCue(o, x);
       else if (o.t === 'block') {
         const y = GY - o.y - o.h;
+        if (o.y >= U * 0.9 && o.y < U * 3.5 && o.w < U * 12) {          // floating: a soft shadow on the floor
+          ctx.fillStyle = 'rgba(0,0,0,.28)';
+          ctx.beginPath(); ctx.ellipse(x + o.w / 2, GY + 4, o.w / 2, 5, 0, 0, Math.PI * 2); ctx.fill();
+        }
         ctx.fillStyle = hsl(hue + 220, 70, 14);
         ctx.fillRect(x, y, o.w, o.h);
         ctx.strokeStyle = hsl(hue + 180, 100, 65);
@@ -1430,18 +1473,37 @@ body {
         ctx.textBaseline = 'middle';
         ctx.fillText(o.dir === -1 ? '▲' : '▼', x, mid + Math.sin(tReal * 8) * 6);
       } else if (o.t === 'goal') {
-        // checkered finish pillar
-        const cols = 2, rows = Math.ceil(GY / 20);
-        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
-          ctx.fillStyle = (r + c) % 2 ? '#f5f0ff' : '#0b0420';
-          ctx.fillRect(x + c * 20, GY - (r + 1) * 20, 20, 20);
+        // the goal wall with its vortex
+        const ww = U * 3, top = -60;
+        ctx.fillStyle = hsl(hue + 220, 70, 9);
+        ctx.fillRect(x, top, ww + 400, GY - top);
+        ctx.strokeStyle = hsl(hue + 180, 100, 65, 0.25);
+        ctx.lineWidth = 1.5;
+        for (let gx = x; gx < x + ww + 400; gx += U) for (let gy = GY - U; gy > top; gy -= U) ctx.strokeRect(gx + 6, gy + 6, U - 12, U - 12);
+        ctx.strokeStyle = '#ffe23d';
+        ctx.lineWidth = 4;
+        glow('#ffe23d', 18);
+        ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, GY); ctx.stroke();
+        const cx = x + ww / 2, cy = GY - 3 * U;
+        const pull = state === 'clear' ? 1 + Math.min(1, clearTimer) * 0.6 : 1;
+        for (let i = 0; i < 6; i++) {
+          const rr = (16 + i * 13 + beat * 8) * pull, a0 = tReal * (3 + i * 0.8) * (state === 'clear' ? 2.5 : 1) + i;
+          ctx.strokeStyle = hsl(hue + i * 45, 100, 65, 0.85);
+          ctx.lineWidth = 5 - i * 0.5;
+          ctx.beginPath(); ctx.arc(cx, cy, rr, a0, a0 + Math.PI * 1.3); ctx.stroke();
         }
+        ctx.shadowBlur = 0;
+        const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, 30 * pull);
+        cg.addColorStop(0, 'rgba(255,255,255,.95)');
+        cg.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = cg;
+        ctx.beginPath(); ctx.arc(cx, cy, 30 * pull, 0, Math.PI * 2); ctx.fill();
         ctx.font = `30px ${F_POP}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
         ctx.fillStyle = '#ffe23d';
         glow('#ffe23d', 20);
-        ctx.fillText('GOAL', x + 20, GY * 0.3);
+        ctx.fillText('GOAL', cx, cy - 110);
         ctx.shadowBlur = 0;
       } else if (o.t === 'mode') {
         const c = MODE_COLOR[o.to];
@@ -1470,6 +1532,16 @@ body {
 
   function drawPlayer() {
     if (state === 'dead' || state === 'result') return;
+    if (state === 'clear') {
+      if (P.shattered) return;
+      ctx.save();
+      ctx.translate(P.cx, P.cy);
+      ctx.rotate(P.rot);
+      ctx.scale(P.cs, P.cs);
+      drawCubeBody(fever > 0 ? hsl(hue, 100, 60) : '#22f2ff');
+      ctx.restore();
+      return;
+    }
     trail.forEach((t, i) => {
       const a = (i + 1) / trail.length;
       ctx.save();
@@ -1501,6 +1573,11 @@ body {
     ctx.translate(PX + U / 2, pyScreen() + P.squash * 4 * grav);
     ctx.scale(1 + P.squash * 0.18, (1 - P.squash * 0.18) * P.flipVis);
     ctx.rotate(P.rot);
+    drawCubeBody(main);
+    ctx.restore();
+  }
+
+  function drawCubeBody(main) {
     glow(main, 20);
     ctx.fillStyle = main;
     ctx.fillRect(-U / 2, -U / 2, U, U);
@@ -1515,7 +1592,6 @@ body {
     ctx.fillStyle = '#0b0420';
     ctx.fillRect(-7, -5, 4, 5); ctx.fillRect(6, -5, 4, 5);
     ctx.fillRect(-6, 5, 13, 3);
-    ctx.restore();
   }
 
   // the spider: the cube with eight legs gripping the surface below it (flipped on the ceiling)
@@ -1811,7 +1887,7 @@ body {
     document.getElementById('pFill').style.width = `${pct}%`;
     document.getElementById('pBest').style.left = `${bestPct}%`;
     document.getElementById('pText').textContent = cleared ? 'ステージクリア！' : `ベスト ${bestPct}%　あと${100 - pct}%でゴール`;
-    document.getElementById('cause').textContent = cleared ? 'STAGE CLEAR!! おめでとう!!' : pick(CAUSES[deathCause]);
+    document.getElementById('cause').textContent = cleared ? 'クリア!! おめでとう!!' : pick(CAUSES[deathCause]);
     document.getElementById('newrec').hidden = !isNew;
     document.getElementById('sScore').textContent = s.toLocaleString();
     document.getElementById('sCombo').textContent = String(maxCombo);
