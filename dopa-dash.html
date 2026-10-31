@@ -178,11 +178,11 @@ body {
         <dt class="c-cyan">長押し</dt><dd>着地したしゅんかんに連続ジャンプ</dd>
         <dt class="c-mag">トゲ・ノコギリ・穴</dt><dd>さわったら爆発</dd>
         <dt class="c-cyan">ブロック</dt><dd>上に乗れる。横や下からぶつかると爆発</dd>
-        <dt class="c-yel">黄色/<span class="c-pink">ピンクの台</span></dt><dd>ふむと大ジャンプ／小ジャンプ</dd>
-        <dt class="c-yel">黄色/<span class="c-pink">ピンクの輪</span></dt><dd>空中でタップしてもう1回ジャンプ</dd>
+        <dt class="c-yel">黄色/<span class="c-pink">ピンク</span></dt><dd>台はふむとジャンプ。輪は空中でタップ</dd>
         <dt class="c-cyan">青いゲート</dt><dd>重力反転！天井を走る（黄色で元にもどる）</dd>
         <dt class="c-lime">◆マーク</dt><dd>音に合わせてここでタップ！PERFECTでボーナス</dd>
         <dt class="c-mag">ピンクのゲート</dt><dd>飛行機に変身！長押しで上、はなすと下</dd>
+        <dt class="c-yel">オレンジのゲート</dt><dd>クモに変身！タップで天井⇔床にワープ</dd>
         <dt class="c-mag">ビートトゲ</dt><dd>音楽に合わせて出たり引っこんだり</dd>
         <dt class="c-cyan">半ブロック</dt><dd>空中の足場。ジャンプで飛び移れ</dd>
         <dt class="c-yel">ゴール</dt><dd>100%でステージクリア！コンボ40でFEVER</dd>
@@ -228,13 +228,14 @@ body {
   const STEP = SPB / 4;               // 16th note
   const BEAT_U = 4;                   // units travelled per beat
   const V = BEAT_U * U / SPB;         // scroll speed, px/s
-  const JUMP = 830;
+  const JUMP = 590;                   // lower hop (about 2.3 blocks high)
   const G = 2 * JUMP / (1.5 * SPB);   // a normal jump lasts exactly 1.5 beats
-  const PAD_V = { y: G * SPB, p: G * SPB / 2 };   // yellow pad: 2 beats, pink: 1 beat
+  const PAD_V = { y: G * SPB, p: JUMP };           // yellow pad: 2 beats high, pink: a normal hop
   const ORB_V = { y: JUMP, p: G * SPB / 2 };
   const SHIP_H = U * 0.6;             // the plane is shorter than the cube
   const SHIP_ACC = 2100;              // hold = climb, release = dive
   const SHIP_MAX = 420;
+  const MODE_COLOR = { ship: '#ff2bd6', spider: '#ffb31a', cube: '#7dff4a' };
   const F_POP = '"Mochiy Pop One","Hiragino Maru Gothic ProN",sans-serif';
   const F_NUM = '"Orbitron","Arial Black",sans-serif';
   const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -262,34 +263,34 @@ body {
     { lv: 1, len: 2, taps: [-2.5], o: [['s', 0, 0], ['s', 1, 0]] },
     { lv: 1, len: 2, taps: [-2.5], o: [['b', 0, 0, 2, 1]] },
     { lv: 1, len: 2, taps: [-2.5], o: [['pit', 0, 2]] },
-    { lv: 1, len: 6, anchor: 0, o: [['pad', 0], ['b', 4, 0, 2, 2]] },
+    { lv: 1, len: 9, anchor: 0, o: [['pad', 0], ['b', 4, 0, 2, 2]] },
     { lv: 1, len: 2, taps: [-2.5], o: [['saw', 1, 0, 0.95, 0]] },
     { lv: 2, len: 3, taps: [-2], o: [['s', 0, 0], ['s', 1, 0], ['s', 2, 0]] },
-    { lv: 2, max: 3, len: 24, taps: [0, 8, 16], o: [['b', 2, 0, 8, 1], ['s', 10, 0], ['b', 11, 0, 6, 2], ['s', 17, 0], ['s', 18, 0], ['b', 19, 0, 5, 3]] },
+    { lv: 2, max: 3, len: 28, taps: [0, 8, 16], o: [['b', 2, 0, 8, 1], ['s', 10, 0], ['b', 11, 0, 6, 2], ['s', 17, 0], ['s', 18, 0], ['b', 19, 0, 5, 3]] },
     { lv: 2, len: 3, taps: [-2], o: [['pit', 0, 3]] },
-    { lv: 2, len: 4, taps: [-2], o: [['b', 0, 0, 4, 1], ['s', 2, 1]] },
+    { lv: 2, len: 4, taps: [-2], o: [['b', 0, 0, 4, 1], ['s', 1.5, 1]] },
     { lv: 2, len: 3, taps: [-2], o: [['bs', 0], ['bs', 1], ['bs', 2]] },
     { lv: 2, len: 3, taps: [-2], o: [['b', 0, 0, 3, 1], ['saw', 1.5, 1, 0.7, 0]] },
     { lv: 2, len: 6, anchor: 0, o: [['b', 0, 2.2, 6, 0.6, 'nojump']] },
-    { lv: 3, len: 6, taps: [-2, 2], o: [['s', 0, 0], ['s', 1, 0], ['s', 2, 0], ['s', 3, 0], ['s', 4, 0], ['s', 5, 0], ['orb', 2, 2.87]] },
+    { lv: 3, len: 10, taps: [-2, 2], o: [['s', 0, 0], ['s', 1, 0], ['s', 2, 0], ['s', 3, 0], ['s', 4, 0], ['s', 5, 0], ['orb', 2, 2.05]] },
     { lv: 3, len: 5, taps: [-1], o: [['pit', 0, 2], ['pit', 3, 2]] },
-    { lv: 3, len: 6, anchor: 0, o: [['pad', 0], ['s', 3, 0], ['s', 4, 0], ['s', 5, 0]] },
-    { lv: 3, len: 22, anchor: 0, taps: [4, 12], o: [['gp', 0, -1], ['b', 0, 5, 22, 1], ['si', 6.5, 4], ['si', 7.5, 4], ['s', 7, 0], ['s', 8, 0], ['si', 15, 4], ['gp', 20, 1]] },
-    { lv: 3, len: 16, taps: [-1, 7], o: [['s', 1, 0], ['s', 2, 0], ['s', 3, 0], ['s', 4, 0], ['s', 5, 0], ['s', 6, 0], ['s', 7, 0], ['s', 8, 0], ['s', 9, 0], ['s', 10, 0], ['s', 11, 0], ['s', 12, 0], ['s', 13, 0], ['s', 14, 0], ['b', 2, 1.5, 6, 0.5], ['b', 11, 1.5, 5, 0.5]] },
-    { lv: 3, len: 10, taps: [-2.5, 5.5], o: [['bs', 0], ['bs', 1], ['b', 3, 0, 4, 1], ['bs', 8], ['bs', 9]] },
-    { lv: 4, len: 4, anchor: 0, o: [['ppad', 0], ['s', 1, 0], ['s', 2, 0]] },
-    { lv: 4, len: 13, taps: [-2, 2, 6, 10], o: [['s', 0, 0], ['s', 1, 0], ['s', 2, 0], ['s', 3, 0], ['s', 4, 0], ['s', 5, 0], ['s', 6, 0], ['s', 7, 0], ['s', 8, 0], ['s', 9, 0], ['s', 10, 0], ['s', 11, 0], ['s', 12, 0], ['porb', 2, 2.87], ['porb', 6, 2.87], ['porb', 10, 2.87]] },
-    { lv: 4, len: 4, taps: [-1.5], o: [['pit', 0, 4]] },
-    { lv: 5, len: 30, anchor: 0, taps: [4, 12, 20], o: [['gp', 0, -1], ['b', 0, 5, 30, 1], ['si', 6.5, 4], ['si', 7.5, 4], ['bs', 7], ['saw', 15.5, 4.6, 0.8, 0], ['si', 23, 4], ['gp', 28, 1]] },
+    { lv: 3, len: 9, anchor: 0, o: [['pad', 0], ['s', 3, 0], ['s', 4, 0], ['s', 5, 0]] },
+    { lv: 3, len: 25, anchor: 0, taps: [4, 12], o: [['gp', 0, -1], ['b', 0, 5, 22, 1], ['si', 6.5, 4], ['si', 7.5, 4], ['s', 7, 0], ['s', 8, 0], ['si', 15, 4], ['gp', 20, 1]] },
+    { lv: 3, len: 16, taps: [-1, 7], o: [['s', 1, 0], ['s', 2, 0], ['s', 3, 0], ['s', 4, 0], ['s', 5, 0], ['s', 6, 0], ['s', 7, 0], ['s', 8, 0], ['s', 9, 0], ['s', 10, 0], ['s', 11, 0], ['s', 12, 0], ['s', 13, 0], ['s', 14, 0], ['b', 3, 1.5, 5, 0.5], ['b', 11, 1.5, 5, 0.5]] },
+    { lv: 3, len: 13, taps: [-2.5, 5.5], o: [['bs', 0], ['bs', 1], ['b', 3, 0, 4, 1], ['bs', 8], ['bs', 9]] },
+    { lv: 4, len: 7, anchor: 0, o: [['ppad', 0], ['s', 1, 0], ['s', 2, 0]] },
+    { lv: 4, len: 16, taps: [-2, 2, 6, 10], o: [['s', 0, 0], ['s', 1, 0], ['s', 2, 0], ['s', 3, 0], ['s', 4, 0], ['s', 5, 0], ['s', 6, 0], ['s', 7, 0], ['s', 8, 0], ['s', 9, 0], ['s', 10, 0], ['s', 11, 0], ['s', 12, 0], ['porb', 2, 2.05], ['porb', 6, 2.05], ['porb', 10, 2.05]] },
+    { lv: 4, len: 5, taps: [-1.5], o: [['pit', 0, 4]] },
+    { lv: 5, len: 33, anchor: 0, taps: [4, 12, 20], o: [['gp', 0, -1], ['b', 0, 5, 30, 1], ['si', 6.5, 4], ['si', 7.5, 4], ['bs', 7], ['saw', 15.5, 4.6, 0.8, 0], ['si', 23, 4], ['gp', 28, 1]] },
     // more spikes
-    { lv: 2, len: 7, taps: [-3, 3], o: [['s', 0, 0], ['b', 1, 0, 5, 1], ['s', 6, 0]] },
-    { lv: 2, len: 8, taps: [-2.5, 3.5], o: [['s', 0, 0], ['s', 1, 0], ['s', 6, 0], ['s', 7, 0]] },
-    { lv: 3, len: 4, taps: [-1.5], o: [['s', 0, 0], ['s', 1, 0], ['s', 2, 0], ['s', 3, 0]] },
-    { lv: 3, len: 14, taps: [-2.5, 3.5, 9.5], o: [['s', 0, 0], ['s', 1, 0], ['s', 6, 0], ['s', 7, 0], ['s', 12, 0], ['s', 13, 0]] },
+    { lv: 2, len: 10, taps: [-3, 3], o: [['s', 0, 0], ['b', 1, 0, 5, 1], ['s', 6, 0]] },
+    { lv: 2, len: 10, taps: [-2.5, 3.5], o: [['s', 0, 0], ['s', 1, 0], ['s', 6, 0], ['s', 7, 0]] },
+    { lv: 3, len: 5, taps: [-1.5], o: [['s', 0, 0], ['s', 1, 0], ['s', 2, 0], ['s', 3, 0]] },
+    { lv: 3, len: 16, taps: [-2.5, 3.5, 9.5], o: [['s', 0, 0], ['s', 1, 0], ['s', 6, 0], ['s', 7, 0], ['s', 12, 0], ['s', 13, 0]] },
     // half-block parkour over a spike carpet
-    { lv: 1, len: 22, taps: [-1, 7, 15], o: [...spikeRow(1, 18), ['b', 3, 1, 5, 0.5], ['b', 11, 1, 5, 0.5]] },
-    { lv: 3, len: 27, taps: [-1, 7, 15], o: [...spikeRow(1, 20), ['b', 3, 1, 5, 0.5], ['b', 11, 2, 5, 0.5], ['b', 19, 3, 4, 0.5]] },
-    { lv: 4, len: 22, taps: [-1, 7, 15], o: [...spikeRow(1, 18), ['b', 3, 1, 13, 0.5], ['s', 10, 1.5], ['s', 11, 1.5]] }
+    { lv: 1, len: 23, taps: [-1, 7, 15], o: [...spikeRow(1, 18), ['b', 3, 1, 5, 0.5], ['b', 11, 1, 5, 0.5]] },
+    { lv: 3, len: 28, taps: [-1, 7, 15], o: [...spikeRow(1, 20), ['b', 3, 1, 5, 0.5], ['b', 11, 2, 5, 0.5], ['b', 19, 3, 4, 0.5]] },
+    { lv: 4, len: 23, taps: [-1, 7, 15], o: [...spikeRow(1, 18), ['b', 3, 1, 13, 0.5], ['s', 10, 1.5], ['s', 11, 1.5]] }
   ];
   function spikeRow(from, to) { const r = []; for (let x = from; x <= to; x++) r.push(['s', x, 0]); return r; }
   const lvAtBar = bar => 1 + Math.floor(Math.max(0, bar - 2) / 8);   // level rises on every drop
@@ -633,6 +634,7 @@ body {
     near() { if (!actx) return; const t = actx.currentTime; noise(t, 0.25, 0.3, 'bandpass', 3000); tone('sine', 1760, 2637, t, 0.2, 0.16); },
     milestone() { if (!actx) return; const t = actx.currentTime; [0, 4, 7, 12, 16, 19, 24].forEach((n, i) => tone('square', 523 * Math.pow(2, n / 12), 523 * Math.pow(2, n / 12), t + i * 0.045, 0.09, 0.07)); },
     fever() { if (!actx) return; const t = actx.currentTime; tone('sawtooth', 110, 1760, t, 0.9, 0.16); noise(t, 0.9, 0.2, 'bandpass', 2500); },
+    warp(up) { if (!actx) return; const t = actx.currentTime; tone('square', up ? 300 : 900, up ? 900 : 300, t, 0.07, 0.12); noise(t, 0.06, 0.2, 'highpass', 6000); },
     transform(ship) { if (!actx) return; const t = actx.currentTime; [0, 5, 7, 12, 17, 19, 24].forEach((n, i) => tone('sawtooth', (ship ? 330 : 262) * Math.pow(2, n / 12), (ship ? 330 : 262) * Math.pow(2, n / 12), t + i * 0.03, 0.07, 0.09)); noise(t, 0.3, 0.2, 'bandpass', 5000); },
     gate() { if (!actx) return; const t = actx.currentTime; tone('sine', 1200, 300, t, 0.3, 0.2); noise(t, 0.3, 0.2, 'bandpass', 4000); },
     death() { if (!actx) return; const t = actx.currentTime; noise(t, 0.6, 0.9, 'lowpass', 900); tone('sawtooth', 440, 40, t, 0.6, 0.3); }
@@ -669,7 +671,8 @@ body {
     while (!genDone && nextX < dist + W + U * 12) {
       const lv = lvAtBar(Math.floor(nextX / (beatPx * 4)));
       const pool = PATTERNS.filter(p => p.lv <= lv && (!p.max || lv <= p.max));
-      const pat = nextX > U * 60 && srand() < (lv >= 2 ? 0.16 : 0.1) ? shipPattern(lv) : spick(pool);
+      const roll = nextX > U * 60 ? srand() : 1;
+      const pat = roll < 0.12 ? shipPattern(lv) : roll < 0.24 ? spiderPattern(lv) : spick(pool);
       const a = pat.anchor !== undefined ? pat.anchor : pat.taps[0];
       // earliest origin, then slide forward until the anchor lands on a beat
       const minX = nextX + Math.max(0, -a) * U;
@@ -691,7 +694,7 @@ body {
       }
       for (const tp of pat.taps || []) objs.push({ t: 'cue', x: x0 + tp * U, judged: false });
       objs.push({ t: 'mark', x: x0 + pat.len * U, done: false });
-      nextX = x0 + (pat.len + Math.round(srand(2, 5))) * U;
+      nextX = x0 + (pat.len + Math.round(srand(3, 6))) * U;
     }
     objs = objs.filter(o => o.t === 'goal' || o.x + (o.w || U * 2) > dist - U * 4);
     pits = pits.filter(p => p.x + p.w > dist - U * 4);
@@ -700,7 +703,7 @@ body {
   // A plane tunnel: one wall section per beat, so the gaps switch exactly on the beat.
   function shipPattern(lv) {
     const gh = lv >= 5 ? 3.5 : lv >= 4 ? 4 : 4.5;        // gap height in units
-    const segs = lv >= 4 ? 12 : 8;
+    const segs = lv >= 4 ? 18 : 14;
     const maxStep = 1;                                    // gaps move one unit per beat, so neighbours overlap a lot
     const topU = Math.ceil(GY / U) + 1;                   // ceilings reach past the top of the screen
     const o = [['mg', 0, 'ship']];
@@ -724,6 +727,31 @@ body {
     const end = 8 + segs * 4;
     o.push(['mg', end, 'cube']);
     return { len: end + 4, anchor: 0, o };
+  }
+
+  // A spider corridor: a ceiling over the whole section. Each ◆ is a switch between floor and ceiling,
+  // and the side you just left gets spikes (or a pit) right after it, so every tap matters.
+  function spiderPattern(lv) {
+    const n = lv >= 4 ? 10 : 8;                           // even, so it always ends on the floor
+    const CH = 4;                                         // underside of the ceiling, in units
+    const topU = Math.ceil(GY / U) + 1;
+    const cues = [];
+    let x = 8;
+    for (let i = 0; i < n; i++) { cues.push(x); x += spick(lv >= 3 ? [8, 8, 12] : [8, 12]); }
+    const end = x;
+    const o = [['mg', 0, 'spider'], ['b', 0, CH, end + 2, topU - CH]];
+    // hanging spikes before the first switch show where the danger is
+    for (let k = 2; k < cues[0] - 2; k++) o.push(['si', k, CH - 1]);
+    for (let i = 0; i < n; i++) {
+      const a = cues[i] + 2, b = (i + 1 < n ? cues[i + 1] : end) - 2;
+      const onCeiling = i % 2 === 0;
+      if (onCeiling) {
+        if (b - a >= 4 && srand() < 0.35) o.push(['pit', a, b - a]);
+        else for (let k = a; k < b; k++) o.push(['s', k, 0]);
+      } else for (let k = a; k < b; k++) o.push(['si', k, CH - 1]);
+    }
+    o.push(['mg', end, 'cube']);
+    return { len: end + 4, anchor: 0, taps: cues, o };
   }
 
   // ---------- helpers ----------
@@ -963,11 +991,34 @@ body {
       }
     } else {
       P.coyote -= dt;
-      P.rot += grav * dt * (Math.PI / (1.5 * SPB));
+      if (mode === 'cube') P.rot += grav * dt * (Math.PI / (1.5 * SPB));
     }
-    if ((P.grounded || P.coyote > 0) && (holding || pressBuf > 0) && P.vh * grav <= 0) jump(JUMP);
+    if (mode === 'cube' && (P.grounded || P.coyote > 0) && (holding || pressBuf > 0) && P.vh * grav <= 0) jump(JUMP);
+    if (mode === 'spider' && pressBuf > 0 && (P.grounded || P.coyote > 0)) spiderWarp();
     P.flipVis += (grav - P.flipVis) * Math.min(1, dt * 12);
     P.squash = Math.max(0, P.squash - dt * 6);
+  }
+
+  // the spider shoots straight to the opposite surface and sticks there
+  function spiderWarp() {
+    pressBuf = 0;
+    const x0 = dist + 3, x1 = dist + U - 3;
+    const fromY = pyScreen();
+    let target = null;
+    if (grav === 1) {
+      for (const o of objs) if (o.t === 'block' && x1 > o.x && x0 < o.x + o.w && o.y >= P.h + U - 1) target = target === null ? o.y - U : Math.min(target, o.y - U);
+    } else {
+      if (overlapsGround(x0, x1)) target = 0;
+      for (const o of objs) if (o.t === 'block' && x1 > o.x && x0 < o.x + o.w && o.y + o.h <= P.h + 1) target = Math.max(target === null ? -1e9 : target, o.y + o.h);
+    }
+    grav = -grav;
+    if (target !== null) { P.h = target; P.vh = 0; P.grounded = true; P.coyote = 0.08; }
+    else { P.vh = 0; P.grounded = false; P.coyote = 0; }
+    P.squash = 1;
+    sfx.warp(grav === -1);
+    const toY = pyScreen();
+    parts.push({ x: PX + U / 2, y: fromY, y2: toY, vx: 0, vy: 0, g: 0, life: 0.25, max: 0.25, size: U * 0.8, color: '#ffb31a', kind: 'beam', rot: 0 });
+    burst(PX + U / 2, toY, 14, '#ffb31a', 260);
   }
 
   // returns false once the player has died
@@ -1045,11 +1096,12 @@ body {
         P.flipVis = 1;
         P.grounded = false;
         sfx.transform(mode === 'ship');
-        const c = mode === 'ship' ? '#ff2bd6' : '#7dff4a';
+        const c = MODE_COLOR[mode];
         ring(PX + U / 2, pyScreen(), c, 120);
         burst(PX + U / 2, pyScreen(), 50, c, 520);
-        pop(mode === 'ship' ? '飛行機モード!!' : 'キューブにもどった!', W / 2, H * 0.22, c, 46, 1.2, true);
+        pop({ ship: '飛行機モード!!', spider: 'クモモード!!', cube: 'キューブにもどった!' }[mode], W / 2, H * 0.22, c, 46, 1.2, true);
         if (mode === 'ship') pop('長押しで上・はなすと下', W / 2, H * 0.22 + 46, '#f5f0ff', 22, 1.6, true);
+        if (mode === 'spider') pop('タップで天井と床をワープ', W / 2, H * 0.22 + 46, '#f5f0ff', 22, 1.6, true);
         flash = Math.max(flash, 0.22);
         zoom = Math.max(zoom, 0.1);
         shake = Math.max(shake, 0.3);
@@ -1392,7 +1444,7 @@ body {
         ctx.fillText('GOAL', x + 20, GY * 0.3);
         ctx.shadowBlur = 0;
       } else if (o.t === 'mode') {
-        const c = o.to === 'ship' ? '#ff2bd6' : '#7dff4a';
+        const c = MODE_COLOR[o.to];
         const top = GY - U * 6, mid = (GY + top) / 2;
         ctx.strokeStyle = c; ctx.lineWidth = 7;
         glow(c, 22);
@@ -1401,6 +1453,7 @@ body {
         ctx.save();
         ctx.translate(x, mid + Math.sin(tReal * 6) * 8);
         if (o.to === 'ship') { ctx.scale(0.7, 0.7); drawShip('#ff2bd6', false); }
+        else if (o.to === 'spider') { ctx.scale(0.6, 0.6); drawSpider('#ffb31a', 1); }
         else { ctx.fillStyle = c; ctx.fillRect(-10, -10, 20, 20); }
         ctx.restore();
       }
@@ -1436,6 +1489,14 @@ body {
       ctx.restore();
       return;
     }
+    if (mode === 'spider') {
+      ctx.save();
+      ctx.translate(PX + U / 2, pyScreen());
+      ctx.scale(1 + P.squash * 0.15, P.flipVis * (1 - P.squash * 0.15));
+      drawSpider(fever > 0 ? main : '#ffb31a', P.grounded ? 1 : 0);
+      ctx.restore();
+      return;
+    }
     ctx.save();
     ctx.translate(PX + U / 2, pyScreen() + P.squash * 4 * grav);
     ctx.scale(1 + P.squash * 0.18, (1 - P.squash * 0.18) * P.flipVis);
@@ -1455,6 +1516,36 @@ body {
     ctx.fillRect(-7, -5, 4, 5); ctx.fillRect(6, -5, 4, 5);
     ctx.fillRect(-6, 5, 13, 3);
     ctx.restore();
+  }
+
+  // the spider: the cube with eight legs gripping the surface below it (flipped on the ceiling)
+  function drawSpider(main, walking) {
+    const step = walking ? Math.sin(tReal * 22) : 0;
+    ctx.strokeStyle = '#0b0420';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 4; i++) {
+      const sx0 = -14 + i * 9, sway = (i % 2 ? step : -step) * 4;
+      ctx.beginPath(); ctx.moveTo(sx0, 8); ctx.lineTo(sx0 + (i < 2 ? -9 : 9) + sway, 14); ctx.lineTo(sx0 + (i < 2 ? -12 : 12) + sway, 22); ctx.stroke();
+    }
+    ctx.strokeStyle = main;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 4; i++) {
+      const sx0 = -14 + i * 9, sway = (i % 2 ? step : -step) * 4;
+      ctx.beginPath(); ctx.moveTo(sx0, 8); ctx.lineTo(sx0 + (i < 2 ? -9 : 9) + sway, 14); ctx.lineTo(sx0 + (i < 2 ? -12 : 12) + sway, 22); ctx.stroke();
+    }
+    glow(main, 18);
+    ctx.fillStyle = main;
+    ctx.fillRect(-U / 2 + 3, -U / 2 + 3, U - 6, U - 10);
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#0b0420';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-U / 2 + 4.5, -U / 2 + 4.5, U - 9, U - 13);
+    // four eyes
+    ctx.fillStyle = '#fff';
+    [[-9, -6], [3, -6], [-5, 2], [6, 2]].forEach(([ex, ey], i) => { const r = i < 2 ? 4 : 3; ctx.fillRect(ex, ey, r + 2, r + 2); });
+    ctx.fillStyle = '#0b0420';
+    [[-8, -5], [4, -5], [-4, 3], [7, 3]].forEach(([ex, ey]) => ctx.fillRect(ex, ey, 3, 3));
   }
 
   // the little plane, centred on its hitbox (40 x 24), with the cube riding in the cockpit
@@ -1497,6 +1588,11 @@ body {
         ctx.globalAlpha = a;
         ctx.lineWidth = 6 * a;
         ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (1.2 - a), 0, Math.PI * 2); ctx.stroke();
+      } else if (p.kind === 'beam') {
+        ctx.globalAlpha = a;
+        ctx.fillStyle = p.color;
+        const y0 = Math.min(p.y, p.y2), y1 = Math.max(p.y, p.y2);
+        ctx.fillRect(p.x - p.size / 2 * a, y0, p.size * a, y1 - y0);
       } else if (p.kind === 'shard') {
         ctx.globalAlpha = Math.min(1, a * 1.5);
         ctx.fillStyle = p.color;
