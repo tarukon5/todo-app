@@ -123,6 +123,43 @@ body {
 }
 .chip:hover { background: rgba(255, 43, 214, .25); }
 .note { margin: 0; font-size: .78rem; color: var(--text-dim); max-width: 30rem; }
+.stages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; }
+@media (max-width: 460px) { .stages { grid-template-columns: 1fr; } }
+.stage {
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 2px solid var(--c);
+  background: linear-gradient(135deg, rgba(11, 4, 32, .85), rgba(26, 11, 61, .85));
+  box-shadow: 0 0 16px color-mix(in srgb, var(--c) 45%, transparent);
+  cursor: pointer;
+  transition: transform .12s;
+}
+.stage:hover { transform: translateY(-2px) scale(1.02); }
+.stage:focus-visible { outline: 3px dashed var(--c); outline-offset: 3px; }
+.stage b { font-family: var(--font-pop); font-weight: 400; font-size: 1.3rem; color: var(--c); }
+.stage .meta { font-family: var(--font-num); font-size: .7rem; color: var(--text-dim); letter-spacing: .06em; align-self: center; justify-self: end; }
+.stage .sbar { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: rgba(245, 240, 255, .12); overflow: hidden; }
+.stage .sbar i { display: block; height: 100%; background: var(--c); }
+.stage .best2 { font-family: var(--font-num); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.stage .crown { font-family: var(--font-pop); font-size: .8rem; color: var(--yellow); justify-self: end; }
+.subhead { margin: 0; font-family: var(--font-pop); font-weight: 400; font-size: 1.6rem; color: var(--cyan); text-shadow: 2px 2px 0 var(--magenta); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.settings { width: 100%; max-width: 26rem; display: flex; flex-direction: column; gap: 12px; text-align: left; margin: 0;
+  padding: 14px 16px; border: 2px solid rgba(34, 242, 255, .5); border-radius: 14px; background: rgba(11, 4, 32, .7); }
+.settings label { display: grid; grid-template-columns: 7.5rem 1fr 3.2rem; align-items: center; gap: 10px; font-weight: 800; }
+.settings output { font-family: var(--font-num); font-size: .8rem; text-align: right; font-variant-numeric: tabular-nums; }
+.settings input[type=range] { width: 100%; accent-color: var(--magenta); }
+.settings input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--magenta); justify-self: start; }
+.settings .hint { font-size: .75rem; color: var(--text-dim); font-weight: 500; margin: -6px 0 0; }
+.chip.danger { border-color: #ff5a3c; }
+.chip.armed { background: #ff5a3c; color: var(--night); }
+.stagetag { font-family: var(--font-pop); font-size: 1rem; }
 .best { font-family: var(--font-num); font-size: 1rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
 .rank {
   font-family: var(--font-num);
@@ -171,8 +208,18 @@ body {
   <canvas id="cv" aria-label="ゲーム画面。タップか長押しでジャンプ"></canvas>
 
   <section class="overlay" id="titleOv">
-    <div class="panel">
+    <div class="panel" id="homePanel">
       <h1 class="logo"><span>DOPA DOPA</span>ドパドパダッシュ!!</h1>
+      <div class="stages" id="stageList"></div>
+      <div class="row">
+        <button class="chip" id="howBtn" type="button">あそびかた</button>
+        <button class="chip" id="setBtn" type="button">せってい</button>
+      </div>
+      <p class="note">画面がはげしく光ったりゆれたりします。目がつかれたり気分が悪くなったら「せってい」で演出をひかえめにして、休けいしてください。音を出して遊ぶのがおすすめ。</p>
+    </div>
+
+    <div class="panel" id="howPanel" hidden>
+      <h2 class="subhead">あそびかた</h2>
       <dl class="how">
         <dt class="c-cyan">タップ</dt><dd>ジャンプ（スペースキーでもOK）</dd>
         <dt class="c-cyan">長押し</dt><dd>着地したしゅんかんに連続ジャンプ</dd>
@@ -187,14 +234,31 @@ body {
         <dt class="c-cyan">浮きブロック</dt><dd>空中の足場。ジャンプで飛び移れ</dd>
         <dt class="c-yel">ゴール</dt><dd>うずに吸いこまれたらクリア！コンボ40でFEVER</dd>
       </dl>
-      <button class="go" id="startBtn" type="button">スタート!!</button>
-      <p class="note">画面がはげしく光ったりゆれたりします。目がつかれたり気分が悪くなったら、右下のボタンで「演出：ひかえめ」にして休けいしてください。音を出して遊ぶのがおすすめ。</p>
-      <div class="best" id="titleBest"></div>
+      <button class="chip backBtn" type="button">もどる</button>
+    </div>
+
+    <div class="panel" id="setPanel" hidden>
+      <h2 class="subhead">せってい</h2>
+      <form class="settings" id="setForm">
+        <label for="setBgm">音楽の音量<input type="range" id="setBgm" min="0" max="100" step="5"><output id="outBgm"></output></label>
+        <label for="setSe">効果音の音量<input type="range" id="setSe" min="0" max="100" step="5"><output id="outSe"></output></label>
+        <label for="setFx">演出MAX<input type="checkbox" id="setFx"><output id="outFx"></output></label>
+        <p class="hint">オフにすると、ゆれ・フラッシュ・スローがなくなります。</p>
+        <label for="setGuide">◆ガイド<input type="checkbox" id="setGuide"><output id="outGuide"></output></label>
+        <p class="hint">タップする場所の◆マークとリングを出します。</p>
+        <label for="setOffset">判定タイミング<input type="range" id="setOffset" min="-150" max="150" step="10"><output id="outOffset"></output></label>
+        <p class="hint">PERFECTが出にくいときに調整。いつも早めなら−、おそめなら＋に。</p>
+      </form>
+      <div class="row">
+        <button class="chip danger" id="resetBtn" type="button">記録をリセット</button>
+        <button class="chip backBtn" type="button">もどる</button>
+      </div>
     </div>
   </section>
 
   <section class="overlay" id="overOv" hidden>
     <div class="panel">
+      <div class="stagetag" id="resStage"></div>
       <div class="rank" id="rank">0%</div>
       <div class="pbar" aria-hidden="true"><i id="pFill"></i><b id="pBest"></b></div>
       <div class="best" id="pText"></div>
@@ -206,13 +270,15 @@ body {
         <div><dt>最大コンボ</dt><dd id="sCombo">0</dd></div>
         <div><dt>PERFECT</dt><dd id="sPerfect">0</dd></div>
       </dl>
-      <button class="go" id="retryBtn" type="button">もう1回!!</button>
+      <div class="row">
+        <button class="go" id="retryBtn" type="button">もう1回!!</button>
+        <button class="chip" id="homeBtn" type="button">ステージ選択</button>
+      </div>
       <div class="tap">画面タップかスペースキーでもリトライ</div>
     </div>
   </section>
 
   <div id="corner">
-    <button class="chip" id="fxBtn2" type="button">演出：MAX</button>
     <button class="chip" id="muteBtn" type="button">音：ON</button>
   </div>
 </div>
@@ -223,18 +289,25 @@ body {
 
   // ---------- tuning: the whole course is locked to the music ----------
   const U = 40;                       // one grid unit = one 16th note of travel
-  const BPM = 145;
-  const SPB = 60 / BPM;               // seconds per beat
-  const STEP = SPB / 4;               // 16th note
-  const BEAT_U = 4;                   // units travelled per beat
-  const V = BEAT_U * U / SPB;         // scroll speed, px/s
-  const JUMP = 590;                   // lower hop (about 2.3 blocks high)
-  const G = 2 * JUMP / (1.5 * SPB);   // a normal jump lasts exactly 1.5 beats
-  const PAD_V = { y: G * SPB, p: JUMP };           // yellow pad: 2 beats high, pink: a normal hop
-  const ORB_V = { y: JUMP, p: G * SPB / 2 };
+  // Everything is measured in beats, so each stage can have its own tempo and the course
+  // keeps the same shape: 4 units per beat, a jump lasts 1.5 beats and peaks 2.3 blocks up.
+  const BEAT_U = 4;
+  const APEX = 91.5;                  // jump height in px
+  let BPM, SPB, STEP, V, JUMP, G, PAD_V, ORB_V, SHIP_ACC, SHIP_MAX;
+  function applyTempo(bpm) {
+    BPM = bpm;
+    SPB = 60 / BPM;
+    STEP = SPB / 4;
+    V = BEAT_U * U / SPB;
+    JUMP = APEX * 4 / (1.5 * SPB);
+    G = 2 * JUMP / (1.5 * SPB);
+    PAD_V = { y: G * SPB, p: JUMP };          // yellow pad: 2 beats, pink: a normal hop
+    ORB_V = { y: JUMP, p: G * SPB / 2 };
+    SHIP_ACC = 2100 * Math.pow(bpm / 145, 2); // hold = climb, release = dive
+    SHIP_MAX = 420 * (bpm / 145);
+    if (delayNode) delayNode.delayTime.value = STEP * 3;
+  }
   const SHIP_H = U * 0.6;             // the plane is shorter than the cube
-  const SHIP_ACC = 2100;              // hold = climb, release = dive
-  const SHIP_MAX = 420;
   const MODE_COLOR = { ship: '#ff2bd6', spider: '#ffb31a', cube: '#7dff4a' };
   const F_POP = '"Mochiy Pop One","Hiragino Maru Gothic ProN",sans-serif';
   const F_NUM = '"Orbitron","Arial Black",sans-serif';
@@ -297,12 +370,22 @@ body {
     { lv: 3, len: 24, taps: [-1, 7, 15], o: [...spikeRow(1, 20), ['b', 3, 1, 5, 1], ['b', 10, 2, 6, 1]] }
   ];
   function spikeRow(from, to) { const r = []; for (let x = from; x <= to; x++) r.push(['s', x, 0]); return r; }
-  const lvAtBar = bar => 1 + Math.floor(Math.max(0, bar - 2) / 8);   // level rises on every drop
-  const STAGE_BARS = 50;                                  // the stage ends after 50 bars (about 80 s)
-  const END_X = STAGE_BARS * 16 * U;
-  // the same seed every attempt, so the stage is always the same and % means something
-  const STAGE_SEED = 20261031;
-  let seed = STAGE_SEED;
+  // Four stages. Each has its own tempo, length, difficulty range, seed and run of drum styles.
+  const STAGES = [
+    { id: 'easy', name: 'かんたん', en: 'EASY', color: '#7dff4a', bpm: 128, bars: 34, lvBase: 0, lvMax: 2, special: 0.2, seed: 1101,
+      styles: ['four', 'break', 'half', 'four'] },
+    { id: 'normal', name: 'ふつう', en: 'NORMAL', color: '#22f2ff', bpm: 145, bars: 50, lvBase: 0, lvMax: 4, special: 0.24, seed: 20261031,
+      styles: ['four', 'break', 'half', 'dnb', 'trap', 'four'] },
+    { id: 'hard', name: 'むずかしい', en: 'HARD', color: '#ff2bd6', bpm: 156, bars: 58, lvBase: 1, lvMax: 5, special: 0.26, seed: 7771,
+      styles: ['break', 'dnb', 'trap', 'half', 'four', 'dnb', 'trap'] },
+    { id: 'oni', name: '鬼', en: 'INSANE', color: '#ff5a3c', bpm: 168, bars: 66, lvBase: 3, lvMax: 6, special: 0.28, seed: 6661,
+      styles: ['dnb', 'trap', 'half', 'break', 'dnb', 'trap', 'four', 'half'] }
+  ];
+  let stage = STAGES[1];
+  let END_X = stage.bars * 16 * U;
+  const lvAtBar = bar => Math.min(stage.lvMax, stage.lvBase + 1 + Math.floor(Math.max(0, bar - 2) / 8));   // level rises on every drop
+  // the same seed every attempt, so a stage is always the same and % means something
+  let seed = stage.seed;
   function srand(a = 0, b = 1) {
     seed |= 0; seed = seed + 0x6D2B79F5 | 0;
     let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
@@ -343,18 +426,34 @@ body {
   window.addEventListener('resize', resize);
 
   // ---------- settings ----------
-  let fxMax = !reduceMotion, muted = false, best = 0, attempts = 0;
+  const settings = { bgm: 0.8, se: 0.8, fx: !reduceMotion, guide: true, offset: 0 };
+  let records = {};                       // { stageId: { pct, score } }
+  let fxMax, muted = false, best = 0, attempts = 0;
   try {
-    best = Number(localStorage.getItem('dopa-best')) || 0;
-    bestPct = Number(localStorage.getItem('dopa-pct')) || 0;
-    const fx = localStorage.getItem('dopa-fx');
-    if (fx) fxMax = fx === 'max';
+    Object.assign(settings, JSON.parse(localStorage.getItem('dopa-settings') || '{}'));
+    records = JSON.parse(localStorage.getItem('dopa-records') || '{}') || {};
+    // carry over the single-stage records from before stages existed
+    if (!records.normal && localStorage.getItem('dopa-pct')) {
+      records.normal = { pct: Number(localStorage.getItem('dopa-pct')) || 0, score: Number(localStorage.getItem('dopa-best')) || 0 };
+    }
   } catch (e) {}
+  fxMax = settings.fx;
+  const rec = id => records[id] || (records[id] = { pct: 0, score: 0 });
+  function saveRecords() { try { localStorage.setItem('dopa-records', JSON.stringify(records)); } catch (e) {} }
+  function saveSettings() { try { localStorage.setItem('dopa-settings', JSON.stringify(settings)); } catch (e) {} }
+  function selectStage(st) {
+    stage = st;
+    END_X = stage.bars * 16 * U;
+    applyTempo(stage.bpm);
+    best = rec(stage.id).score;
+    bestPct = rec(stage.id).pct;
+  }
 
   // ---------- audio: a small, loud techno engine ----------
+  let delayNode = null;
   let actx = null, master, comp, musicFilter, musicBus, duckBus, kickBus, bassBus, revSend, delaySend, sfxBus, noiseBuf, analyser, freqData;
   let nextStepTime = 0, songStep = 0, songStart = 0, musicOn = false, perfStart = 0;
-  const kickTimes = [];
+  const kickTimes = [], styleTimes = [];
 
   function shaperCurve(k) {
     const n = 1024, c = new Float32Array(n);
@@ -380,7 +479,7 @@ body {
       comp.connect(master).connect(actx.destination);
       musicFilter = actx.createBiquadFilter(); musicFilter.type = 'lowpass'; musicFilter.frequency.value = 18000;
       musicFilter.connect(comp);
-      musicBus = gain(0.6); musicBus.connect(musicFilter);
+      musicBus = gain(0.75 * settings.bgm); musicBus.connect(musicFilter);
       analyser = actx.createAnalyser(); analyser.fftSize = 128; analyser.smoothingTimeConstant = 0.7;
       musicBus.connect(analyser);
       freqData = new Uint8Array(analyser.frequencyBinCount);
@@ -389,10 +488,10 @@ body {
       bassBus = actx.createWaveShaper(); bassBus.curve = shaperCurve(4); const bassOut = gain(0.6); bassBus.connect(bassOut).connect(duckBus);
       const conv = actx.createConvolver(); conv.buffer = makeIR(1.6);
       revSend = gain(0.3); revSend.connect(conv); conv.connect(duckBus);
-      const dl = actx.createDelay(1); dl.delayTime.value = STEP * 3;
+      const dl = actx.createDelay(1); dl.delayTime.value = STEP * 3; delayNode = dl;
       const fb = gain(0.38), wet = gain(0.5);
       delaySend = gain(1); delaySend.connect(dl); dl.connect(fb).connect(dl); dl.connect(wet).connect(duckBus);
-      sfxBus = gain(0.6); sfxBus.connect(comp);
+      sfxBus = gain(0.75 * settings.se); sfxBus.connect(comp);
       noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
       const d = noiseBuf.getChannelData(0);
       for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -549,7 +648,40 @@ body {
     [784, 0, 587, 0, 784, 0, 988, 0, 1175, 0, 988, 0, 784, 0, 659, 587]
   ];
   const STAB_STEPS = [0, 3, 6, 10, 13];
+  // the beat changes every 8 bars, following the stage's list of styles
+  const DRUMS = {
+    four: { name: '4つ打ち!!', kick: [0, 4, 8, 12], snare: [4, 12], ghost: [], hats: 16, bass: 'roll' },
+    break: { name: 'ブレイクビーツ!!', kick: [0, 6, 10], snare: [4, 12], ghost: [7, 15], hats: 8, bass: 'sync' },
+    half: { name: 'ハーフタイム!!', kick: [0, 11], snare: [8], ghost: [14], hats: 16, bass: 'wobble' },
+    dnb: { name: 'ドラムンベース!!', kick: [0, 10], snare: [4, 12], ghost: [7, 9, 15], hats: 16, bass: 'reese' },
+    trap: { name: 'トラップ!!', kick: [0, 7, 10], snare: [8], ghost: [], hats: 'roll', bass: '808' }
+  };
+  function styleAtBar(bar) {
+    if (bar < 2) return 'four';
+    return stage.styles[Math.floor((bar - 2) / 8) % stage.styles.length];
+  }
+  function reese(t, f, dur) {
+    const lp = actx.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 4;
+    lp.frequency.setValueAtTime(1400, t); lp.frequency.linearRampToValueAtTime(500, t + dur);
+    const g = actx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.42, t + 0.01);
+    g.gain.setValueAtTime(0.42, t + dur - 0.02); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    lp.connect(g).connect(bassBus);
+    [-18, 18].forEach(c => { const o = actx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = c; o.connect(lp); o.start(t); o.stop(t + dur + 0.02); });
+  }
+  function bass808(t, f) {
+    const o = actx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(f * 1.6, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.08);
+    const g = actx.createGain(); g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.001, t + SPB * 1.4);
+    o.connect(g).connect(bassBus); o.start(t); o.stop(t + SPB * 1.5);
+  }
   function playStep(st, t) {
+    const bar0 = Math.floor(st / 16);
+    if (bar0 >= 2 && (bar0 - 2) % 8 === 0 && st % 16 === 0) styleTimes.push([t, styleAtBar(bar0)]);
+    if (bar0 >= 2 && bar0 % 8 !== 1) return playStyled(st, t);
+    playBasic(st, t);
+  }
+  // intro and build-up bars, and the shared melodic layers
+  function playBasic(st, t) {
     const bar = Math.floor(st / 16), s = st % 16, ch = PROG[bar % 4];
     const sec = bar === 0 ? 'intro' : (bar % 8 === 1 ? 'fill' : 'full');
     const lv = lvAtBar(bar);
@@ -587,6 +719,39 @@ body {
     if (sec === 'full' && (lv >= 2 || fev) && m) lead(t, m, STEP * 1.7, 0.06);
     if (sec === 'full' && (lv >= 3 || fev)) arp(t, ch.chord[s % 3] * (s % 8 < 4 ? 2 : 4), 0.035);
   }
+  function playStyled(st, t) {
+    const bar = Math.floor(st / 16), s = st % 16, ch = PROG[bar % 4];
+    const lv = lvAtBar(bar), fev = fever > 0;
+    const D = DRUMS[styleAtBar(bar)];
+    // drums
+    if (D.kick.includes(s)) kick(t);
+    if (bar % 4 === 3 && (s === 13 || s === 15)) kick(t, 0.8);
+    if (bar % 8 === 2 && s === 0) { crash(t); subBoom(t); }
+    if (D.snare.includes(s)) { clap(t, 0.55); snare(t, 0.35); }
+    if (D.ghost.includes(s)) snare(t, 0.12);
+    if (bar % 4 === 3 && s >= 12) snare(t, 0.18 + (s - 12) * 0.06);
+    if (D.hats === 8) { if (s % 2 === 0) hat(t, s % 4 === 2, s % 4 === 2 ? 0.22 : 0.1); }
+    else if (D.hats === 'roll') {
+      if (s % 2 === 0) hat(t, false, 0.12);
+      if (bar % 2 === 1 && s >= 12) { hat(t, false, 0.1); hat(t + STEP / 2, false, 0.08); }
+      if (s === 10) hat(t, true, 0.2);
+    } else {
+      if (s % 4 === 2) hat(t, true, 0.24);
+      else hat(t, false, s % 2 ? 0.06 : 0.11);
+    }
+    // bass follows the style
+    if (D.bass === 'roll') { if (s % 4 !== 0) bass(t, ch.root * 2, STEP * 0.85, true); }
+    else if (D.bass === 'sync') { if ([0, 3, 6, 10, 12].includes(s)) bass(t, ch.root * 2, STEP * 1.7, true); }
+    else if (D.bass === 'wobble') { if (s % 4 === 0) wobble(t, ch.root * 2, fev || lv >= 4 ? 4 : 3); }
+    else if (D.bass === 'reese') { if (s % 2 === 0) reese(t, ch.root * 2, STEP * 1.9); }
+    else if (D.bass === '808') { if (D.kick.includes(s)) bass808(t, ch.root * 2); }
+    // melodic layers
+    if (s === 0) pad(t, ch.chord, STEP * 16, lv >= 2 || fev ? 0.035 : 0.022);
+    if (STAB_STEPS.includes(s) && D.bass !== 'wobble') stab(t, ch.chord, STEP * 1.6, fev ? 0.07 : 0.05);
+    const m = MELODY[bar % 4][s];
+    if ((lv >= 2 || fev) && m) lead(t, m, STEP * 1.7, 0.06);
+    if (lv >= 3 || fev) arp(t, ch.chord[s % 3] * (s % 8 < 4 ? 2 : 4), 0.035);
+  }
   function scheduler() {
     if (!actx || !musicOn) return;
     if (nextStepTime < actx.currentTime) nextStepTime = actx.currentTime + 0.02;
@@ -605,6 +770,7 @@ body {
     songStart = actx.currentTime + 0.1;
     nextStepTime = songStart;
     kickTimes.length = 0;
+    styleTimes.length = 0;
     musicFilter.frequency.cancelScheduledValues(actx.currentTime);
     musicFilter.frequency.setValueAtTime(18000, actx.currentTime);
   }
@@ -667,7 +833,7 @@ body {
     score = 0; shownScore = 0; combo = 0; comboTimer = 0; maxCombo = 0; mult = 1; fever = 0; perfects = 0;
     shake = 0; flash = 0; zoom = 0; timeScale = 1; slowTimer = 0; hue = 280; deathTimer = 0;
     attemptX = U * 6; lastSongT = 0; lastBeat = -1;
-    seed = STAGE_SEED; genDone = false; nextSpecial = 'ship'; clearTimer = 0; pct = 0;
+    seed = stage.seed; genDone = false; nextSpecial = 'ship'; clearTimer = 0; pct = 0;
     if (state === 'play') { objs.push({ t: 'goal', x: END_X }); generate(); }
   }
 
@@ -679,7 +845,7 @@ body {
       const pool = PATTERNS.filter(p => p.lv <= lv && (!p.max || lv <= p.max));
       const roll = nextX > U * 60 ? srand() : 1;
       let pat;
-      if (roll < 0.24) {                                   // plane and spider sections take turns
+      if (roll < stage.special) {                          // plane and spider sections take turns
         pat = nextSpecial === 'ship' ? shipPattern(lv) : spiderPattern(lv);
         nextSpecial = nextSpecial === 'ship' ? 'spider' : 'ship';
       } else pat = spick(pool);
@@ -712,7 +878,8 @@ body {
 
   // A plane tunnel: one wall section per beat, so the gaps switch exactly on the beat.
   function shipPattern(lv) {
-    const gh = lv >= 5 ? 3.5 : lv >= 4 ? 4 : 4.5;        // gap height in units
+    const gh = lv >= 5 ? 4.5 : lv >= 4 ? 5 : 5.5;        // gap height in units
+    const gMax = Math.max(0, Math.min(3, Math.floor(GY / U - gh - 0.5)));
     const segs = lv >= 4 ? 18 : 14;
     const maxStep = 1;                                    // gaps move one unit per beat, so neighbours overlap a lot
     const topU = Math.ceil(GY / U) + 1;                   // ceilings reach past the top of the screen
@@ -725,7 +892,7 @@ body {
         if (left <= Math.ceil(4 / maxStep)) g = Math.max(0, g - maxStep);   // come back down to land
         else {
           const opts = [];
-          for (let d = -maxStep; d <= maxStep; d++) if (g + d >= 0 && g + d <= 3) opts.push(d);
+          for (let d = -maxStep; d <= maxStep; d++) if (g + d >= 0 && g + d <= gMax) opts.push(d);
           g += spick(opts);
         }
       }
@@ -848,6 +1015,11 @@ body {
       riseGlow = bar >= 1 && Math.floor(bar) % 8 === 1 ? bar % 1 : 0;
     } else riseGlow = 0;
 
+    // announce each new drum style the moment it starts playing
+    if (actx) while (styleTimes.length && styleTimes[0][0] <= actx.currentTime) {
+      const [, st] = styleTimes.shift();
+      if (state === 'play') pop(DRUMS[st].name, W / 2, H * 0.16 + 46, '#ff7ab8', 26, 1.4, true);
+    }
     if (state === 'title') {
       dist += 200 * dtReal;
       P.rot += dtReal * 4;
@@ -1161,7 +1333,7 @@ body {
     let bestCue = null, bestD = Infinity;
     for (const o of objs) {
       if (o.t !== 'cue' || o.judged) continue;
-      const d = Math.abs(dist - o.x);
+      const d = Math.abs(dist - settings.offset / 1000 * V - o.x);
       if (d < bestD) { bestD = d; bestCue = o; }
     }
     if (!bestCue) return;
@@ -1360,6 +1532,7 @@ body {
 
   // ◆ tap marks, with a ring that shrinks onto them exactly on the beat
   function drawCue(o, x) {
+    if (!settings.guide) return;
     const cx = x + U / 2;
     const tLeft = (o.x - dist) / V;
     const y = GY;
@@ -1735,7 +1908,7 @@ body {
     ctx.fillText(sTxt, 16, 44);
     ctx.font = `700 12px ${F_NUM}`;
     ctx.fillStyle = 'rgba(245,240,255,.7)';
-    ctx.fillText(`LV ${level}   HIGH ${best.toLocaleString()}`, 18, 64);
+    ctx.fillText(`${stage.en}  ${BPM}BPM   LV ${level}   HIGH ${best.toLocaleString()}`, 18, 64);
     // stage progress
     const bw = Math.min(240, W * 0.34), bx = W / 2 - bw / 2, by = 12;
     ctx.fillStyle = 'rgba(245,240,255,.15)';
@@ -1839,32 +2012,112 @@ body {
   // ---------- UI ----------
   const titleOv = document.getElementById('titleOv');
   const overOv = document.getElementById('overOv');
-  const startBtn = document.getElementById('startBtn');
   const retryBtn = document.getElementById('retryBtn');
-  const fxBtn2 = document.getElementById('fxBtn2');
   const muteBtn = document.getElementById('muteBtn');
+  const homePanel = document.getElementById('homePanel');
+  const howPanel = document.getElementById('howPanel');
+  const setPanel = document.getElementById('setPanel');
   let resultAt = 0;
 
-  function renderSettings() {
-    fxBtn2.textContent = fxMax ? '演出：MAX' : '演出：ひかえめ';
-    muteBtn.textContent = muted ? '音：OFF' : '音：ON';
-    document.getElementById('titleBest').textContent = `BEST ${bestPct}%　・　HIGH SCORE ${best.toLocaleString()}`;
+  function showPanel(which) {
+    homePanel.hidden = which !== 'home';
+    howPanel.hidden = which !== 'how';
+    setPanel.hidden = which !== 'set';
+    titleOv.scrollTop = 0;
   }
-  fxBtn2.addEventListener('click', e => {
-    fxMax = !fxMax;
-    try { localStorage.setItem('dopa-fx', fxMax ? 'max' : 'low'); } catch (err) {}
+  function renderStages() {
+    const list = document.getElementById('stageList');
+    list.replaceChildren();
+    for (const st of STAGES) {
+      const r = rec(st.id);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'stage';
+      b.style.setProperty('--c', st.color);
+      b.innerHTML = `<b></b><span class="meta"></span><span class="sbar"><i></i></span><span class="best2"></span><span class="crown"></span>`;
+      b.querySelector('b').textContent = st.name;
+      b.querySelector('.meta').textContent = `${st.en} · ${st.bpm} BPM`;
+      b.querySelector('.sbar i').style.width = `${r.pct}%`;
+      b.querySelector('.best2').textContent = `BEST ${r.pct}%`;
+      b.querySelector('.crown').textContent = r.pct >= 100 ? '★ CLEAR' : '';
+      b.addEventListener('click', () => { selectStage(st); startGame(); });
+      list.append(b);
+    }
+  }
+  function renderSettings() {
+    muteBtn.textContent = muted ? '音：OFF' : '音：ON';
+    document.getElementById('setBgm').value = Math.round(settings.bgm * 100);
+    document.getElementById('outBgm').textContent = Math.round(settings.bgm * 100);
+    document.getElementById('setSe').value = Math.round(settings.se * 100);
+    document.getElementById('outSe').textContent = Math.round(settings.se * 100);
+    document.getElementById('setFx').checked = settings.fx;
+    document.getElementById('outFx').textContent = settings.fx ? 'ON' : 'OFF';
+    document.getElementById('setGuide').checked = settings.guide;
+    document.getElementById('outGuide').textContent = settings.guide ? 'ON' : 'OFF';
+    document.getElementById('setOffset').value = settings.offset;
+    document.getElementById('outOffset').textContent = `${settings.offset > 0 ? '+' : ''}${settings.offset}ms`;
+    renderStages();
+  }
+  function applyVolumes() {
+    if (master) master.gain.value = muted ? 0 : 0.9;
+    if (musicBus) musicBus.gain.value = 0.75 * settings.bgm;
+    if (sfxBus) sfxBus.gain.value = 0.75 * settings.se;
+  }
+  document.getElementById('setForm').addEventListener('input', () => {
+    settings.bgm = Number(document.getElementById('setBgm').value) / 100;
+    settings.se = Number(document.getElementById('setSe').value) / 100;
+    settings.fx = document.getElementById('setFx').checked;
+    settings.guide = document.getElementById('setGuide').checked;
+    settings.offset = Number(document.getElementById('setOffset').value);
+    fxMax = settings.fx;
+    saveSettings();
+    applyVolumes();
     renderSettings();
-    e.currentTarget.blur();
+  });
+  document.getElementById('setForm').addEventListener('submit', e => e.preventDefault());
+  // a quick sound so the volume sliders can be heard while adjusting
+  document.getElementById('setSe').addEventListener('change', () => { initAudio(); applyVolumes(); sfx.perfect(); });
+  document.getElementById('howBtn').addEventListener('click', () => showPanel('how'));
+  document.getElementById('setBtn').addEventListener('click', () => { initAudio(); applyVolumes(); showPanel('set'); });
+  document.querySelectorAll('.backBtn').forEach(b => b.addEventListener('click', () => showPanel('home')));
+  const resetBtn = document.getElementById('resetBtn');
+  let resetArmed = 0;
+  resetBtn.addEventListener('click', () => {
+    if (performance.now() - resetArmed < 3000) {
+      records = {};
+      saveRecords();
+      selectStage(stage);
+      resetArmed = 0;
+      resetBtn.classList.remove('armed');
+      resetBtn.textContent = 'リセットしました';
+      renderSettings();
+      return;
+    }
+    resetArmed = performance.now();
+    resetBtn.classList.add('armed');
+    resetBtn.textContent = 'もう一度おすと消えます';
+    setTimeout(() => { if (performance.now() - resetArmed >= 2900) { resetBtn.classList.remove('armed'); resetBtn.textContent = '記録をリセット'; } }, 3000);
   });
   muteBtn.addEventListener('click', () => {
     muted = !muted;
-    if (master) master.gain.value = muted ? 0 : 0.9;
+    applyVolumes();
     renderSettings();
     muteBtn.blur();
+  });
+  document.getElementById('homeBtn').addEventListener('click', () => {
+    overOv.hidden = true;
+    state = 'title';
+    musicOn = false;
+    reset();
+    showPanel('home');
+    titleOv.hidden = false;
+    renderSettings();
   });
 
   function startGame() {
     initAudio();
+    applyTempo(stage.bpm);
+    applyVolumes();
     startMusic();
     attempts++;
     state = 'play';
@@ -1873,14 +2126,19 @@ body {
     overOv.hidden = true;
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   }
-  startBtn.addEventListener('click', startGame);
   retryBtn.addEventListener('click', () => { if (performance.now() - resultAt > 350) startGame(); });
 
   function showResult(cleared) {
     const s = Math.floor(score);
-    if (s > best) { best = s; try { localStorage.setItem('dopa-best', String(best)); } catch (e) {} }
-    const isNew = pct > bestPct;
-    if (isNew) { bestPct = pct; try { localStorage.setItem('dopa-pct', String(bestPct)); } catch (e) {} }
+    const r = rec(stage.id);
+    if (s > r.score) r.score = s;
+    const isNew = pct > r.pct;
+    if (isNew) r.pct = pct;
+    best = r.score; bestPct = r.pct;
+    saveRecords();
+    const tag = document.getElementById('resStage');
+    tag.textContent = `${stage.name}（${stage.en}）`;
+    tag.style.color = stage.color;
     const rankEl = document.getElementById('rank');
     rankEl.textContent = `${pct}%`;
     rankEl.style.animation = 'none'; void rankEl.offsetWidth; rankEl.style.animation = '';
@@ -1930,7 +2188,7 @@ body {
     if (e.target && e.target.tagName === 'BUTTON' && state !== 'play') return;
     e.preventDefault();
     if (e.repeat) return;
-    if (state === 'title') { startGame(); return; }
+    if (state === 'title') { if (!homePanel.hidden) startGame(); return; }
     press();
   });
   window.addEventListener('keyup', e => { if (KEYS.includes(e.code)) release(); });
@@ -1938,16 +2196,16 @@ body {
   // ---------- boot ----------
   function boot(data) {
     if (data) {
-      if (data.best > best) best = data.best;
       if (data.attempts) attempts = data.attempts;
-      if (data.bestPct > bestPct) bestPct = data.bestPct;
+      if (data.records) records = Object.assign({}, data.records, records);
     }
+    selectStage(stage);
     resize();
     reset();
     renderSettings();
     requestAnimationFrame(ts => { lastFrame = ts; requestAnimationFrame(frame); });
   }
-  if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(() => ({ best, attempts, bestPct }));
+  if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(() => ({ attempts, records }));
   if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(boot);
   else boot((window.claude && window.claude.hot && window.claude.hot.data) || {});
 })();
