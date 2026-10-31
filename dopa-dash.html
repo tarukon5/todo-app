@@ -171,6 +171,7 @@ body {
         <dt class="c-yel">黄色/<span class="c-pink">ピンクの輪</span></dt><dd>空中でタップしてもう1回ジャンプ</dd>
         <dt class="c-cyan">青いゲート</dt><dd>重力反転！天井を走る（黄色で元にもどる）</dd>
         <dt class="c-lime">◆マーク</dt><dd>音に合わせてここでタップ！PERFECTでボーナス</dd>
+        <dt class="c-mag">ピンクのゲート</dt><dd>飛行機に変身！長押しで上、はなすと下</dd>
         <dt class="c-mag">ビートトゲ</dt><dd>音楽に合わせて出たり引っこんだり</dd>
         <dt class="c-yel">コンボ40</dt><dd>FEVER突入！スコア2倍</dd>
       </dl>
@@ -217,6 +218,9 @@ body {
   const G = 2 * JUMP / (1.5 * SPB);   // a normal jump lasts exactly 1.5 beats
   const PAD_V = { y: G * SPB, p: G * SPB / 2 };   // yellow pad: 2 beats, pink: 1 beat
   const ORB_V = { y: JUMP, p: G * SPB / 2 };
+  const SHIP_H = U * 0.6;             // the plane is shorter than the cube
+  const SHIP_ACC = 2100;              // hold = climb, release = dive
+  const SHIP_MAX = 420;
   const F_POP = '"Mochiy Pop One","Hiragino Maru Gothic ProN",sans-serif';
   const F_NUM = '"Orbitron","Arial Black",sans-serif';
   const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -579,6 +583,7 @@ body {
     near() { if (!actx) return; const t = actx.currentTime; noise(t, 0.25, 0.3, 'bandpass', 3000); tone('sine', 1760, 2637, t, 0.2, 0.16); },
     milestone() { if (!actx) return; const t = actx.currentTime; [0, 4, 7, 12, 16, 19, 24].forEach((n, i) => tone('square', 523 * Math.pow(2, n / 12), 523 * Math.pow(2, n / 12), t + i * 0.045, 0.09, 0.07)); },
     fever() { if (!actx) return; const t = actx.currentTime; tone('sawtooth', 110, 1760, t, 0.9, 0.16); noise(t, 0.9, 0.2, 'bandpass', 2500); },
+    transform(ship) { if (!actx) return; const t = actx.currentTime; [0, 5, 7, 12, 17, 19, 24].forEach((n, i) => tone('sawtooth', (ship ? 330 : 262) * Math.pow(2, n / 12), (ship ? 330 : 262) * Math.pow(2, n / 12), t + i * 0.03, 0.07, 0.09)); noise(t, 0.3, 0.2, 'bandpass', 5000); },
     gate() { if (!actx) return; const t = actx.currentTime; tone('sine', 1200, 300, t, 0.3, 0.2); noise(t, 0.3, 0.2, 'bandpass', 4000); },
     death() { if (!actx) return; const t = actx.currentTime; noise(t, 0.6, 0.9, 'lowpass', 900); tone('sawtooth', 440, 40, t, 0.6, 0.3); }
   };
@@ -586,7 +591,7 @@ body {
   // ---------- state ----------
   let state = 'title';
   let dist, level, nextX, objs, pits, parts, pops, trail;
-  let P, grav, holding, pressBuf, score, shownScore, combo, comboTimer, maxCombo, mult, fever, perfects;
+  let P, grav, mode, holding, pressBuf, score, shownScore, combo, comboTimer, maxCombo, mult, fever, perfects;
   let shake, flash, zoom, timeScale, slowTimer, hue, deathTimer, deathCause, attemptX, lastSongT, lastBeat;
   let tReal = 0, lastFrame = 0;
 
@@ -598,7 +603,7 @@ body {
     dist = 0; level = 1; nextX = U * 26;
     objs = []; pits = []; parts = []; pops = []; trail = [];
     P = { h: 0, vh: 0, rot: 0, grounded: true, coyote: 0, squash: 0, flipVis: 1 };
-    grav = 1;
+    grav = 1; mode = 'cube';
     holding = false; pressBuf = 0;
     score = 0; shownScore = 0; combo = 0; comboTimer = 0; maxCombo = 0; mult = 1; fever = 0; perfects = 0;
     shake = 0; flash = 0; zoom = 0; timeScale = 1; slowTimer = 0; hue = 280; deathTimer = 0;
@@ -612,7 +617,7 @@ body {
     while (nextX < dist + W + U * 12) {
       const lv = lvAtBar(Math.floor(nextX / (beatPx * 4)));
       const pool = PATTERNS.filter(p => p.lv <= lv && (!p.max || lv <= p.max));
-      const pat = pick(pool);
+      const pat = nextX > U * 60 && Math.random() < (lv >= 2 ? 0.16 : 0.1) ? shipPattern(lv) : pick(pool);
       const a = pat.anchor !== undefined ? pat.anchor : pat.taps[0];
       // earliest origin, then slide forward until the anchor lands on a beat
       const minX = nextX + Math.max(0, -a) * U;
@@ -628,6 +633,8 @@ body {
         else if (t === 'orb' || t === 'porb') objs.push({ t: 'orb', kind: t === 'orb' ? 'y' : 'p', x: x0 + p1 * U, y: p2 * U });
         else if (t === 'saw') objs.push({ t: 'saw', x: x0 + p1 * U, y: p2 * U, r: p3 * U, bob: p4 * U, ph: Math.random() * 6 });
         else if (t === 'gp') objs.push({ t: 'gate', dir: p2, x: x0 + p1 * U });
+        else if (t === 'mg') objs.push({ t: 'mode', to: p2, x: x0 + p1 * U });
+        else if (t === 'mk') objs.push({ t: 'mark', x: x0 + p1 * U, done: false });
       }
       for (const tp of pat.taps || []) objs.push({ t: 'cue', x: x0 + tp * U, judged: false });
       objs.push({ t: 'mark', x: x0 + pat.len * U, done: false });
@@ -637,10 +644,39 @@ body {
     pits = pits.filter(p => p.x + p.w > dist - U * 4);
   }
 
+  // A plane tunnel: one wall section per beat, so the gaps switch exactly on the beat.
+  function shipPattern(lv) {
+    const gh = lv >= 5 ? 2.5 : lv >= 4 ? 3 : 3.5;        // gap height in units
+    const segs = lv >= 4 ? 12 : 8;
+    const maxStep = 1;                                    // gaps move one unit per beat, so neighbours overlap a lot
+    const topU = Math.ceil(GY / U) + 1;                   // ceilings reach past the top of the screen
+    const o = [['mg', 0, 'ship']];
+    let g = 0;
+    for (let i = 0; i < segs; i++) {
+      const x = 8 + i * 4;                                // two open beats after the gate to settle
+      const left = segs - i;
+      if (i > 0) {
+        if (left <= Math.ceil(4 / maxStep)) g = Math.max(0, g - maxStep);   // come back down to land
+        else {
+          const opts = [];
+          for (let d = -maxStep; d <= maxStep; d++) if (g + d >= 0 && g + d <= 4) opts.push(d);
+          g += pick(opts);
+        }
+      }
+      if (g > 0) o.push(['b', x, 0, 4, g]);
+      o.push(['b', x, g + gh, 4, topU - g - gh]);
+      if (gh >= 3 && i > 0 && left > 2 && Math.random() < 0.3) o.push(['s', x + 1.5, g]);
+      if (i % 2 === 1) o.push(['mk', x + 4]);
+    }
+    const end = 8 + segs * 4;
+    o.push(['mg', end, 'cube']);
+    return { len: end + 4, anchor: 0, o };
+  }
+
   // ---------- helpers ----------
   const sx = wx => wx - dist + PX;           // world x -> screen x
   const overlapsGround = (x0, x1) => !pits.some(p => x0 >= p.x && x1 <= p.x + p.w);
-  const pyScreen = () => GY - P.h - U / 2;    // player centre on screen
+  const pyScreen = () => GY - P.h - (mode === 'ship' ? SHIP_H / 2 : U / 2);    // player centre on screen
 
   function addCombo(n, label) {
     combo += n;
@@ -749,7 +785,13 @@ body {
     }
     if (state !== 'play') return;
     if (nextX < dist + W + U * 12) generate();
-    trail.push({ x: dist, h: P.h, rot: P.rot, hue });
+    trail.push({ x: dist, h: P.h, rot: P.rot, hue, m: mode });
+    if (mode === 'ship' && holding) {
+      for (let i = 0; i < (fxMax ? 3 : 1); i++) parts.push({
+        x: PX + U / 2 - 22, y: pyScreen() + 3 + rand(-3, 3), vx: rand(-380, -200), vy: rand(-40, 40), g: 0,
+        life: rand(0.15, 0.35), max: 0.35, size: rand(3, 6), color: pick(['#ffe23d', '#ffb31a', '#ff5a3c']), kind: 'spark', rot: 0
+      });
+    }
     if (trail.length > (fxMax ? 14 : 5)) trail.shift();
   }
 
@@ -780,6 +822,38 @@ body {
   function physics(dt) {
     pressBuf = Math.max(0, pressBuf - dt);
     const px0 = dist + 3, px1 = dist + U - 3;
+    if (mode === 'ship') shipPhysics(dt);
+    else cubePhysics(dt, px0, px1);
+
+    const hb = mode === 'ship'
+      ? { x0: dist + 6, x1: dist + U - 4, y0: P.h + 2, y1: P.h + SHIP_H - 2 }
+      : { x0: dist + 5, x1: dist + U - 5, y0: P.h + 4, y1: P.h + U - 4 };
+    if (hazards(hb, px0, px1) === false) return;
+    if (grav === 1 && P.h < -6 && overlapsGround(dist + 4, dist + U - 4)) return die('pit');
+    if (P.h < -U * 2.5) return die('pit');
+    if (P.h > GY + U) return die('space');
+  }
+
+  function shipPhysics(dt) {
+    const prevH = P.h;
+    P.vh = clamp(P.vh + (holding ? SHIP_ACC : -SHIP_ACC) * dt, -SHIP_MAX, SHIP_MAX);
+    P.h += P.vh * dt;
+    const roof = GY - 6;
+    if (P.h + SHIP_H > roof) { P.h = roof - SHIP_H; P.vh = Math.min(0, P.vh); }
+    // floors and ceilings are safe to slide along; only their sides are deadly
+    const x0 = dist + 6, x1 = dist + U - 4;
+    if (overlapsGround(x0, x1) && prevH >= -2 && P.h <= 0) { P.h = 0; P.vh = Math.max(0, P.vh); }
+    for (const o of objs) {
+      if (o.t !== 'block' || !(x1 > o.x && x0 < o.x + o.w)) continue;
+      const tp = o.y + o.h;
+      if (prevH >= tp - 2 && P.h <= tp) { P.h = tp; P.vh = Math.max(0, P.vh); }
+      if (prevH + SHIP_H <= o.y + 2 && P.h + SHIP_H >= o.y) { P.h = o.y - SHIP_H; P.vh = Math.min(0, P.vh); }
+    }
+    P.rot = -P.vh / SHIP_MAX * 0.5;
+    P.grounded = false;
+  }
+
+  function cubePhysics(dt, px0, px1) {
     const prevH = P.h;
     P.vh -= G * grav * dt;
     P.h += P.vh * dt;
@@ -813,12 +887,14 @@ body {
     if ((P.grounded || P.coyote > 0) && (holding || pressBuf > 0) && P.vh * grav <= 0) jump(JUMP);
     P.flipVis += (grav - P.flipVis) * Math.min(1, dt * 12);
     P.squash = Math.max(0, P.squash - dt * 6);
+  }
 
-    const hb = { x0: dist + 5, x1: dist + U - 5, y0: P.h + 4, y1: P.h + U - 4 };
+  // returns false once the player has died
+  function hazards(hb, px0, px1) {
     const phase = beatPhase();
     for (const o of objs) {
       if (o.t === 'block') {
-        if (hb.x1 > o.x && hb.x0 < o.x + o.w && hb.y1 > o.y && hb.y0 < o.y + o.h) return die('block');
+        if (hb.x1 > o.x && hb.x0 < o.x + o.w && hb.y1 > o.y && hb.y0 < o.y + o.h) { die('block'); return false; }
       } else if (o.t === 'spike') {
         let lo, hi;
         if (o.inv) { lo = o.y + U * 0.4; hi = o.y + U; }
@@ -829,7 +905,7 @@ body {
         }
         const k0 = o.x + U * 0.28, k1 = o.x + U * 0.72;
         if (hb.x1 > k0 && hb.x0 < k1) {
-          if (hb.y0 < hi && hb.y1 > lo) return die('spike');
+          if (hb.y0 < hi && hb.y1 > lo) { die('spike'); return false; }
           const gap = o.inv ? lo - hb.y1 : hb.y0 - hi;
           if (gap < 16) o.near = true;
         }
@@ -838,10 +914,10 @@ body {
         const cy = o.y + Math.sin(tReal * 3 + o.ph) * o.bob;
         const qx = clamp(o.x, hb.x0, hb.x1), qy = clamp(cy, hb.y0, hb.y1);
         const d = Math.hypot(o.x - qx, cy - qy);
-        if (d < o.r * 0.82) return die('saw');
+        if (d < o.r * 0.82) { die('saw'); return false; }
         if (d < o.r + 16) o.near = true;
         if (o.near && !o.nearDone && o.x + o.r < dist) { o.nearDone = true; nearMiss(); }
-      } else if (o.t === 'pad' && !o.used) {
+      } else if (o.t === 'pad' && !o.used && mode === 'cube') {
         if (dist + U / 2 > o.x && dist + U / 2 < o.x + o.w && P.h < 14 && grav === 1) {
           o.used = true;
           jump(PAD_V[o.kind], true);
@@ -852,7 +928,7 @@ body {
           addCombo(1, o.kind === 'y' ? 'BOING!' : 'ポンッ!');
           addScore(30);
         }
-      } else if (o.t === 'orb' && !o.used) {
+      } else if (o.t === 'orb' && !o.used && mode === 'cube') {
         const cx = o.x + U / 2, cy = o.y + U / 2;
         const d = Math.hypot(cx - (dist + U / 2), cy - (P.h + U / 2));
         if (d < 52 && !P.grounded && (holding || pressBuf > 0)) {
@@ -879,6 +955,24 @@ body {
         flash = Math.max(flash, 0.2);
         zoom = Math.max(zoom, 0.08);
         addCombo(1, null);
+      } else if (o.t === 'mode' && !o.used && dist + U / 2 > o.x) {
+        o.used = true;
+        mode = o.to;
+        grav = 1;
+        P.vh = 0;
+        P.rot = 0;
+        P.flipVis = 1;
+        P.grounded = false;
+        sfx.transform(mode === 'ship');
+        const c = mode === 'ship' ? '#ff2bd6' : '#7dff4a';
+        ring(PX + U / 2, pyScreen(), c, 120);
+        burst(PX + U / 2, pyScreen(), 50, c, 520);
+        pop(mode === 'ship' ? '飛行機モード!!' : 'キューブにもどった!', W / 2, H * 0.22, c, 46, 1.2, true);
+        if (mode === 'ship') pop('長押しで上・はなすと下', W / 2, H * 0.22 + 46, '#f5f0ff', 22, 1.6, true);
+        flash = Math.max(flash, 0.22);
+        zoom = Math.max(zoom, 0.1);
+        shake = Math.max(shake, 0.3);
+        addCombo(1, null);
       } else if (o.t === 'mark' && !o.done && o.x < dist) {
         o.done = true;
         sfx.clear();
@@ -886,13 +980,12 @@ body {
         addScore(100);
       }
     }
-    if (grav === 1 && P.h < -6 && overlapsGround(dist + 4, dist + U - 4)) return die('pit');
-    if (P.h < -U * 2.5) return die('pit');
-    if (P.h > GY + U) return die('space');
+    return true;
   }
 
   // a tap is judged against the nearest ◆ mark
   function judgeTap() {
+    if (mode === 'ship') return;
     let bestCue = null, bestD = Infinity;
     for (const o of objs) {
       if (o.t !== 'cue' || o.judged) continue;
@@ -1203,6 +1296,18 @@ body {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(o.dir === -1 ? '▲' : '▼', x, mid + Math.sin(tReal * 8) * 6);
+      } else if (o.t === 'mode') {
+        const c = o.to === 'ship' ? '#ff2bd6' : '#7dff4a';
+        const top = GY - U * 6, mid = (GY + top) / 2;
+        ctx.strokeStyle = c; ctx.lineWidth = 7;
+        glow(c, 22);
+        ctx.beginPath(); ctx.ellipse(x, mid, 16 + beat * 6, (GY - top) / 2, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.save();
+        ctx.translate(x, mid + Math.sin(tReal * 6) * 8);
+        if (o.to === 'ship') { ctx.scale(0.7, 0.7); drawShip('#ff2bd6', false); }
+        else { ctx.fillStyle = c; ctx.fillRect(-10, -10, 20, 20); }
+        ctx.restore();
       }
     }
     const ax = sx(attemptX);
@@ -1220,18 +1325,26 @@ body {
     trail.forEach((t, i) => {
       const a = (i + 1) / trail.length;
       ctx.save();
-      ctx.translate(PX - (dist - t.x) + U / 2, GY - t.h - U / 2);
+      ctx.translate(PX - (dist - t.x) + U / 2, GY - t.h - (t.m === 'ship' ? SHIP_H / 2 : U / 2));
       ctx.rotate(t.rot);
       ctx.fillStyle = fever > 0 ? hsl(t.hue + i * 25, 100, 60, a * 0.5) : `rgba(34,242,255,${a * 0.3})`;
       const s = U * (0.4 + a * 0.5);
       ctx.fillRect(-s / 2, -s / 2, s, s);
       ctx.restore();
     });
+    const main = fever > 0 ? hsl(hue, 100, 60) : '#22f2ff';
+    if (mode === 'ship') {
+      ctx.save();
+      ctx.translate(PX + U / 2, pyScreen());
+      ctx.rotate(P.rot);
+      drawShip(main, holding);
+      ctx.restore();
+      return;
+    }
     ctx.save();
     ctx.translate(PX + U / 2, pyScreen() + P.squash * 4 * grav);
     ctx.scale(1 + P.squash * 0.18, (1 - P.squash * 0.18) * P.flipVis);
     ctx.rotate(P.rot);
-    const main = fever > 0 ? hsl(hue, 100, 60) : '#22f2ff';
     glow(main, 20);
     ctx.fillStyle = main;
     ctx.fillRect(-U / 2, -U / 2, U, U);
@@ -1247,6 +1360,37 @@ body {
     ctx.fillRect(-7, -5, 4, 5); ctx.fillRect(6, -5, 4, 5);
     ctx.fillRect(-6, 5, 13, 3);
     ctx.restore();
+  }
+
+  // the little plane, centred on its hitbox (40 x 24), with the cube riding in the cockpit
+  function drawShip(main, thrust) {
+    if (thrust) {
+      ctx.fillStyle = Math.random() < 0.5 ? '#ffe23d' : '#ffb31a';
+      ctx.beginPath(); ctx.moveTo(-19, -4); ctx.lineTo(-34 - Math.random() * 10, 2); ctx.lineTo(-19, 8); ctx.closePath(); ctx.fill();
+    }
+    // the rider
+    ctx.save();
+    ctx.translate(-2, -10);
+    ctx.fillStyle = '#ff2bd6';
+    ctx.fillRect(-8, -8, 16, 16);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(-5, -4, 4, 5); ctx.fillRect(2, -4, 4, 5);
+    ctx.fillStyle = '#0b0420';
+    ctx.fillRect(-4, -2, 2, 3); ctx.fillRect(3, -2, 2, 3);
+    ctx.restore();
+    glow(main, 18);
+    ctx.fillStyle = main;
+    ctx.strokeStyle = '#0b0420';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(22, 2); ctx.lineTo(10, -6); ctx.lineTo(-14, -6); ctx.lineTo(-20, -14);
+    ctx.lineTo(-20, 10); ctx.lineTo(12, 11); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#ff2bd6';
+    ctx.beginPath(); ctx.moveTo(-8, 3); ctx.lineTo(8, 3); ctx.lineTo(-12, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.8)';
+    ctx.fillRect(4, -3, 8, 3);
   }
 
   function drawParticles() {
