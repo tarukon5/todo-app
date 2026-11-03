@@ -360,6 +360,41 @@ h1 small { font-family: var(--font-ui); font-weight: 500; font-size: .8rem; lett
 .result-big.win { color: var(--gold); }
 .result-big.lose { color: var(--shu); }
 .center { text-align: center; color: var(--ink-dim); margin: 0; }
+/* ---------- practice mode ---------- */
+.nav { display: flex; gap: 6px; align-items: center; }
+.nav .iconbtn[aria-pressed="true"] { color: var(--koma-ink); background: var(--gold); border-color: var(--gold); font-weight: 700; }
+.lesson-card h2 { margin: 0; font-family: var(--font-koma); font-weight: 800; font-size: 1.25rem; }
+.lesson-card .lvl { font-size: .75rem; color: var(--gold); letter-spacing: .08em; font-weight: 700; }
+.lesson-card p { margin: 8px 0 0; font-size: .9rem; line-height: 1.65; }
+.lesson-card .task { margin-top: 10px; padding: 8px 10px; border-radius: 8px; background: rgba(233, 196, 106, .14); border-left: 3px solid var(--gold); font-weight: 700; }
+.lesson-card .fb { margin-top: 10px; min-height: 1.5em; font-weight: 700; }
+.lesson-card .fb.ok { color: var(--gold); }
+.lesson-card .fb.ng { color: #ff8a78; }
+.lesson-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.cell .koma.ghost { opacity: .32; filter: saturate(.4); }
+.cell.goal { box-shadow: inset 0 0 0 3px rgba(80, 190, 140, .9); }
+.levels .chap { margin: 0 0 6px; font-size: .85rem; color: var(--ink-dim); font-weight: 700; letter-spacing: .08em; display: flex; justify-content: space-between; }
+.levels .grid10 { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 6px; margin-bottom: 14px; }
+.lvbtn {
+  font: inherit;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 1px solid rgba(236, 230, 214, .3);
+  background: rgba(236, 230, 214, .06);
+  color: var(--ink);
+  cursor: pointer;
+  position: relative;
+}
+.lvbtn.done { background: linear-gradient(180deg, var(--koma), var(--koma-2)); color: var(--koma-ink); border-color: transparent; }
+.lvbtn.done::after { content: "★"; position: absolute; top: -6px; right: -4px; font-size: .7rem; color: var(--shu); }
+.lvbtn.next { box-shadow: 0 0 0 2px var(--gold); }
+.lvbtn:disabled { opacity: .3; cursor: default; }
+.lvbtn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.sheet.wide { width: min(100%, 620px); max-height: calc(100dvh - 32px); overflow-y: auto; }
+.progress { font-size: .85rem; color: var(--ink-dim); }
+.progress b { color: var(--gold); font-size: 1.1rem; }
 @media (prefers-reduced-motion: reduce) {
   .cell.moved .koma, .callout.show, .status.cpu .dot { animation: none; }
   .callout.show { opacity: 1; }
@@ -370,7 +405,11 @@ h1 small { font-family: var(--font-ui); font-weight: 500; font-size: .8rem; lett
 <div class="wrap">
   <header class="top">
     <h1>将棋道場<small>コンピューター対局</small></h1>
-    <button class="iconbtn" id="soundBtn" type="button">音：ON</button>
+    <div class="nav">
+      <button class="iconbtn" id="navGame" type="button" aria-pressed="true">対局</button>
+      <button class="iconbtn" id="navLesson" type="button" aria-pressed="false">練習 1〜100</button>
+      <button class="iconbtn" id="soundBtn" type="button">音：ON</button>
+    </div>
   </header>
 
   <main class="table" aria-label="将棋盤">
@@ -387,7 +426,20 @@ h1 small { font-family: var(--font-ui); font-weight: 500; font-size: .8rem; lett
   </main>
 
   <aside class="side">
-    <section class="card">
+    <section class="card lesson-card" id="lessonCard" hidden>
+      <div class="lvl" id="lLevel"></div>
+      <h2 id="lTitle"></h2>
+      <p id="lText"></p>
+      <div class="task" id="lTask"></div>
+      <div class="fb" id="lFb" aria-live="polite"></div>
+      <div class="lesson-btns">
+        <button class="btn" id="lHint" type="button">ヒント</button>
+        <button class="btn ghost" id="lRetry" type="button">やり直し</button>
+        <button class="btn ghost" id="lList" type="button">レベル一覧</button>
+        <button class="btn" id="lNext" type="button" disabled>次のレベル</button>
+      </div>
+    </section>
+    <section class="card" id="gameCard">
       <div class="status" id="status" aria-live="polite"><span class="dot"></span><span id="statusText">対局の準備中</span></div>
       <div class="sub" id="subText"></div>
       <div class="meter" aria-hidden="true">
@@ -395,7 +447,7 @@ h1 small { font-family: var(--font-ui); font-weight: 500; font-size: .8rem; lett
         <div class="bar"><i id="evalBar"></i></div>
       </div>
     </section>
-    <section class="buttons">
+    <section class="buttons" id="gameButtons">
       <button class="btn" id="hintBtn" type="button">ヒント</button>
       <button class="btn" id="undoBtn" type="button">待った</button>
       <button class="btn red" id="resignBtn" type="button">投了</button>
@@ -428,8 +480,18 @@ h1 small { font-family: var(--font-ui); font-weight: 500; font-size: .8rem; lett
       </div>
     </fieldset>
     <button class="btn" type="submit" id="startBtn">対局開始</button>
+    <button class="btn ghost" type="button" id="goLessons">練習モード（レベル1〜100）で学ぶ</button>
     <button class="btn ghost" type="button" id="cancelNew">閉じる</button>
   </form>
+</div>
+
+<div class="modal" id="lessonModal" hidden>
+  <div class="sheet wide">
+    <h2>練習 レベル1〜100</h2>
+    <div class="progress" id="lProgress"></div>
+    <div class="levels" id="levelList"></div>
+    <button class="btn ghost" type="button" id="lessonClose">閉じる</button>
+  </div>
 </div>
 
 <div class="modal" id="promoModal" hidden>
@@ -512,13 +574,14 @@ var Shogi = (() => {
     return { b: Int8Array.from(st.b), h: Int8Array.from(st.h), side: st.side, k: Int16Array.from(st.k) };
   }
   function fromPlain(o) {
-    const st = { b: Int8Array.from(o.b), h: Int8Array.from(o.h), side: o.side, k: new Int16Array(2) };
+    const st = { b: Int8Array.from(o.b), h: Int8Array.from(o.h), side: o.side, k: Int16Array.from([-1, -1]) };
     for (let i = 0; i < 81; i++) { if (st.b[i] === OU) st.k[0] = i; else if (st.b[i] === -OU) st.k[1] = i; }
     return st;
   }
   const toPlain = st => ({ b: Array.from(st.b), h: Array.from(st.h), side: st.side });
 
   function attacked(st, sq, by) {
+    if (sq < 0) return false;                 // practice positions may have no king
     const b = st.b, r = (sq / 9) | 0, c = sq % 9;
     for (let dr = -2; dr <= 2; dr++) {
       const ar = r - dr;
@@ -835,6 +898,64 @@ var Shogi = (() => {
     return { move: bestMove, score: bestScore, depth: reached, nodes };
   }
 
+  // ---------- mate solver (for tsume problems) ----------
+  // moves after which the opponent is checkmated
+  function mateMoves(st) {
+    const out = [];
+    for (const m of legalMoves(st, true)) {
+      const cap = make(st, m);
+      if (inCheck(st, st.side) && !hasLegalMove(st)) out.push(m);
+      unmake(st, m, cap);
+    }
+    return out;
+  }
+  // after the attacker's move m: is it check, and does every reply allow a mate in 1?
+  function forcesMate1(st, m) {
+    const cap = make(st, m);
+    let ok = inCheck(st, st.side);
+    if (ok) {
+      const replies = legalMoves(st, true);
+      if (!replies.length) ok = true;             // already mate
+      else for (const r of replies) {
+        const c2 = make(st, r);
+        const mm = mateMoves(st).length;
+        unmake(st, r, c2);
+        if (!mm) { ok = false; break; }
+      }
+    }
+    unmake(st, m, cap);
+    return ok;
+  }
+  // first moves that force mate within 3 plies
+  function mate3Moves(st) {
+    const out = [];
+    for (const m of legalMoves(st, true)) if (forcesMate1(st, m)) out.push(m);
+    return out;
+  }
+  // the toughest reply: the one that leaves the fewest mating moves
+  function bestDefence(st) {
+    let best = 0, fewest = Infinity;
+    for (const r of legalMoves(st, true)) {
+      const c = make(st, r);
+      const n = mateMoves(st).length;
+      unmake(st, r, c);
+      if (n < fewest) { fewest = n; best = r; }
+    }
+    return best;
+  }
+
+  // exact score of every root move (used to build and check practice problems)
+  function rootScores(st, depth, q) {
+    nodes = 0; stopped = false; deadline = Date.now() + 60000; killers.length = 0;
+    const out = [];
+    for (const m of legalMoves(st, true)) {
+      const cap = make(st, m);
+      out.push([m, -negamax(st, depth - 1, -MATE * 2, MATE * 2, 1, q)]);
+      unmake(st, m, cap);
+    }
+    return out.sort((x, y) => y[1] - x[1]);
+  }
+
   function perft(st, depth) {
     if (depth === 0) return 1;
     let n = 0;
@@ -850,9 +971,72 @@ var Shogi = (() => {
   return {
     FU, KY, KE, GI, KI, KA, HI, OU, TO, NY, NK, NG, UM, RY, MATE, VAL,
     newState, clone, fromPlain, toPlain, legalMoves, make, unmake, inCheck, isLegal, think, perft, evaluate,
-    hasLegalMove
+    hasLegalMove, mateMoves, forcesMate1, mate3Moves, bestDefence, attacked, rootScores
   };
 })();
+</script>
+<script>
+// shared helpers: parse lesson positions and USI moves (used by the app and by the build scripts)
+var LessonUtil = (() => {
+  const LET = { P: 1, L: 2, N: 3, S: 4, G: 5, B: 6, R: 7, K: 8 };
+  const LETTERS = ['', 'P', 'L', 'N', 'S', 'G', 'B', 'R', 'K'];
+  const sqOf = (file, rank) => (rank - 1) * 9 + (9 - file);
+  function parsePiece(t) {
+    let i = 0, pro = false;
+    if (t[i] === '+') { pro = true; i++; }
+    const ch = t[i], up = ch.toUpperCase();
+    const code = LET[up] + (pro ? 8 : 0);
+    return ch === up ? code : -code;
+  }
+  function parsePos(pos, hand, ohand, side) {
+    const b = new Array(81).fill(0), h = new Array(16).fill(0);
+    for (const tok of (pos || '').split(/\s+/).filter(Boolean)) b[sqOf(+tok[0], +tok[1])] = parsePiece(tok.slice(2));
+    for (const ch of hand || '') h[LET[ch.toUpperCase()]]++;
+    for (const ch of ohand || '') h[8 + LET[ch.toUpperCase()]]++;
+    return { b, h, side: side || 1 };
+  }
+  function posToTokens(plain) {
+    const out = [];
+    for (let sq = 0; sq < 81; sq++) {
+      const p = plain.b[sq];
+      if (!p) continue;
+      const a = Math.abs(p), file = 9 - sq % 9, rank = ((sq / 9) | 0) + 1;
+      let l = LETTERS[a > 8 ? a - 8 : a];
+      if (p < 0) l = l.toLowerCase();
+      out.push(`${file}${rank}${a > 8 ? '+' : ''}${l}`);
+    }
+    return out.join(' ');
+  }
+  function handToStr(plain, base) {
+    let s = '';
+    for (let t = 1; t <= 7; t++) s += LETTERS[t].repeat(Math.max(0, plain.h[base + t]));
+    return s;
+  }
+  // "7g7f", "7g7f+", "G*5e" -> { from, to, promo, drop }
+  function parseUsi(u) {
+    const sq = (f, r) => sqOf(+f, r.charCodeAt(0) - 96);
+    if (u[1] === '*') return { drop: LET[u[0]], from: 100 + LET[u[0]], to: sq(u[2], u[3]), promo: null };
+    return { from: sq(u[0], u[1]), to: sq(u[2], u[3]), promo: u[4] === '+' ? true : u[4] === '=' ? false : null };
+  }
+  function moveToUsi(m) {
+    const from = m & 127, to = (m >> 7) & 127;
+    const s = q => `${9 - q % 9}${String.fromCharCode(97 + ((q / 9) | 0))}`;
+    if (from >= 100) return `${LETTERS[from - 100]}*${s(to)}`;
+    return s(from) + s(to) + (m & 16384 ? '+' : '');
+  }
+  function matches(m, u) {
+    const p = parseUsi(u);
+    if ((m & 127) !== p.from || ((m >> 7) & 127) !== p.to) return false;
+    if (p.promo === true && !(m & 16384)) return false;
+    if (p.promo === false && (m & 16384)) return false;
+    return true;
+  }
+  // goal tokens like "55P" / "53+P" -> [[sq, code]]
+  const parseGoal = goal => goal.map(t => [sqOf(+t[0], +t[1]), parsePiece(t.slice(2))]);
+  return { parsePos, posToTokens, handToStr, parseUsi, moveToUsi, matches, parseGoal, sqOf };
+})();
+var LESSONS = [{"title":"歩（ふ）","type":"reach","pos":"57P","goal":["55P"],"limit":2,"hint":["5g5f","5f5e"],"text":"歩は前に1マスだけ進めます。いちばん数が多い、大切な駒です。","task":"歩を５五まで進めよう（2手）"},{"title":"香車（きょうしゃ）","type":"reach","pos":"99L","goal":["94L"],"limit":1,"hint":["9i9d"],"text":"香車は前にまっすぐ、何マスでも進めます。うしろや横には動けません。","task":"香車を一気に９四まで進めよう（1手）"},{"title":"桂馬（けいま）","type":"reach","pos":"89N","goal":["65N"],"limit":2,"hint":["8i7g","7g6e"],"text":"桂馬は「2つ前の左右」にジャンプします。間に駒があっても飛びこえられます。","task":"桂馬を６五まで動かそう（2手）"},{"title":"銀（ぎん）","type":"reach","pos":"58S","goal":["46S"],"limit":2,"hint":["5h4g","4g4f"],"text":"銀は前の3マスと、うしろのななめ2マスに動けます。","task":"銀を４六まで動かそう（2手）"},{"title":"金（きん）","type":"reach","pos":"59G","goal":["67G"],"limit":2,"hint":["5i6h","6h6g"],"text":"金は前の3マス・横・まうしろに動けます。うしろのななめには行けません。","task":"金を６七まで動かそう（2手）"},{"title":"角（かく）","type":"reach","pos":"88B","goal":["44B"],"limit":1,"hint":["8h4d"],"text":"角はななめに何マスでも進めます。","task":"角を４四へ（1手）"},{"title":"飛車（ひしゃ）","type":"reach","pos":"28R","goal":["85R"],"limit":2,"hint":["2h2e","2e8e"],"text":"飛車はたて・横に何マスでも進めます。いちばん強い駒です。","task":"飛車を８五へ（2手）"},{"title":"玉（ぎょく）","type":"reach","pos":"59K","goal":["57K"],"limit":2,"hint":["5i5h","5h5g"],"text":"玉はまわりの8マスに1マスずつ動けます。取られたら負けの、いちばん大事な駒です。","task":"玉を５七まで動かそう（2手）"},{"title":"成る","type":"reach","pos":"54P","goal":["53+P"],"limit":1,"hint":["5d5c+"],"text":"相手の陣地（いちばん奥の3段）に入ると、駒をうら返して「成る」ことができます。歩が成ると「と金」になり、金と同じ動きになります。","task":"歩を５三に進めて「成る」を選ぼう"},{"title":"と金","type":"reach","pos":"53+P","goal":["42+P"],"limit":1,"hint":["5c4b"],"text":"と金は金と同じ動き。ななめ前にも動けます。","task":"と金を４二へ（1手）"},{"title":"馬（うま）","type":"reach","pos":"77B","goal":["33+B"],"limit":1,"hint":["7g3c+"],"text":"角が成ると「馬」。ななめに何マスでも＋たて横に1マス動けます。","task":"角を３三に進めて成ろう"},{"title":"龍（りゅう）","type":"reach","pos":"28R","goal":["23+R"],"limit":1,"hint":["2h2c+"],"text":"飛車が成ると「龍」。たて横に何マスでも＋ななめに1マス動けます。最強の駒です。","task":"飛車を２三に進めて成ろう"},{"title":"持ち駒を打つ","type":"reach","pos":"","hand":"G","goal":["55G"],"limit":1,"hint":["G*5e"],"text":"取った駒は「持ち駒」になり、空いているマスに置く（打つ）ことができます。","task":"持ち駒の金を５五に打とう"},{"title":"二歩はダメ","type":"reach","pos":"57P","hand":"P","goal":["44P"],"limit":1,"hint":["P*4d"],"text":"同じたての列（筋）に、自分の歩を2枚置くことはできません。これを「二歩」といって反則です。５筋にはもう歩があるので打てません。","task":"持ち駒の歩を４四に打とう"},{"title":"歩で取る","type":"best","pos":"56P 55p","answers":["5f5e"],"text":"相手の駒がいるマスに動くと、その駒を取れます。取った駒は自分の持ち駒になります。","task":"相手の歩を取ろう","after":"取った歩は持ち駒になりました。"},{"title":"飛車で取る","type":"best","pos":"28R 23g","answers":["2h2c"],"text":"飛車は遠くの駒も取れます。","task":"相手の金を取ろう","after":"２三は相手の陣地なので、成って龍にもなれます。"},{"title":"大きい駒を取ろう","type":"best","pos":"55B 73p 22r","answers":["5e2b"],"text":"取れる駒が2つあるときは、価値の高い駒を取ろう。飛車＞角＞金＞銀＞桂・香＞歩の順に強い駒です。","task":"どちらを取る？","after":"飛車は一番強い駒。取れたら大きなリードです。"},{"title":"ただの駒を取ろう","type":"best","pos":"57S 46g 56p 51l","answers":["5g4f"],"text":"取っても取り返されない駒を「ただ」といいます。５六の歩は５一の香車が守っています。","task":"取り返されない駒を取ろう","after":"４六の金はだれも守っていないので、ただで取れました。"},{"title":"取られそうな駒を逃げる","type":"safe","pos":"55G 54p 53s","from":"55","text":"５五の金が５四の歩にねらわれています。５四の歩は銀が守っているので、取ると取り返されます。","task":"金を安全なマスへ逃がそう","after":"取られない場所に逃げるのも大事な手です。"},{"title":"飛車を逃がそう","type":"safe","pos":"28R 55b 26p 33p","from":"28","text":"５五の角が２八の飛車をねらっています。","task":"飛車を安全なマスへ","after":"いちばん強い駒を守るのは基本です。"},{"title":"両取り","type":"best","pos":"71g 51g","hand":"N","answers":["N*6c"],"text":"1つの駒で2つの駒をねらうことを「両取り」といいます。桂馬は2か所を同時にねらえます。","task":"持ち駒の桂馬で両取りをかけよう","after":"６三の桂馬が７一と５一の金を同時にねらっています。「ふんどしの桂」といいます。"},{"title":"王手飛車取り","type":"best","pos":"51k 61g 41g 15r 52p 97P 87P 77P 57P 47P 37P 27P 17P 69G 49G 59K","hand":"B","answers":["B*3c"],"text":"王手をしながら飛車もねらう手を「王手飛車取り」といいます。相手は王手をよけるしかないので、飛車が取れます。","task":"角を打って王手飛車取りをかけよう","after":"３三の角が５一の玉と１五の飛車を同時にねらっています。"},{"title":"王手をかけよう","type":"pred","pred":"check","pos":"51k","hand":"G","text":"相手の玉を次に取れる状態にすることを「王手」といいます。","task":"持ち駒の金で王手をかけよう","after":"王手をかけられた側は、必ずよけなければいけません。"},{"title":"玉で逃げる","type":"pred","pred":"king","pos":"59K 52r","text":"５二の飛車に王手をかけられています。王手をよける方法の1つめは「玉が逃げる」です。","task":"玉を動かして王手をよけよう","after":"逃げる場所が飛車のたての線上だと、また取られてしまうので注意。"},{"title":"間に駒を打つ","type":"pred","pred":"block","pos":"59K 52r","hand":"G","text":"2つめの方法は、相手の駒と玉の間に駒を置いて止めること。これを「合い駒」といいます。","task":"持ち駒の金を間に打って王手を止めよう","after":"遠くから王手してくる飛車・角・香車には合い駒が使えます。"},{"title":"王手した駒を取る","type":"pred","pred":"capture","pos":"59K 58g 57p 49S","text":"3つめの方法は、王手をしてきた駒を取ること。５八の金は歩に守られているので、玉では取れません。","task":"銀で王手している金を取ろう","after":"これで王手が消えて、金も手に入りました。"},{"title":"詰み","type":"mate1","pos":"11k 13P","hand":"G","text":"どうやっても王手をよけられない状態を「詰み」といい、詰ませたほうの勝ちです。すみっこの玉は逃げ道が少ないので詰ませやすいです。","task":"1手で詰ませよう（ヒント：玉の真上）","after":"玉の頭に金を打つと、歩が守っているので取れません。これで詰みです。"},{"title":"頭金","type":"mate1","pos":"51k 53P","hand":"G","text":"玉の真上（頭）に金を打つと、歩が守っているので取れません。","task":"1手で詰ませよう","after":"頭金は一番よく出てくる詰みの形です。"},{"title":"一間竜","type":"mate1","pos":"51k 61g 62p 52p 42p 35+R","text":"龍が玉から1マスあけて王手する形を「一間竜」といいます。","task":"1手で詰ませよう","after":"玉は龍の横の利きで動けません。"},{"title":"吊るし桂","type":"mate1","pos":"11k 12p 21n 22b","hand":"N","text":"桂馬の王手は、間に駒を置いて止めることができません。","task":"1手で詰ませよう","after":"桂馬の王手は合い駒がきかない、とっておきの武器です。"},{"title":"遠見の角","type":"mate1","pos":"91k 81b 92l","hand":"B","text":"角は遠くからでも王手できます。","task":"1手で詰ませよう","after":"玉の逃げ道を相手の駒がふさいでいるので、遠くからの王手で詰みました。"},{"title":"1手詰め 第1問","type":"mate1","pos":"91p 81k 92s 62g 73G","hand":"S","hint":["S*8b"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"1手詰め 第2問","type":"mate1","pos":"11k 12g 33s 13p 24+R","hand":"SG","hint":["G*2a"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"1手詰め 第3問","type":"mate1","pos":"91l 71G 82k 72b 52+R 93n 84P 64g","hand":"","hint":["5b7b"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"1手詰め 第4問","type":"mate1","pos":"51k 21+P 62g 52p 42p","hand":"PR","hint":["R*3a"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"1手詰め 第5問","type":"mate1","pos":"61k 51B 41G 82R 52n 63g","hand":"","hint":["8b8a+"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"1手詰め 第6問","type":"mate1","pos":"71s 61k 82R 42n 63r 43g","hand":"G","hint":["G*5b"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"1手詰め 第7問","type":"mate1","pos":"71k 62p 73S","hand":"SS","hint":["S*7b"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"1手詰め 第8問","type":"mate1","pos":"51+B 21k 11p 42+R 22B 33s 23n","hand":"LG","hint":["2b3a+"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"1手詰め 第9問","type":"mate1","pos":"41s 32k 43n 13G 54p 14p 25+R","hand":"","hint":["2e2b"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"1手詰め 第10問","type":"mate1","pos":"81B 61g 51k 72p 42R 63g","hand":"G","hint":["G*4a"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"1手詰め 第11問","type":"mate1","pos":"21k 42R 12p","hand":"GG","hint":["G*2b"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"1手詰め 第12問","type":"mate1","pos":"21p 12k 34+R 25+R","hand":"PB","hint":["3d1d"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"1手詰め 第13問","type":"mate1","pos":"91n 81k 73S 74+S","hand":"SG","hint":["G*8b"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"1手詰め 第14問","type":"mate1","pos":"71p 51k 31+S 72R 33g","hand":"PG","hint":["G*5b"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"1手詰め 第15問","type":"mate1","pos":"81k 62s 83+B 53B","hand":"SB","hint":["S*8b"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"1手詰め 第16問","type":"mate1","pos":"91k 92b 62R 93g 94G","hand":"SB","hint":["S*8b"],"text":"王手をかけて、玉がどこにも逃げられない形を作ろう。","task":"1手で詰ませよう","after":"詰みました！ 玉の逃げ道をすべてふさいでいます。"},{"title":"割打ちの銀","type":"best","pos":"41k 82r 62g 72p 43p 33p 53p 97P 87P 77P 57P 47P 37P 27P 17P 69G 49G 59K","hand":"S","answers":["S*7a"],"text":"銀はうしろななめにも利きます。2つの駒の間の「うしろ」に打つと、両方をねらえます。","task":"銀を打って両取りをかけよう","after":"７一の銀が８二の飛車と６二の金を同時にねらう「割打ちの銀」です。"},{"title":"ふんどしの桂（王手）","type":"best","pos":"51k 71g 41s 54p 74p 97P 87P 77P 57P 47P 37P 27P 17P 69G 49G 59K","hand":"N","answers":["N*6c"],"text":"桂馬で玉と金を同時にねらいます。王手なので相手は玉を逃げるしかありません。","task":"王手しながら金をねらおう","after":"王手金取り。玉が逃げたら金をいただきます。"},{"title":"桂馬のジャンプ","type":"best","pos":"77N 53g 73s 51k 97P 87P 76P 57P 47P 37P 27P 17P 69G 49G 59K","answers":["7g6e"],"text":"盤上の桂馬も両取りに使えます。","task":"桂馬を跳ねて両取りしよう","after":"６五の桂馬が５三の金と７三の銀をねらっています。"},{"title":"角の両取り","type":"best","pos":"73s 33g 51k 97P 87P 77P 57P 47P 37P 27P 17P 69G 49G 59K","hand":"B","answers":["B*5e"],"text":"角は2本のななめの線で、離れた2つの駒を同時にねらえます。","task":"角を打って両取りしよう","after":"５五の角が７三の銀と３三の金を同時にねらっています。"},{"title":"十字飛車","type":"best","pos":"63g 25s 51k 97P 87P 77P 57P 47P 37P 27P 17P 69G 49G 59K","hand":"R","answers":["R*6e","R*2c","R*2a"],"text":"飛車はたてと横の十字にねらえます。2つの駒の「たての線」と「横の線」が交わるところに打ちます。","task":"飛車を打って両取りしよう","after":"飛車が金と銀を同時にねらう「十字飛車」です。どちらかは取れます。"},{"title":"王手飛車（実戦形）","type":"best","pos":"51k 61g 41g 95r 52p 43p 63p 97P 87P 77P 57P 47P 37P 27P 17P 69G 49G 59K","hand":"B","answers":["B*7c"],"text":"王手と飛車取りを同時にかけます。","task":"角を打って王手飛車取りをかけよう","after":"玉が逃げたあと、飛車を取れます。"},{"title":"次の一手 第1問","type":"best","pos":"81n 61g 51k 41g 93l 45s 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 79S 69G 59K 49G","hand":"S","answers":["S*8b"],"text":"相手の駒を2つ同時にねらったり、取れる駒をふやしたりする、いちばん得な手を探そう。","task":"駒得になる次の一手は？","after":"この手で相手は全部の駒を守れません。駒得まちがいなしです。"},{"title":"次の一手 第2問","type":"best","pos":"61g 51k 41g 21s 42n 24l 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 79S 69G 59K 49G","hand":"R","answers":["R*2c"],"text":"相手の駒を2つ同時にねらったり、取れる駒をふやしたりする、いちばん得な手を探そう。","task":"駒得になる次の一手は？","after":"この手で相手は全部の駒を守れません。駒得まちがいなしです。"},{"title":"次の一手 第3問","type":"best","pos":"61g 51k 41g 12g 43n 94r 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 79S 69G 59K 49G","hand":"N","answers":["N*5c"],"text":"相手の駒を2つ同時にねらったり、取れる駒をふやしたりする、いちばん得な手を探そう。","task":"駒得になる次の一手は？","after":"この手で相手は全部の駒を守れません。駒得まちがいなしです。"},{"title":"次の一手 第4問","type":"best","pos":"61g 51k 41g 21n 72l 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 79S 69G 59K 49G","hand":"S","answers":["S*2b"],"text":"相手の駒を2つ同時にねらったり、取れる駒をふやしたりする、いちばん得な手を探そう。","task":"駒得になる次の一手は？","after":"この手で相手は全部の駒を守れません。駒得まちがいなしです。"},{"title":"舟囲い","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 28R 99L 89N 79S 69G 59K 49G 39S 29N 19L","goal":["78K","58G","69G"],"limit":4,"hint":["5i6h","6h7h","4i5h"],"text":"玉を安全な場所に移して、金銀で守る形を「囲い」といいます。舟囲いは居飛車の基本の囲いです。","task":"玉を７八、右の金を５八へ動かそう","after":"玉が戦場の中央から離れて安全になりました。"},{"title":"片美濃囲い","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 28R 99L 89N 79S 69G 59K 49G 39S 29N 19L","goal":["68R","28K","38S","49G"],"limit":6,"hint":["2h6h","5i4h","4h3h","3h2h","3i3h"],"text":"飛車を左に動かす「振り飛車」の代表的な囲いが美濃囲いです。まず飛車を６八へ、玉を２八へ。","task":"飛車を６八、玉を２八、銀を３八へ","after":"片美濃囲いの完成。かたくて崩れにくい形です。"},{"title":"本美濃囲い","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 28R 99L 89N 79S 69G 59K 49G 39S 29N 19L","goal":["68R","28K","38S","49G","58G"],"limit":7,"hint":["2h6h","5i4h","4h3h","3h2h","3i3h","6i5h"],"text":"片美濃に、左の金を５八に上げると「本美濃囲い」になります。","task":"本美濃囲いを完成させよう","after":"横からの攻めにとても強い囲いです。"},{"title":"高美濃囲い","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 76P 67P 57P 47P 37P 27P 17P 88B 68R 99L 89N 79S 58G 28K 49G 38S 29N 19L","goal":["46P","47G"],"limit":2,"hint":["4g4f","5h4g"],"text":"美濃囲いから、４筋の歩をついて金を４七に上げると「高美濃」になります。","task":"歩を４六、金を４七へ","after":"上からの攻めにも強くなりました。"},{"title":"銀冠（ぎんかんむり）","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 76P 67P 57P 46P 37P 27P 17P 88B 68R 99L 89N 79S 47G 28K 49G 38S 29N 19L","goal":["26P","27S","38G"],"limit":3,"hint":["2g2f","3h2g","4i3h"],"text":"高美濃から、銀を玉の頭に乗せる「銀冠」。持久戦で強い囲いです。","task":"歩を２六、銀を２七、金を３八へ","after":"玉の頭が銀で守られて、とてもかたい形です。"},{"title":"矢倉囲い①","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 28R 99L 89N 79S 69G 59K 49G 39S 29N 19L","goal":["76P","66P","56P","77S","78G","67G"],"limit":8,"hint":["7g7f","7i6h","6h7g","6g6f","5g5f","6i7h","4i5h","5h6g"],"text":"矢倉（やぐら）は居飛車の「王様」の囲い。金銀3枚でがっちり守ります。まず金銀を組みます。","task":"歩を７六・６六・５六、銀を７七、金を７八と６七へ","after":"矢倉の骨組みができました。"},{"title":"矢倉囲い②（入城）","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 76P 66P 56P 47P 37P 27P 17P 88B 28R 99L 89N 77S 78G 67G 59K 39S 29N 19L","goal":["88K","46B"],"limit":5,"hint":["8h7i","5i6i","7i4f","6i7i","7i8h"],"text":"角を外に出して、玉を矢倉の中に入れます（入城）。","task":"角を４六に出して、玉を８八へ","after":"金矢倉の完成です。"},{"title":"居飛車穴熊","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 28R 99L 89N 79S 69G 59K 49G 39S 29N 19L","goal":["99K","98L","88S","79G","77B"],"limit":9,"hint":["7g7f","8h7g","9i9h","5i6h","6h7h","7h8h","8h9i","7i8h","6i7i"],"text":"穴熊（あなぐま）は玉を盤のすみにもぐらせる、いちばんかたい囲いです。","task":"香を９八、玉を９九、銀を８八、金を７九へ","after":"王手がかかりにくい、最強クラスの囲いです。"},{"title":"振り飛車穴熊","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 28R 99L 89N 79S 69G 59K 49G 39S 29N 19L","goal":["68R","19K","18L","28S","39G"],"limit":8,"hint":["2h6h","1i1h","5i4h","4h3h","3h2h","2h1i","3i2h","4i3i"],"text":"振り飛車でも穴熊に組めます。玉を右すみの１九へ。","task":"飛車を６八へ振って、玉を１九にもぐらせよう","after":"振り飛車穴熊の完成です。"},{"title":"原始棒銀","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 28R 99L 89N 79S 69G 59K 49G 39S 29N 19L","goal":["25P","26S"],"limit":5,"hint":["2g2f","2f2e","3i3h","3h2g","2g2f"],"text":"棒銀（ぼうぎん）は、飛車の前に銀を進めて２筋を突破する、わかりやすい攻めです。","task":"歩を２五まで進めて、銀を２六へ","after":"飛車・銀・歩の3つで２筋を攻める形です。"},{"title":"棒銀で突破","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 77P 67P 57P 47P 37P 25P 17P 88B 28R 99L 89N 79S 69G 59K 49G 26S 29N 19L","goal":["24S"],"limit":2,"hint":["2f1e","1e2d"],"text":"銀を１五から２四へ進めて、２三の歩をねらいます。","task":"銀を２四まで進めよう","after":"銀と飛車で２筋を突破して、と金や龍を作るのがねらいです。"},{"title":"中飛車","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 28R 99L 89N 79S 69G 59K 49G 39S 29N 19L","goal":["58R","55P"],"limit":3,"hint":["5g5f","2h5h","5f5e"],"text":"飛車をまん中（５筋）に振る「中飛車」。５筋の歩を伸ばして中央から攻めます。","task":"飛車を５八へ、歩を５五まで","after":"中央を制する、攻撃的な振り飛車です。"},{"title":"三間飛車","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 28R 99L 89N 79S 69G 59K 49G 39S 29N 19L","goal":["76P","78R"],"limit":2,"hint":["7g7f","2h7h"],"text":"飛車を７筋（左から3つめ）に振るのが「三間飛車」です。","task":"歩を７六、飛車を７八へ","after":"７筋から攻めのチャンスをうかがいます。"},{"title":"石田流","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 28R 99L 89N 79S 69G 59K 49G 39S 29N 19L","goal":["75P","76R","96P","97B","77N"],"limit":7,"hint":["7g7f","7f7e","2h7h","7h7f","9g9f","8h9g","8i7g"],"text":"三間飛車から飛車を７六に浮かせる「石田流」。攻めの理想形です。","task":"歩７五・飛車７六・角９七・桂７七の形を作ろう","after":"飛車・角・桂が協力する、攻撃力の高い形です。"},{"title":"向かい飛車","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 28R 99L 89N 79S 69G 59K 49G 39S 29N 19L","goal":["77B","88R"],"limit":3,"hint":["7g7f","8h7g","2h8h"],"text":"飛車を相手の飛車と向かい合う８筋に振るのが「向かい飛車」。","task":"角を７七に上げて、飛車を８八へ","after":"相手の飛車先を受け止めて、反撃をねらいます。"},{"title":"早繰り銀","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 28R 99L 89N 79S 69G 59K 49G 39S 29N 19L","goal":["46P","36S"],"limit":4,"hint":["4g4f","3i3h","3h4g","4g3f"],"text":"銀を３八→４七→３六とすばやく進める「早繰り銀」。","task":"歩を４六、銀を３六へ","after":"銀を前線に出して、３筋・４筋から攻めます。"},{"title":"右四間飛車","type":"shape","pos":"91l 81n 71s 61g 51k 41g 31s 21n 11l 82r 22b 93p 83p 73p 63p 53p 43p 33p 23p 13p 97P 87P 77P 67P 57P 47P 37P 27P 17P 88B 28R 99L 89N 79S 69G 59K 49G 39S 29N 19L","goal":["48R","45P"],"limit":3,"hint":["4g4f","2h4h","4f4e"],"text":"飛車を４筋に回して、４筋を集中攻撃するのが「右四間飛車」。","task":"飛車を４八、歩を４五へ","after":"一点集中の破壊力がある戦法です。"},{"title":"3手詰め 第1問","type":"mate3","pos":"21b 11k 24L","hand":"SS","hint":["S*2b"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第2問","type":"mate3","pos":"91g 92k 72n 93b 63+S 84+P 74n","hand":"G","hint":["G*8c"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第3問","type":"mate3","pos":"51n 41k 31p 21n 32s 63+R 14+S","hand":"NB","hint":["B*5b"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第4問","type":"mate3","pos":"41k 11G 42s 53s 43B","hand":"PS","hint":["S*5b"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第5問","type":"mate3","pos":"51k 41s 52B 32+R 73s 33L","hand":"S","hint":["5b4a+"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第6問","type":"mate3","pos":"31s 21+P 11n 12k 33+P 13g 14p","hand":"PG","hint":["G*2b"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第7問","type":"mate3","pos":"62k 63g 33S 64+B 65R","hand":"S","hint":["6d6c"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第8問","type":"mate3","pos":"41s 31+P 42g 22k 33s 23b 34+R","hand":"LR","hint":["R*2a"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第9問","type":"mate3","pos":"71p 51k 41s 31n 83R 64N","hand":"G","hint":["8c5c+"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第10問","type":"mate3","pos":"91s 92k 64R 75+R","hand":"PN","hint":["7e7b"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第11問","type":"mate3","pos":"91l 81k 71g 53+S 84N 74R","hand":"S","hint":["7d7a+"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第12問","type":"mate3","pos":"61k 41n 32B 63+B 53R","hand":"N","hint":["5c5b+"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第13問","type":"mate3","pos":"61r 51k 63L 53s 84L 44+R","hand":"LG","hint":["4d5c"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第14問","type":"mate3","pos":"61R 51+S 31k 21g 11s 22s 24+S","hand":"L","hint":["5a5b"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第15問","type":"mate3","pos":"91l 92k 83n 84l 74+R 65+P","hand":"LG","hint":["L*9d"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第16問","type":"mate3","pos":"72n 62k 93+S 33+R","hand":"NG","hint":["G*6c"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第17問","type":"mate3","pos":"71k 51l 52g 83+S","hand":"SB","hint":["S*7b"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第18問","type":"mate3","pos":"51+B 21b 32k 13g 14r","hand":"SG","hint":["G*3c"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第19問","type":"mate3","pos":"51k 32p 53B 43g 33s 23+R","hand":"SG","hint":["G*6b"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第20問","type":"mate3","pos":"61b 51+S 82k 84+B 54L","hand":"SG","hint":["S*7c"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第21問","type":"mate3","pos":"51l 62k 63l 64+R 34N 85+R","hand":"NR","hint":["8e8b"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第22問","type":"mate3","pos":"82k 72B 93p 74p 75+P","hand":"GR","hint":["G*8c"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第23問","type":"mate3","pos":"31r 12k 33p 23l 24+R 14l 35L","hand":"GR","hint":["R*1c"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第24問","type":"mate3","pos":"81r 71s 61S 82k 53S 74+S","hand":"PR","hint":["P*8c"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第25問","type":"mate3","pos":"61k 72b 83s 73G 43p","hand":"SR","hint":["R*6b"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"},{"title":"3手詰め 第26問","type":"mate3","pos":"11s 22k 24S 14R","hand":"SR","hint":["S*3c"],"text":"あなたが王手 → 相手が逃げる → あなたがもう一度王手して詰ませます。1手目は必ず王手です。","task":"3手で詰ませよう","after":"3手詰めクリア！ 最初の王手で玉を逃げにくい場所に追いこむのがコツです。"}];
+var CHAPTERS = [{"name":"駒の動き","from":1,"to":14},{"name":"駒を取る","from":15,"to":22},{"name":"王手","from":23,"to":27},{"name":"1手詰め","from":28,"to":47},{"name":"攻めの手筋","from":48,"to":57},{"name":"囲い（守りの形）","from":58,"to":66},{"name":"戦法（攻めの形）","from":67,"to":74},{"name":"3手詰め","from":75,"to":100}];
 </script>
 <script>
 (() => {
@@ -875,6 +1059,7 @@ var Shogi = (() => {
   let sel = null;             // { sq } or { hand: t }
   let targets = new Map();    // to-square -> list of legal moves
   let hint = null, lastScore = 0, soundOn = true, reqId = 0;
+  let mode = 'game';          // 'game' or 'lesson'
   let records = {};
   try { records = JSON.parse(localStorage.getItem('shogi-records') || '{}') || {}; } catch (e) {}
   try { soundOn = localStorage.getItem('shogi-sound') !== 'off'; } catch (e) {}
@@ -1000,6 +1185,13 @@ var Shogi = (() => {
         cell.append(komaEl(p, (p > 0) !== (playerSide > 0)));
         if (sq === lastTo && renderMoved) cell.classList.add('moved');
       }
+      if (mode === 'lesson' && lessonGoal) {
+        const g = lessonGoal.find(([gs]) => gs === sq);
+        if (g && st.b[sq] !== g[1]) {
+          cell.classList.add('goal');
+          if (!p) { const k = komaEl(g[1], false); k.classList.add('ghost'); cell.append(k); }
+        }
+      }
       const a = Math.abs(p);
       const owner = p ? (p > 0 ? '先手' : '後手') : '';
       cell.setAttribute('aria-label', sqName(sq) + (p ? ` ${owner}の${KIF_CH[a]}` : ' 空き'));
@@ -1010,6 +1202,7 @@ var Shogi = (() => {
     $('whoBottom').innerHTML = `<b>あなた</b>${playerSide > 0 ? '先手 ▲' : '後手 △'}`;
     $('whoTop').innerHTML = `<b>相手</b>${playerSide > 0 ? '後手 △' : '先手 ▲'}`;
     renderKifu();
+    if (mode === 'lesson') { $('whoTop').innerHTML = '<b>相手</b>'; $('whoBottom').innerHTML = '<b>あなた</b>'; return; }
     renderStatus();
   }
   let renderMoved = false;
@@ -1094,7 +1287,10 @@ var Shogi = (() => {
     }
     sel = { hand: t };
   }
-  function playerTurn() { return !over && !thinking && st.side === playerSide; }
+  function playerTurn() {
+    if (mode === 'lesson') return !lessonBusy && !lessonDone && st.side === 1;
+    return !over && !thinking && st.side === playerSide;
+  }
 
   grid.addEventListener('click', e => {
     const cell = e.target.closest('.cell');
@@ -1130,7 +1326,7 @@ var Shogi = (() => {
     $('promoNo').onclick = () => { $('promoModal').hidden = true; doMove(no); };
   }
 
-  function doMove(m, score) {
+  function doMove(m, score, silent) {
     const prevTo = history.length ? (history[history.length - 1].m >> 7) & 127 : -1;
     const kif = kifText(st, m, prevTo);
     const side = st.side;
@@ -1141,6 +1337,7 @@ var Shogi = (() => {
     renderMoved = true;
     pachi(!!cap);
     render();
+    if (mode === 'lesson') { if (!silent) lessonAfter(m, cap); return; }
     if (checkEnd()) return;
     if (S.inCheck(st, st.side)) callout('王手');
     if (st.side !== playerSide) cpuMove();
@@ -1276,12 +1473,227 @@ var Shogi = (() => {
     if (st.side !== playerSide) cpuMove();
   }
 
+  // ---------- practice mode (levels 1-100) ----------
+  const LU = LessonUtil;
+  let lesson = null, lessonIdx = 0, lessonMoves = 0, lessonBusy = false, lessonDone = false, lessonGoal = null, lessonStage = 0, checkers = [];
+  let cleared = new Set();
+  try { cleared = new Set(JSON.parse(localStorage.getItem('shogi-lessons') || '[]')); } catch (e) {}
+  const saveCleared = () => { try { localStorage.setItem('shogi-lessons', JSON.stringify([...cleared])); } catch (e) {} };
+  const chapterOf = n => CHAPTERS.find(c => n >= c.from && n <= c.to);
+  const unlocked = n => n === 1 || cleared.has(n - 1) || cleared.has(n) || chapterOf(n).from === n;
+
+  function setMode(m) {
+    mode = m;
+    $('navGame').setAttribute('aria-pressed', String(m === 'game'));
+    $('navLesson').setAttribute('aria-pressed', String(m === 'lesson'));
+    $('lessonCard').hidden = m !== 'lesson';
+    $('gameCard').hidden = m === 'lesson';
+    $('gameButtons').hidden = m === 'lesson';
+  }
+  function openLessonList() {
+    const list = $('levelList');
+    list.replaceChildren();
+    let next = 1;
+    while (next <= 100 && cleared.has(next)) next++;
+    for (const ch of CHAPTERS) {
+      const h = document.createElement('div');
+      h.className = 'chap';
+      const done = [...cleared].filter(n => n >= ch.from && n <= ch.to).length;
+      h.innerHTML = `<span></span><span>${done} / ${ch.to - ch.from + 1}</span>`;
+      h.firstChild.textContent = `${ch.name}（レベル${ch.from}〜${ch.to}）`;
+      const g = document.createElement('div');
+      g.className = 'grid10';
+      for (let n = ch.from; n <= ch.to; n++) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'lvbtn' + (cleared.has(n) ? ' done' : '') + (n === next ? ' next' : '');
+        b.textContent = n;
+        b.disabled = !unlocked(n);
+        b.title = LESSONS[n - 1].title;
+        b.setAttribute('aria-label', `レベル${n} ${LESSONS[n - 1].title}${cleared.has(n) ? ' クリア済み' : ''}`);
+        b.addEventListener('click', () => { $('lessonModal').hidden = true; openLesson(n - 1); });
+        g.append(b);
+      }
+      list.append(h, g);
+    }
+    $('lProgress').innerHTML = `クリア <b>${cleared.size}</b> / 100　・　次はレベル${Math.min(next, 100)}`;
+    $('lessonModal').hidden = false;
+  }
+  function lessonFeedback(text, kind) {
+    const fb = $('lFb');
+    fb.textContent = text || '';
+    fb.className = 'fb' + (kind ? ' ' + kind : '');
+  }
+  function openLesson(i, keepFeedback) {
+    cancelThinking();
+    setMode('lesson');
+    $('newModal').hidden = true;
+    $('resultModal').hidden = true;
+    over = false;
+    lessonIdx = i;
+    lesson = LESSONS[i];
+    lessonMoves = 0; lessonBusy = false; lessonDone = false; lessonStage = 0;
+    playerSide = 1;
+    st = S.fromPlain(LU.parsePos(lesson.pos, lesson.hand, lesson.ohand, 1));
+    history = [];
+    lessonGoal = lesson.goal ? LU.parseGoal(lesson.goal) : null;
+    // pieces that are giving check right now (for the "escape check" lessons)
+    checkers = [];
+    if (st.k[0] >= 0 && S.inCheck(st, 1)) {
+      for (let sq = 0; sq < 81; sq++) if (st.b[sq] < 0) {
+        const keep = st.b[sq];
+        st.b[sq] = 0;
+        const still = S.inCheck(st, 1);
+        st.b[sq] = keep;
+        if (!still) checkers.push(sq);
+      }
+    }
+    clearSel();
+    hint = null;
+    const ch = chapterOf(i + 1);
+    $('lLevel').textContent = `レベル ${i + 1} ・ ${ch.name}${cleared.has(i + 1) ? ' ・ クリア済み' : ''}`;
+    $('lTitle').textContent = lesson.title;
+    $('lText').textContent = lesson.text;
+    $('lTask').textContent = lesson.task + (lesson.limit && !/手）$/.test(lesson.task) ? `（${lesson.limit}手以内）` : '');
+    $('lNext').disabled = !cleared.has(i + 1) || i >= 99;
+    if (!keepFeedback) lessonFeedback(lesson.type === 'shape' || lesson.type === 'reach' ? '緑の枠が目標の場所です。' : '');
+    setStatus(`レベル${i + 1}：${lesson.title}`, false, lesson.task);
+    render();
+  }
+  function goalMet() { return lessonGoal.every(([sq, c]) => st.b[sq] === c); }
+  function lessonOk() {
+    lessonDone = true;
+    const n = lessonIdx + 1;
+    const first = !cleared.has(n);
+    cleared.add(n);
+    saveCleared();
+    callout('正解!!');
+    pachi(true);
+    lessonFeedback((lesson.after || 'よくできました！') + (first ? '　レベルクリア！' : ''), 'ok');
+    $('lLevel').textContent = `レベル ${n} ・ ${chapterOf(n).name} ・ クリア済み`;
+    $('lNext').disabled = n >= 100;
+    $('lNext').focus();
+    setStatus('正解！', false, n < 100 ? '「次のレベル」へ進もう' : '全レベルクリア！');
+  }
+  function lessonNg(text) {
+    lessonBusy = true;
+    callout('おしい');
+    lessonFeedback(text || 'その手ではありません。もう一度考えてみよう。', 'ng');
+    setTimeout(() => { if (mode === 'lesson' && lesson) openLesson(lessonIdx, true); }, 1300);
+  }
+  // after each of your moves in a lesson
+  function lessonAfter(m, cap) {
+    const L = lesson, to = (m >> 7) & 127, from = m & 127;
+    lessonMoves++;
+    if (L.type === 'reach' || L.type === 'shape') {
+      st.side = 1;                     // the opponent does not move in these drills
+      render();
+      if (goalMet()) return lessonOk();
+      if (lessonMoves >= L.limit) return lessonNg(`${L.limit}手以内に目標の形にできませんでした。もう一度やってみよう。`);
+      lessonFeedback(`いいね！ あと${L.limit - lessonMoves}手以内に完成させよう。`);
+      return;
+    }
+    if (L.type === 'best') {
+      return L.answers.some(u => LU.matches(m, u)) ? lessonOk() : lessonNg();
+    }
+    if (L.type === 'safe') {
+      const fromSq = LU.sqOf(+L.from[0], +L.from[1]);
+      if (from !== fromSq) return lessonNg('ねらわれている駒を動かそう。');
+      return S.attacked(st, to, -1) ? lessonNg('そのマスも相手にねらわれています。') : lessonOk();
+    }
+    if (L.type === 'pred') {
+      if (L.pred === 'check') return S.inCheck(st, -1) ? lessonOk() : lessonNg('相手の玉をねらう手を指そう。');
+      const kingMove = Math.abs(st.b[to]) === S.OU;
+      if (L.pred === 'king') return kingMove ? lessonOk() : lessonNg('今回は玉を動かしてよけよう。');
+      if (L.pred === 'capture') return checkers.includes(to) && cap ? lessonOk() : lessonNg('王手をしている駒を取ろう。');
+      if (L.pred === 'block') return !kingMove && !checkers.includes(to) ? lessonOk() : lessonNg('相手の駒と玉の間に駒を置こう。');
+    }
+    if (L.type === 'mate1') {
+      return S.inCheck(st, -1) && !S.hasLegalMove(st) ? lessonOk() : lessonNg('まだ詰んでいません。玉の逃げ道を全部ふさごう。');
+    }
+    if (L.type === 'mate3') {
+      if (lessonStage === 1) {
+        return S.inCheck(st, -1) && !S.hasLegalMove(st) ? lessonOk() : lessonNg('詰みませんでした。最初からもう一度。');
+      }
+      // first move: must be a check that leaves a mate in 1 after every reply
+      let ok = S.inCheck(st, -1);
+      if (ok) for (const r of S.legalMoves(st, true)) {
+        const c = S.make(st, r);
+        const mm = S.mateMoves(st).length;
+        S.unmake(st, r, c);
+        if (!mm) { ok = false; break; }
+      }
+      if (!ok) return lessonNg(S.inCheck(st, -1) ? 'その王手だと逃げられてしまいます。' : '1手目は王手をかけよう。');
+      lessonBusy = true;
+      lessonFeedback('いい王手！ 相手が逃げます…');
+      setTimeout(() => {
+        if (mode !== 'lesson' || !lesson) return;
+        const r = S.bestDefence(st);
+        const kif = kifText(st, r, to);
+        doMove(r, 0, true);
+        lessonStage = 1;
+        lessonBusy = false;
+        lessonFeedback(`相手は ${kif.slice(1)}。次の1手で詰ませよう！`);
+        setStatus('あと1手で詰み！', false, lesson.task);
+      }, 700);
+    }
+  }
+  function lessonHint() {
+    if (!lesson || lessonDone) return;
+    const L = lesson;
+    let m = 0, tip = '';
+    const legal = S.legalMoves(st, true);
+    if (L.type === 'reach' || L.type === 'shape') {
+      // the first move of the model answer that can be played from here
+      for (const u of L.hint) {
+        m = legal.find(x => LU.matches(x, u)) || 0;
+        if (m) break;
+      }
+      if (!m) tip = 'うまくいかないときは「やり直し」で最初からやってみよう。';
+    } else if (L.type === 'best') m = legal.find(x => LU.matches(x, L.answers[0]));
+    else if (L.type === 'mate1' || (L.type === 'mate3' && lessonStage === 1)) m = S.mateMoves(st)[0];
+    else if (L.type === 'mate3') m = L.hint ? legal.find(x => LU.matches(x, L.hint[0])) : S.mate3Moves(st)[0];
+    else if (L.type === 'safe') { const f = LU.sqOf(+L.from[0], +L.from[1]); hint = { from: f, to: -1 }; tip = '光っている駒を、相手の駒が利いていないマスへ。'; }
+    else if (L.type === 'pred') tip = { check: '持ち駒を玉のすぐ近くに打ってみよう。', king: '飛車のたての線から外れるマスへ。', block: '持ち駒をタップして、飛車と玉の間に打とう。', capture: '銀でななめ前の金を取れます。' }[L.pred];
+    if (m) {
+      const from = m & 127, to = (m >> 7) & 127;
+      hint = { from: from < 100 ? from : -1, to };
+      tip = 'ヒント：' + kifText(st, m, -1).slice(1);
+    }
+    clearSel();
+    render();
+    lessonFeedback(tip);
+  }
+  $('lHint').addEventListener('click', lessonHint);
+  $('lRetry').addEventListener('click', () => openLesson(lessonIdx));
+  $('lList').addEventListener('click', openLessonList);
+  $('lNext').addEventListener('click', () => { if (lessonIdx < 99) openLesson(lessonIdx + 1); });
+  $('lessonClose').addEventListener('click', () => { $('lessonModal').hidden = true; });
+  $('navLesson').addEventListener('click', () => {
+    let next = 0;
+    while (next < 99 && cleared.has(next + 1)) next++;
+    if (mode !== 'lesson') openLesson(next);
+    openLessonList();
+  });
+  $('navGame').addEventListener('click', () => {
+    if (mode === 'game') return;
+    setMode('game');
+    lesson = null;
+    lessonGoal = null;
+    st = S.newState();
+    history = [];
+    over = false;
+    render();
+    openNew();
+  });
+
   // keyboard: Escape closes dialogs and clears the selection
   window.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if (!$('promoModal').hidden) return;
     if (!$('newModal').hidden && !$('cancelNew').hidden) $('newModal').hidden = true;
     if (!$('resultModal').hidden) $('resultModal').hidden = true;
+    if (!$('lessonModal').hidden) $('lessonModal').hidden = true;
     clearSel();
     render();
   });
@@ -1289,6 +1701,7 @@ var Shogi = (() => {
   // ---------- boot ----------
   function boot(data) {
     buildBoard();
+    if (data && typeof data.lesson === 'number') { openLesson(data.lesson); return; }
     if (data && Array.isArray(data.moves)) {
       level = data.level || 2;
       startGame(data.playerSide || 1, data.moves);
@@ -1297,8 +1710,9 @@ var Shogi = (() => {
       openNew();
     }
   }
+  $('goLessons').addEventListener('click', () => { $('newModal').hidden = true; $('navLesson').click(); });
   if (window.claude && window.claude.hot && window.claude.hot.snapshot) {
-    window.claude.hot.snapshot(() => ({ moves: history.map(h => h.m), level, playerSide }));
+    window.claude.hot.snapshot(() => (mode === 'lesson' ? { lesson: lessonIdx } : { moves: history.map(h => h.m), level, playerSide }));
   }
   if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(boot);
   else boot((window.claude && window.claude.hot && window.claude.hot.data) || null);
